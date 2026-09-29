@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import type { CampusItem } from "@/lib/dashboard-types";
+import "@/app/campus/campus.css";
 
 type Props = { items: CampusItem[] };
 
-// 2026-09-20 -> 20/09/2026. Dinh dang khac (sheet tu doi ngay) thi giu nguyen.
+// 2026-09-20 -> 20/09/2026. Định dạng khác (sheet tự đổi ngày) thì giữ nguyên.
 function formatDate(value: string): string {
   const m = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   return m ? `${m[3].padStart(2, "0")}/${m[2].padStart(2, "0")}/${m[1]}` : value;
@@ -14,13 +15,27 @@ function formatDate(value: string): string {
 
 const metaLine = (item: CampusItem) => [formatDate(item.date), item.place].filter(Boolean).join(" · ");
 
+function monthKey(date: string): string {
+  const m = date.match(/^(\d{4})-(\d{1,2})/);
+  return m ? `${m[1]}-${m[2].padStart(2, "0")}` : "";
+}
+
+function monthLabel(key: string): string {
+  if (!key) return "Khác";
+  const [year, month] = key.split("-");
+  return `Tháng ${Number(month)}, ${year}`;
+}
+
+type Entry = { item: CampusItem; idx: number };
+
 export function CampusJournal({ items }: Props) {
   const [tag, setTag] = useState(""); // "" = Tất cả, còn lại là tag viết thường
-  const [open, setOpen] = useState<number | null>(null); // index trong `shown`
+  const [open, setOpen] = useState<number | null>(null); // index trong `flat`
   const openerRef = useRef<HTMLElement | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const touchX = useRef(0);
 
-  // Gom tag không phân biệt hoa/thường ("Lab" và "lab" chung 1 chip), giữ thứ tự xuất hiện.
+  // Gom tag không phân biệt hoa/thường, giữ thứ tự xuất hiện.
   const tags = useMemo(() => {
     const map = new Map<string, { label: string; count: number }>();
     for (const item of items) {
@@ -33,14 +48,32 @@ export function CampusJournal({ items }: Props) {
     return [...map].map(([key, value]) => ({ key, ...value }));
   }, [items]);
 
-  const shown = useMemo(() => (tag ? items.filter((item) => item.tag.toLowerCase() === tag) : items), [items, tag]);
+  // flat = thứ tự duyệt trong lightbox (hero trước, rồi từng tháng). Hero chỉ hiện ở "Tất cả".
+  const { flat, groups, hero } = useMemo(() => {
+    const filtered = tag ? items.filter((item) => item.tag.toLowerCase() === tag) : items;
+    const heroIndex = tag ? -1 : Math.max(0, filtered.findIndex((item) => item.featured));
+    const heroItem = heroIndex >= 0 ? filtered[heroIndex] : undefined;
+    const byMonth = new Map<string, CampusItem[]>();
+    filtered.forEach((item, i) => {
+      if (i === heroIndex) return;
+      const key = monthKey(item.date);
+      byMonth.set(key, [...(byMonth.get(key) ?? []), item]);
+    });
+    const flatList: CampusItem[] = heroItem ? [heroItem] : [];
+    const grouped: { key: string; label: string; entries: Entry[] }[] = [];
+    for (const [key, list] of byMonth) {
+      grouped.push({ key, label: monthLabel(key), entries: list.map((item) => ({ item, idx: flatList.push(item) - 1 })) });
+    }
+    return { flat: flatList, groups: grouped, hero: heroItem };
+  }, [items, tag]);
 
-  // Hero chỉ hiện ở "Tất cả": dòng featured đầu tiên, không có thì dòng đầu.
-  const heroIndex = tag ? -1 : Math.max(0, items.findIndex((item) => item.featured));
-  const hero = heroIndex >= 0 ? shown[heroIndex] : undefined;
-  const grid = shown.map((item, index) => ({ item, index })).filter((entry) => entry.index !== heroIndex);
+  const stats = useMemo(() => {
+    const places = new Set(items.map((i) => i.place.trim().toLowerCase()).filter(Boolean));
+    const months = new Set(items.map((i) => monthKey(i.date)).filter(Boolean));
+    return { places: places.size, months: months.size };
+  }, [items]);
 
-  const current = open === null ? null : shown[open];
+  const current = open === null ? null : flat[open];
   const isOpen = current !== null && current !== undefined;
 
   const openAt = (index: number, el: HTMLElement) => {
@@ -52,8 +85,8 @@ export function CampusJournal({ items }: Props) {
     openerRef.current?.focus();
   }, []);
   const step = useCallback(
-    (delta: number) => setOpen((cur) => (cur === null ? cur : (cur + delta + shown.length) % shown.length)),
-    [shown.length]
+    (delta: number) => setOpen((cur) => (cur === null ? cur : (cur + delta + flat.length) % flat.length)),
+    [flat.length]
   );
 
   useEffect(() => {
@@ -73,6 +106,18 @@ export function CampusJournal({ items }: Props) {
     };
   }, [isOpen, close, step]);
 
+  // Ảnh hiện dần khi cuộn tới (1 observer cho cả trang).
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+      }),
+      { threshold: 0.05 }
+    );
+    document.querySelectorAll(".cp-tile:not(.is-in)").forEach((node) => io.observe(node));
+    return () => io.disconnect();
+  }, [groups]);
+
   if (items.length === 0) {
     return (
       <section className="section no-top">
@@ -90,20 +135,24 @@ export function CampusJournal({ items }: Props) {
     <section className="section no-top campus-journal">
       <div className="container">
         {hero ? (
-          <button type="button" className="campus-hero" onClick={(e) => openAt(heroIndex, e.currentTarget)}>
+          <button type="button" className="cp-hero" onClick={(e) => openAt(0, e.currentTarget)}>
             <SafeImage src={hero.image} alt="" fallback={null} loading="eager" />
-            <span className="campus-hero-shade" />
-            <span className="campus-hero-text">
-              <span className="campus-badge">Nổi bật</span>
-              {metaLine(hero) ? <span className="campus-hero-meta">{metaLine(hero)}</span> : null}
-              <span className="campus-hero-title">{hero.title}</span>
-              {hero.summary ? <span className="campus-hero-summary">{hero.summary}</span> : null}
+            <span className="cp-hero-text">
+              {metaLine(hero) ? <span className="cp-hero-meta">{metaLine(hero)}</span> : null}
+              <span className="cp-hero-title">{hero.title}</span>
+              {hero.summary ? <span className="cp-hero-sum">{hero.summary}</span> : null}
             </span>
           </button>
         ) : null}
 
+        <p className="cp-summary">
+          <b>{items.length}</b> khoảnh khắc
+          {stats.places > 0 ? <> tại <b>{stats.places}</b> địa điểm</> : null}
+          {stats.months > 0 ? <>, ghi lại qua <b>{stats.months}</b> tháng</> : null}.
+        </p>
+
         {tags.length > 1 ? (
-          <div className="campus-filter">
+          <div className="cp-filter">
             <div className="type-chips" role="tablist" aria-label="Lọc ảnh theo nhãn">
               <button type="button" role="tab" aria-selected={tag === ""} className={`chip ${tag === "" ? "is-active" : ""}`} onClick={() => setTag("")}>
                 Tất cả <em>{items.length}</em>
@@ -124,38 +173,47 @@ export function CampusJournal({ items }: Props) {
           </div>
         ) : null}
 
-        {grid.length > 0 ? (
-          <div className="campus-grid">
-            {grid.map(({ item, index }, position) => {
-              const big = position % 6 === 3; // mỗi 6 ảnh có 1 ảnh to 2x2, đổi bên trái/phải theo vòng
-              const right = big && Math.floor(position / 6) % 2 === 1;
-              return (
+        {groups.map((group) => (
+          <div className="cp-month" key={group.key || "other"}>
+            <div className="cp-month-head">
+              <h2>{group.label}</h2>
+              <span>{group.entries.length} ảnh</span>
+            </div>
+            <div className="cp-masonry">
+              {group.entries.map(({ item, idx }) => (
                 <button
                   type="button"
-                  key={`${item.title}-${index}`}
-                  className={`campus-tile${big ? " is-big" : ""}${right ? " is-right" : ""}`}
-                  onClick={(e) => openAt(index, e.currentTarget)}
+                  key={`${item.title}-${idx}`}
+                  className="cp-tile"
+                  onClick={(e) => openAt(idx, e.currentTarget)}
                   aria-label={`Xem ảnh: ${item.title}`}
                 >
                   <SafeImage src={item.image} alt={item.title} loading="lazy" fallback={<span className="campus-empty">Chưa có ảnh</span>} />
-                  <span className="campus-tile-cap">
-                    <span className="campus-tile-title">{item.title}</span>
-                    {item.date ? <span className="campus-tile-date">{formatDate(item.date)}</span> : null}
+                  <span className="cp-cap">
+                    <b>{item.title}</b>
+                    {item.date ? <small>{formatDate(item.date)}</small> : null}
                   </span>
                 </button>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        ) : null}
+        ))}
       </div>
 
       {current ? (
         <div className="campus-lb" role="dialog" aria-modal="true" aria-label={current.title} onClick={close}>
           <div className="campus-lb-card" onClick={(e) => e.stopPropagation()}>
             <button ref={closeRef} type="button" className="campus-lb-close" onClick={close} aria-label="Đóng">×</button>
-            <div className="campus-lb-stage">
+            <div
+              className="campus-lb-stage"
+              onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+              onTouchEnd={(e) => {
+                const dx = e.changedTouches[0].clientX - touchX.current;
+                if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+              }}
+            >
               <SafeImage src={current.image} alt={current.title} fallback={<span className="campus-empty">Chưa có ảnh</span>} />
-              {shown.length > 1 ? (
+              {flat.length > 1 ? (
                 <>
                   <button type="button" className="campus-lb-nav is-prev" onClick={() => step(-1)} aria-label="Ảnh trước">‹</button>
                   <button type="button" className="campus-lb-nav is-next" onClick={() => step(1)} aria-label="Ảnh sau">›</button>
@@ -169,8 +227,8 @@ export function CampusJournal({ items }: Props) {
               </div>
               <h3>{current.title}</h3>
               {current.summary ? <p>{current.summary}</p> : <p className="muted-note">Chưa có note cho ảnh này.</p>}
-              {current.url ? <a className="campus-link" href={current.url} target="_blank" rel="noreferrer">Xem thêm ↗</a> : null}
-              <span className="campus-lb-count">{(open ?? 0) + 1} / {shown.length}</span>
+              {current.url ? <a className="campus-link" href={current.url} target="_blank" rel="noreferrer">Xem thêm</a> : null}
+              <span className="campus-lb-count">{(open ?? 0) + 1} / {flat.length}</span>
             </div>
           </div>
         </div>
