@@ -1,0 +1,149 @@
+/* ===== Khóa học: danh sách môn + trang chi tiết (đề cương theo nhánh) ===== */
+.course-empty {
+  margin: 0;
+  border: 1px dashed var(--tsinghua-border);
+  padding: 40px 24px;
+  color: var(--muted);
+  text-align: center;
+}
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+.course-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--tsinghua-border);
+  background: var(--white);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.course-card:hover,
+.course-card:focus-visible {
+  transform: translateY(-4px);
+  border-color: var(--tsinghua-purple);
+  box-shadow: 8px 10px 0 rgba(79, 70, 229, 0.1);
+}
+.course-cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(135deg, hsl(calc(var(--tone, 280) * 1deg) 46% 94%), var(--tsinghua-lavender));
+}
+.course-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.course-cover-mark {
+  color: var(--tsinghua-purple);
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+.course-body { display: flex; flex: 1; flex-direction: column; gap: 10px; padding: 20px 22px 22px; }
+.course-body h2 { margin: 0; font-size: 26px; letter-spacing: -0.03em; }
+.course-body p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.course-tracks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 8px; }
+.course-track-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  background: var(--tsinghua-lavender);
+  font-size: 13px;
+}
+.course-track-chip strong { color: var(--tsinghua-purple); }
+.course-track-chip em { color: var(--muted); font-size: 12px; font-style: normal; }
+
+.course-back { display: inline-block; margin-top: 22px; color: var(--tsinghua-purple); font-size: 14px; font-weight: 750; }
+.course-back:hover { text-decoration: underline; }
+.course-nav { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 30px; }
+.course-track-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+.course-track-head h2 { margin: 0 0 8px; font-size: clamp(28px, 3.4vw, 40px); letter-spacing: -0.04em; }
+.course-track-head p { max-width: 640px; margin: 0; color: var(--muted); line-height: 1.7; }
+.course-group { margin-top: 34px; }
+.course-group h3 { margin: 0 0 10px; color: var(--tsinghua-purple); font-size: 15px; font-weight: 850; }
+.course-lessons { margin: 0; padding: 0; border-top: 1px solid var(--line); list-style: none; }
+.course-lesson {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 10px;
+  transition: background 150ms ease;
+}
+.course-lesson:hover,
+.course-lesson:focus-visible { background: var(--tsinghua-lavender); }
+.course-lesson-no {
+  color: #c3c6ee;
+  font-size: 24px;
+  font-weight: 850;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  transition: color 150ms ease;
+}
+.course-lesson:hover .course-lesson-no,
+.course-lesson:focus-visible .course-lesson-no { color: var(--tsinghua-purple); }
+.course-lesson-main strong { display: block; font-size: 17px; line-height: 1.4; }
+.course-lesson-main > span { display: block; margin-top: 3px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+.course-lesson-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; color: var(--muted); font-size: 13px; }
+.course-lesson-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--tsinghua-border);
+  padding: 4px 9px;
+  background: var(--white);
+  color: var(--tsinghua-purple);
+  font-weight: 700;
+}
+.course-lesson-type svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.course-card:focus-visible,
+.course-lesson:focus-visible { outline: 2px solid var(--tsinghua-purple); outline-offset: 2px; }
+@media (max-width: 640px) {
+  .course-lesson { grid-template-columns: 38px minmax(0, 1fr); gap: 10px 12px; }
+  .course-lesson-no { font-size: 20px; }
+  .course-lesson-meta { grid-column: 2; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .course-card,
+  .course-lesson,
+  .course-lesson-no { transition: none; }
+  .course-card:hover { transform: none; }
+}
+
+/* Hero có ảnh bìa: chữ bên trái, ảnh bên phải (trên điện thoại ảnh xuống dưới chữ) */
+.course-hero { display: grid; gap: 28px; align-items: center; }
+.course-hero.has-cover { grid-template-columns: minmax(0, 1fr) minmax(0, 360px); }
+.course-hero-cover {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border: 1px solid var(--tsinghua-border);
+  background: var(--tsinghua-lavender);
+  box-shadow: 8px 10px 0 rgba(79, 70, 229, 0.1);
+}
+.course-hero-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 860px) {
+  .course-hero.has-cover { grid-template-columns: 1fr; }
+  .course-hero-cover { max-width: 420px; }
+}
+/* Bài đã lên kế hoạch nhưng chưa có link */
+.course-lesson.is-soon { cursor: default; }
+.course-lesson.is-soon:hover { background: transparent; }
+.course-lesson.is-soon .course-lesson-no { color: #dfe1f4; }
+.course-lesson.is-soon:hover .course-lesson-no { color: #dfe1f4; }
+.course-lesson.is-soon .course-lesson-main strong { color: var(--muted); font-weight: 650; }
+.course-lesson-soon {
+  border: 1px dashed var(--tsinghua-border);
+  padding: 4px 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}

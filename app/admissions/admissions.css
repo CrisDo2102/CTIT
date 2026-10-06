@@ -1,0 +1,135 @@
+/* ===== CTIT Admissions v2 — hero 1 tiêu đề, nav dính, rail cuộn ngang, split sticky, dải tối, CTA cuối ===== */
+.adm-wrap{width:min(1120px,calc(100% - 40px));margin:0 auto}
+
+/* ---- hero ---- */
+.adm-hero{position:relative;overflow:hidden;padding:76px 0 0;background:radial-gradient(50% 70% at 88% 10%,rgba(168,85,247,.16),transparent 65%),radial-gradient(45% 60% at 0% 100%,rgba(56,189,248,.16),transparent 65%),linear-gradient(180deg,#fff,#f6f5ff);border-bottom:1px solid var(--line)}
+.adm-hero::before{content:"";position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(60% 70% at 70% 30%,#000,transparent)}
+.adm-hero-grid{position:relative;display:grid;grid-template-columns:1.2fr .8fr;gap:48px;align-items:center}
+.adm-eyebrow{display:inline-flex;gap:8px;align-items:center;padding:6px 14px;border:1px solid var(--tsinghua-border);border-radius:999px;background:#fff;color:var(--tsinghua-purple);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.adm-eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--tsinghua-purple)}
+.adm-hero h1{margin:20px 0 0;font-size:clamp(64px,12vw,156px);line-height:.9;letter-spacing:-.06em}
+.adm-line{display:inline-block;overflow:hidden;padding-bottom:.08em}
+.adm-line span{display:inline-block;background:var(--gradient-brand);-webkit-background-clip:text;background-clip:text;color:transparent;animation:adm-up 1s cubic-bezier(.2,.8,.2,1) both}
+.adm-line:nth-of-type(2) span{animation-delay:.12s}
+@keyframes adm-up{from{transform:translateY(105%)}}
+.adm-lead{max-width:52ch;margin:24px 0 0;color:var(--muted);font-size:19px;line-height:1.7}
+.adm-cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.adm-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:999px;font-weight:700;font-size:15px;transition:transform .25s,box-shadow .25s,background .25s}
+.adm-btn.primary{background:var(--ink);color:#fff}
+.adm-btn.ghost{border:1px solid var(--tsinghua-border);background:#fff}
+.adm-btn.light{background:#fff;color:#1e1b69}
+.adm-btn.outline{border:1px solid rgba(255,255,255,.4);color:#fff}
+.adm-btn:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(79,70,229,.3)}
+
+/* vé trạng thái */
+.adm-ticket{position:relative;padding:28px;border-radius:28px;color:#fff;background:radial-gradient(80% 100% at 100% 0%,rgba(168,85,247,.55),transparent 60%),radial-gradient(80% 90% at 0% 100%,rgba(56,189,248,.4),transparent 60%),#15123a;box-shadow:0 30px 80px rgba(30,27,105,.32);transform:rotate(1.6deg);transition:transform .5s}
+.adm-ticket:hover{transform:rotate(0) translateY(-6px)}
+.adm-ticket-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.adm-live{display:inline-flex;gap:8px;align-items:center}
+.adm-live i{width:9px;height:9px;border-radius:50%;background:#34d399;box-shadow:0 0 0 6px rgba(52,211,153,.18);animation:adm-pulse 2s infinite}
+@keyframes adm-pulse{50%{box-shadow:0 0 0 10px rgba(52,211,153,0)}}
+.adm-ticket-code{opacity:.6}
+.adm-ticket strong{display:block;margin-top:34px;font-size:clamp(26px,3vw,36px);line-height:1.1;letter-spacing:-.03em}
+.adm-ticket p{margin:12px 0 0;color:rgba(255,255,255,.72);line-height:1.6}
+.adm-ticket-cut{margin:26px -28px 18px;border-top:2px dashed rgba(255,255,255,.28);position:relative}
+.adm-ticket-cut::before,.adm-ticket-cut::after{content:"";position:absolute;top:-13px;width:24px;height:24px;border-radius:50%;background:#f8f7ff}
+.adm-ticket-cut::before{left:-12px}.adm-ticket-cut::after{right:-12px}
+.adm-ticket-foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:rgba(255,255,255,.7)}
+.adm-ticket-foot b{font-size:20px;color:#fff}
+
+.adm-facts{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:60px;border-top:1px solid var(--line)}
+.adm-facts div{padding:22px 18px;border-right:1px solid var(--line)}.adm-facts div:last-child{border-right:0}
+.adm-facts strong{display:block;font-size:40px;letter-spacing:-.04em;background:var(--gradient-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
+.adm-facts span{font-size:13px;color:var(--muted)}
+
+/* ---- nav dính ---- */
+.adm-nav-wrap{position:sticky;top:12px;z-index:30;display:flex;justify-content:center;padding:14px 12px 0}
+.adm-nav{display:flex;gap:4px;padding:5px;max-width:100%;overflow-x:auto;border-radius:999px;background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border:1px solid var(--tsinghua-border);box-shadow:0 12px 40px rgba(30,27,105,.12)}
+.adm-nav a{flex:none;padding:9px 18px;border-radius:999px;font-size:14px;font-weight:600;color:var(--muted);transition:all .25s}
+.adm-nav a:hover{color:var(--ink)}.adm-nav a.is-active{background:var(--ink);color:#fff}
+
+/* ---- section ---- */
+.adm-sec{padding:84px 0;scroll-margin-top:80px}
+.adm-soft{background:linear-gradient(180deg,rgba(238,240,255,.7),rgba(238,240,255,.25))}
+.adm-head{margin-bottom:38px}
+.adm-head-n{display:inline-block;padding:4px 12px;border:1px solid var(--tsinghua-border);border-radius:999px;color:var(--tsinghua-purple);font-size:13px;font-weight:800;letter-spacing:.14em}
+.adm-head h2{margin:14px 0 0;font-size:clamp(34px,5vw,64px);letter-spacing:-.05em;line-height:1}
+.adm-head p{max-width:46ch;margin:14px 0 0;color:var(--muted);font-size:17px;line-height:1.6}
+.adm-head.is-light h2{color:#fff}.adm-head.is-light p{color:rgba(255,255,255,.66)}
+.adm-head.is-light .adm-head-n{color:#a5b4fc;border-color:rgba(255,255,255,.2)}
+
+/* ---- tracks ---- */
+.adm-tracks{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px}
+.adm-track{position:relative;display:block;height:100%;overflow:hidden;border-radius:28px;background:#fff;border:1px solid var(--tsinghua-border);transition:transform .4s,box-shadow .4s}
+.adm-track:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+.adm-track-media{position:relative;aspect-ratio:16/10;overflow:hidden;display:grid;place-items:center;background:var(--gradient-brand-soft)}
+.adm-track-media img{width:100%;height:100%;object-fit:cover;transition:transform .7s}.adm-track:hover .adm-track-media img{transform:scale(1.07)}
+.adm-track-mono{font-size:64px;font-weight:800;background:var(--gradient-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
+.adm-track-n{position:absolute;top:14px;left:16px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.9);font-size:12px;font-weight:800;letter-spacing:.1em}
+.adm-track-body{position:relative;padding:22px 64px 24px 24px}
+.adm-track-body h3{margin:0 0 8px;font-size:22px;letter-spacing:-.02em}.adm-track-body p{margin:0;color:var(--muted);line-height:1.65}
+.adm-go{position:absolute;right:20px;bottom:20px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:var(--ink);color:#fff;transition:transform .35s,background .35s}
+.adm-track:hover .adm-go{transform:rotate(45deg);background:var(--tsinghua-purple)}
+
+/* ---- rail cuộn ngang (quy trình + mốc) ---- */
+.adm-rail-wrap{overflow:hidden}
+.adm-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(250px,1fr);gap:18px;margin:0;padding:6px 2px 22px;list-style:none;overflow-x:auto;scroll-snap-type:x proximity}
+.adm-rail li{scroll-snap-align:start;min-width:0}
+.adm-step{position:relative;height:100%;padding:26px 24px 28px;border-radius:26px;background:#fff;border:1px solid var(--tsinghua-border);transition:transform .35s,box-shadow .35s}
+.adm-step:hover{transform:translateY(-5px);box-shadow:var(--shadow)}
+.adm-step-n{display:block;font-size:64px;font-weight:800;line-height:1;letter-spacing:-.05em;color:transparent;-webkit-text-stroke:1.5px var(--tsinghua-purple)}
+.adm-step h3{margin:18px 0 8px;font-size:20px;letter-spacing:-.02em}.adm-step p{margin:0;color:var(--muted);line-height:1.65}
+.adm-step::after{content:"";position:absolute;right:-19px;top:46px;width:20px;height:2px;background:var(--gradient-brand)}
+.adm-rail li:last-child .adm-step::after{display:none}
+
+/* ---- split: cột trái dính ---- */
+.adm-split{display:grid;grid-template-columns:.85fr 1.15fr;gap:56px;align-items:start}
+.adm-split-side{position:sticky;top:96px}
+.adm-checks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0;padding:0;list-style:none}
+.adm-check{display:flex;gap:14px;align-items:flex-start;height:100%;padding:20px;border-radius:22px;background:#fff;border:1px solid var(--tsinghua-border);transition:all .3s}
+.adm-check:hover{transform:translateY(-3px);border-color:var(--tsinghua-purple);box-shadow:0 14px 40px rgba(79,70,229,.14)}
+.adm-check span{flex:none;width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:var(--gradient-brand);color:#fff}
+.adm-check strong{line-height:1.45}
+
+/* ---- dải tối: mốc thời gian ---- */
+.adm-dark{color:#fff;background:radial-gradient(60% 90% at 90% 0%,rgba(79,70,229,.5),transparent 60%),#0b0a1f;border-radius:36px;margin:0 12px}
+.adm-rail-time{padding-top:34px;position:relative}
+.adm-time{position:relative;height:100%;padding:26px 6px 0 0;border-top:2px solid rgba(255,255,255,.16)}
+.adm-time::before{content:"";position:absolute;top:-8px;left:0;width:14px;height:14px;border-radius:50%;background:#67e8f9;box-shadow:0 0 0 6px rgba(103,232,249,.18)}
+.adm-time time{display:inline-block;font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-.03em;background:linear-gradient(120deg,#fff,#a5b4fc);-webkit-background-clip:text;background-clip:text;color:transparent}
+.adm-time h3{margin:10px 0 6px;font-size:19px}.adm-time p{margin:0;color:rgba(255,255,255,.64);line-height:1.6}
+
+/* ---- FAQ ---- */
+.adm-ask{margin-top:30px;padding:22px;border-radius:22px;background:var(--gradient-brand-soft);border:1px solid var(--tsinghua-border)}
+.adm-ask strong{display:block;margin-bottom:8px}.adm-ask a{display:block;margin-top:4px;color:var(--tsinghua-purple);font-weight:700;word-break:break-all}.adm-ask a:hover{text-decoration:underline}
+.adm-faq{display:grid;gap:10px}
+.adm-faq-item{border-radius:22px;background:#fff;border:1px solid var(--tsinghua-border);transition:box-shadow .3s,border-color .3s}
+.adm-faq-item[open]{border-color:var(--tsinghua-purple);box-shadow:0 14px 40px rgba(79,70,229,.12)}
+.adm-faq-item summary{display:flex;align-items:center;gap:16px;padding:20px 24px;cursor:pointer;font-weight:700;font-size:17px;list-style:none}
+.adm-faq-item summary::-webkit-details-marker{display:none}
+.adm-faq-item summary span{color:var(--tsinghua-purple);font-size:13px;letter-spacing:.1em}
+.adm-faq-item summary::after{content:"+";margin-left:auto;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:var(--tsinghua-lavender);font-size:20px;transition:transform .3s,background .3s}
+.adm-faq-item[open] summary::after{transform:rotate(45deg);background:var(--gradient-brand);color:#fff}
+.adm-faq-item p{margin:0;padding:0 24px 22px 62px;color:var(--muted);line-height:1.7;animation:adm-fade .4s}
+@keyframes adm-fade{from{opacity:0;transform:translateY(-6px)}}
+
+/* ---- CTA cuối ---- */
+.adm-final-wrap{padding:20px 0 90px}
+.adm-final{padding:clamp(36px,6vw,72px);border-radius:36px;text-align:center;color:#fff;background:radial-gradient(60% 100% at 20% 0%,rgba(56,189,248,.5),transparent 60%),radial-gradient(60% 100% at 90% 100%,rgba(168,85,247,.6),transparent 60%),#2e1f8c}
+.adm-final h2{margin:0;font-size:clamp(32px,5.5vw,68px);letter-spacing:-.05em;line-height:1}
+.adm-final p{margin:16px auto 0;max-width:46ch;color:rgba(255,255,255,.78);font-size:17px}
+.adm-final .adm-cta{justify-content:center}
+.adm-empty{padding:40px;border:1px dashed var(--tsinghua-border);border-radius:22px;color:var(--muted);text-align:center}
+
+@media(max-width:860px){
+  .adm-hero-grid,.adm-split{grid-template-columns:1fr}
+  .adm-hero{padding-top:44px}
+  .adm-ticket{transform:none}
+  .adm-split-side{position:static}
+  .adm-checks{grid-template-columns:1fr}
+  .adm-sec{padding:60px 0}
+  .adm-dark{margin:0 6px;border-radius:26px}
+  .adm-rail{grid-auto-columns:78%}
+  .adm-faq-item p{padding-left:24px}
+}
+@media(prefers-reduced-motion:reduce){.adm-line span,.adm-live i,.adm-faq-item p{animation:none}.adm-ticket{transition:none}}
