@@ -13,7 +13,7 @@ export default function NotFound() {
   return (
     <>
       <Header />
-      <main>
+      <main id="main">
         <section className="state-page">
           <div className="container">
             <p className="state-code" aria-hidden="true">404</p>

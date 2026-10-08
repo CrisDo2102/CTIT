@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
-import { nav } from "@/lib/site-config";
+import { SavedLink } from "@/components/SaveButton";
+import { contact, nav } from "@/lib/site-config";
 import { getAboutInfo } from "@/lib/sheet-data";
 import { resolvePhotoUrl } from "@/lib/photo-url";
 
@@ -22,6 +23,13 @@ export async function Header() {
       <div className="top-strip">
         <div className="container top-strip-inner">
           <span>Automotive Engineering Technology</span>
+          <nav className="top-links" aria-label="Liên kết tiện ích">
+            <Link href="/admissions">Tuyển sinh</Link>
+            <Link href="/resources/documents">Tài liệu</Link>
+            <Link href="/resources/courses">Khóa học</Link>
+            <SavedLink />
+            <a href={`mailto:${contact.email}`}>Liên hệ</a>
+          </nav>
         </div>
       </div>
       <header className="header">
@@ -35,7 +43,7 @@ export async function Header() {
             <span>Closed Thinking Institute of Technology</span>
           </Link>
           <MainNav items={navItems} />
-          <MobileNav items={navItems} resourceLinks={resourceLinks} />
+          <MobileNav items={[...navItems, { href: "/saved", label: "★ Đã lưu" }]} resourceLinks={resourceLinks} />
         </div>
       </header>
     </>

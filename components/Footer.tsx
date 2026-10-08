@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { contact, socials } from "@/lib/site-config";
+import { contact, nav, socials } from "@/lib/site-config";
 
 const icons: Record<string, React.ReactNode> = {
   TikTok: <path d="M14 4v10.5a3 3 0 1 1-3-3M14 4c.3 2.3 1.9 3.8 4.5 4" />,
@@ -19,34 +19,67 @@ const icons: Record<string, React.ReactNode> = {
   )
 };
 
+const resourceLinks = [
+  { href: "/resources/documents", label: "Tài liệu" },
+  { href: "/resources/inventory", label: "Inventory" },
+  { href: "/resources/courses", label: "Khóa học" }
+];
+
 export function Footer() {
   return (
     <footer className="site-footer">
       <div className="container">
-        <div className="foot-top">
-          <Link href="/" className="brand footer-brand" aria-label="CTIT - Trang chủ">
-            <span className="footer-logo-wrap">
-              <img src="/images/About/logo.png" alt="" className="footer-logo" />
-            </span>
-            <span className="footer-brand-copy">
-              <strong>CTIT</strong>
-              <small>Closed Thinking Institute of Technology</small>
-            </span>
-          </Link>
-          <div className="socials">
-            {socials.map((s) => (
-              <a key={s.name} className="social" href={s.href} aria-label={s.name} target="_blank" rel="noreferrer">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  {icons[s.name]}
-                </svg>
-              </a>
-            ))}
+        <div className="foot-grid">
+          <div className="foot-about">
+            <Link href="/" className="brand footer-brand" aria-label="CTIT - Trang chủ">
+              <span className="footer-logo-wrap">
+                <img src="/images/About/logo.png" alt="" className="footer-logo" />
+              </span>
+              <span className="footer-brand-copy">
+                <strong>CTIT</strong>
+                <small>Closed Thinking Institute of Technology</small>
+              </span>
+            </Link>
+            <div className="socials">
+              {socials.map((s) => (
+                <a key={s.name} className="social" href={s.href} aria-label={s.name} target="_blank" rel="noreferrer">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    {icons[s.name]}
+                  </svg>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <div className="foot-col is-wide">
+            <h4>Khám phá</h4>
+            <ul>
+              {nav.filter((n) => n.href !== "/resources").map((n) => (
+                <li key={n.href}><Link href={n.href}>{n.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="foot-col">
+            <h4>Tài nguyên</h4>
+            <ul>
+              {resourceLinks.map((n) => (
+                <li key={n.href}><Link href={n.href}>{n.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="foot-col">
+            <h4>Liên hệ</h4>
+            <ul>
+              <li><a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a></li>
+              <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>
+            </ul>
           </div>
         </div>
+
         <div className="foot-bottom">
           <span>©{new Date().getFullYear()} CTIT. All Rights Reserved</span>
-          <span>Tel: {contact.phone}</span>
-          <a href={`mailto:${contact.email}`}>{contact.email}</a>
         </div>
       </div>
     </footer>

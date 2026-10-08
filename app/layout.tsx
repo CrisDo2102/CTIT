@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ScrollUI } from "@/components/ScrollUI";
 
 export const metadata: Metadata = {
   title: "CTIT",
@@ -13,7 +14,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        <a className="skip-link" href="#main">Bỏ qua tới nội dung</a>
+        {children}
+        <ScrollUI />
+      </body>
     </html>
   );
 }

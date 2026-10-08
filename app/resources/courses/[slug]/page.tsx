@@ -4,7 +4,10 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PageHero } from "@/components/PageHero";
+import { CourseProgress, LessonDone } from "@/components/LessonDone";
 import { SafeImage } from "@/components/SafeImage";
+import { SaveButton } from "@/components/SaveButton";
 import { TypeIcon } from "@/components/ResourceCard";
 import type { CourseLesson } from "@/lib/dashboard-types";
 import { padIndex } from "@/lib/format";
@@ -53,22 +56,25 @@ export default async function CoursePage({ params, searchParams }: Props) {
   return (
     <>
       <Header />
-      <main>
-        <section className="page-hero">
-          <div className={`container course-hero${course.image ? " has-cover" : ""}`}>
-            <div className="course-hero-text">
-              <p className="eyebrow">Resources / Courses</p>
-              <h1>{course.title}</h1>
-              {course.description ? <p className="lead">{course.description}</p> : null}
-              <Link href="/resources/courses" className="course-back">← Tất cả khóa học</Link>
-            </div>
-            {course.image ? (
-              <div className="course-hero-cover">
+      <main id="main">
+        <PageHero
+          eyebrow="Resources / Courses"
+          title={course.title}
+          intro={course.description || undefined}
+          parent={{ label: "Khóa học", href: "/resources/courses" }}
+          aside={
+            course.image ? (
+              <div className="ph-cover">
                 <SafeImage src={course.image} alt="" loading="eager" fallback={null} />
               </div>
-            ) : null}
-          </div>
-        </section>
+            ) : undefined
+          }
+        >
+          <SaveButton
+            variant="pill"
+            item={{ id: `khoa-hoc:${course.slug}`, kind: "Khóa học", title: course.title, sub: `${course.lessonCount} bài`, href: `/resources/courses/${course.slug}` }}
+          />
+        </PageHero>
 
         <section className="section no-top">
           <div className="container">
@@ -102,13 +108,16 @@ export default async function CoursePage({ params, searchParams }: Props) {
               </div>
             ) : null}
 
+            <CourseProgress ids={track.lessons.flatMap((lesson, index) => (lesson.url ? [`${course.slug}:${track.slug}:${index}`] : []))} />
+
             {groups.map((group, groupIndex) => (
               <section key={`${group.name}-${groupIndex}`} className="course-group">
                 {group.name ? <h3>{group.name}</h3> : null}
                 <ol className="course-lessons">
                   {group.items.map(({ lesson, no }) => (
-                    <li key={`${lesson.title}-${no}`}>
+                    <li key={`${lesson.title}-${no}`} className={lesson.url ? "has-done" : undefined}>
                       {lesson.url ? (
+                        <>
                         <a className="course-lesson" href={lesson.url} target="_blank" rel="noopener noreferrer">
                           <span className="course-lesson-no">{padIndex(no)}</span>
                           <span className="course-lesson-main">
@@ -123,6 +132,8 @@ export default async function CoursePage({ params, searchParams }: Props) {
                             <span className="sr-only">(mở tab mới)</span>
                           </span>
                         </a>
+                        <LessonDone id={`${course.slug}:${track.slug}:${no}`} title={lesson.title} />
+                        </>
                       ) : (
                         <div className="course-lesson is-soon">
                           <span className="course-lesson-no">{padIndex(no)}</span>

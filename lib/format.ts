@@ -22,3 +22,20 @@ export function toneOf(text: string): number {
 export function todayInVietnam(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 }
+
+/** Bỏ dấu + hạ chữ thường để so khớp không phân biệt dấu: "Vi điều khiển" -> "vi dieu khien". */
+export function fold(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "d")
+    .toLowerCase();
+}
+
+/** Chuỗi dùng làm đường dẫn: "STM32F103C8T6 Type-C" -> "stm32f103c8t6-type-c". */
+export function slugify(text: string): string {
+  return fold(text)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}

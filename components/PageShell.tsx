@@ -1,5 +1,6 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PageHero } from "@/components/PageHero";
 import { nav } from "@/lib/site-config";
 
 type Props = {
@@ -15,22 +16,19 @@ type Props = {
   children: React.ReactNode;
 };
 
-// Khung chung cho 8 trang con: banner tiêu đề kiểu Tsinghua + nội dung + footer.
+// Khung chung cho các trang con: banner (PageHero) + nội dung + footer.
 export function PageShell({ slug, bare, title, intro, heroClass = "", children }: Props) {
   const page = nav.find((item) => item.href === `/${slug}`)!;
-  const heroTitle = title || page.label;
-  const heroIntro = intro || page.intro;
   return (
     <>
       <Header />
-      <main>
-        <section className={`page-hero ${heroClass}`.trim()}>
-          <div className="container">
-            <p className="eyebrow">{page.en}</p>
-            <h1>{heroTitle}</h1>
-            <p className="lead">{heroIntro}</p>
-          </div>
-        </section>
+      <main id="main">
+        <PageHero
+          className={heroClass}
+          eyebrow={page.en}
+          title={title || page.label}
+          intro={intro || page.intro}
+        />
         {bare ? (
           children
         ) : (

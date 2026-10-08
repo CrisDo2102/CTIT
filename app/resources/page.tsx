@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PageHero } from "@/components/PageHero";
 import { InventoryIcon } from "@/components/icons";
 
 function DocumentIcon() {
@@ -13,14 +14,13 @@ export default function ResourcesPage() {
   return (
     <>
       <Header />
-      <main>
-        <section className="page-hero resources-home-hero">
-          <div className="container">
-            <p className="eyebrow">CTIT Resources</p>
-            <h1>Tài nguyên</h1>
-            <p className="lead">Một không gian chung cho mọi tài nguyên CTIT — từ kiến thức để học đến vật tư để làm.</p>
-          </div>
-        </section>
+      <main id="main">
+        <PageHero
+          eyebrow="CTIT Resources"
+          title="Tài nguyên"
+          intro="Một không gian chung cho mọi tài nguyên CTIT — từ kiến thức để học đến vật tư để làm."
+          stats={[{ value: 3, label: "nhóm tài nguyên" }]}
+        />
 
         <section className="section no-top">
           <div className="container">

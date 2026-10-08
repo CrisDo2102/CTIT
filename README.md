@@ -931,3 +931,87 @@ Mục thứ 3 của menu **Tài nguyên** (cạnh Tài liệu và Inventory). Ch
 
 - **/events** dựng lại: thẻ lớn "Sự kiện tiếp theo" (có đếm ngược "Còn N ngày", thứ trong tuần), lịch sắp tới gom theo tháng, và lưới thẻ ảnh đều nhau cho sự kiện đã diễn ra (hiện 6 cái, bấm "Xem thêm" để mở rộng). Sự kiện không có ảnh vẫn đẹp (ô số ngày / biểu tượng lịch). Cột sheet không đổi. Ngày "hôm nay" tính theo giờ Việt Nam.
 - **/campus**: bỏ câu tổng kết cố định ("N khoảnh khắc tại M địa điểm, ghi lại qua K tháng") thay bằng các thẻ số liệu gọn (số ảnh, số địa điểm, khoảng thời gian). Nhóm tháng sắp mới nhất trước; ảnh chưa ghi ngày vào nhóm "Chưa rõ ngày" ở cuối (và không hiện tiêu đề nhóm nếu toàn bộ ảnh đều chưa có ngày). Số ảnh của nhóm chỉ hiện khi từ 2 ảnh trở lên.
+
+## Đồng bộ UI các trang — 2026-10-06
+
+Trước đây mỗi trang tự vẽ banner đầu trang một kiểu (About/Research tối, Schools/Resources/Admin sáng, News/Admissions riêng). Đợt này gom phần chung về một chỗ.
+
+### Thành phần dùng chung mới
+
+| File | Việc làm |
+|---|---|
+| `components/PageHero.tsx` | Banner đầu trang nền tối + lưới (cùng phong cách /about, /research): nút quay lại mục cha (tuỳ chọn), eyebrow, tiêu đề gradient, mô tả, dải số liệu dạng viên thuốc, cột phụ (`aside`) và vùng nút. |
+| `components/ScrollUI.tsx` | Thanh tiến độ cuộn ở mép trên + nút "lên đầu trang". Gắn một lần trong `app/layout.tsx` nên mọi trang đều có. |
+
+CSS của các phần trên nằm cuối `app/globals.css` (class `.ph-*`, `.scroll-progress`, `.to-top`, `.foot-*`).
+
+`Footer.tsx` giờ là footer nhiều cột (giới thiệu + mạng xã hội, Khám phá, Tài nguyên, Liên hệ — lấy từ `nav`/`contact` trong `lib/site-config.ts`). Banner có thêm quầng sáng trôi chậm và vạch nhấn dưới tiêu đề; trang con của /resources có nút "← Tài nguyên" (prop `parent`) thay cho breadcrumb, trang cấp 1 không có gì phía trên nhãn tiếng Anh để khỏi lặp với tiêu đề; nút `.btn` có hiệu ứng nhấc/nhấn; thêm màu chọn chữ và viền focus bàn phím. Đã bỏ dải "Trang trước / Trang sau".
+
+### Trang đã chuyển sang `PageHero`
+
+- `PageShell` (About, Campus, Events…) — About vẫn giữ chữ tiêu đề lớn riêng nhờ class `about-hero`.
+- `/schools` — bỏ banner sáng `hero-compact`, dùng `PageShell`.
+- `/resources`, `/resources/documents`, `/resources/inventory`, `/resources/courses`, `/resources/courses/[slug]` — nút quay lại mục cha, số liệu chuyển thành viên thuốc trong banner; Inventory giữ thẻ số lượng ở cột phụ, trang khóa học giữ ảnh bìa.
+- `/admin`.
+
+### Giữ nguyên banner riêng
+
+`/news`, `/admissions`, `/research` vẫn dùng hero riêng (có nội dung đặc thù: ticket, 3D chip, marquee). Chúng nhận thêm thanh tiến độ cuộn, nút lên đầu trang và footer mới qua Footer/layout.
+
+### Ghi chú
+
+- Các class CSS cũ (`.inventory-hero-layout`, `.inventory-hero-mark`, `.course-hero`, `.course-back`, `.resource-hero-stats`, `.resources-home-hero`) không còn được dùng; có thể xoá khi muốn dọn code.
+- Banner có hiệu ứng trượt lên khi vào trang; tự tắt khi người dùng bật "giảm chuyển động".
+- Đã chạy `tsc --noEmit` và `next build` thành công (16 route).
+
+### Header điện thoại — 2026-10-07
+
+- Ẩn dải trên cùng, logo/nút 36–40px, tên thương hiệu cắt tối đa 2 dòng để header gọn một hàng. (Ô tìm kiếm toàn trang đã thử rồi bỏ.)
+
+### Trang chủ & banner theo phong cách ti.com — 2026-10-07
+
+Tham khảo bố cục trang chủ ti.com (không dùng màu/logo của TI): ảnh tràn khung, góc vuông, đường kẻ mảnh, chữ đậm, mỗi khối có một liên kết "… →".
+
+| Khối | File | Ghi chú |
+|---|---|---|
+| Carousel đầu trang | `components/HomeCarousel.tsx` | Slide 1 là giới thiệu CTIT (ảnh `HERO_IMAGE` trong `app/page.tsx`), slide 2 = tin mới nhất, slide 3 = sự kiện đầu tiên lấy từ Google Sheet (không có dữ liệu thì bỏ slide). Tự chuyển 7 giây, dừng khi rê chuột / bấm nút tạm dừng; bật "giảm chuyển động" thì chỉ chuyển bằng nút. |
+| Lưới 8 ô khu vực | `components/HomeBento.tsx` | Ảnh trên, tiêu đề + mô tả, dòng "Khám phá … →". Ô không có ảnh dùng nền gradient + số thứ tự. Ảnh cấu hình trong `images` ở đầu file. |
+| Tin tức | `components/HomeNews.tsx` | 1 bài nổi bật + danh sách, mỗi dòng "ngày \| chuyên mục". |
+| Dải số liệu | `components/HomeStats.tsx` | Nền tối, nằm gần cuối trang (dữ liệu tab Overview). |
+| Dải kêu gọi | `app/page.tsx` | "Tham gia CTIT" → `/admissions`. |
+
+- CSS trang chủ: `app/home.css` (viết lại hoàn toàn; class `ti-*`). Banner các trang con (`PageHero`) giờ tràn khung, góc vuông; các liên kết "Xem tất cả" có mũi tên.
+- Header: menu desktop thu nhỏ để 8 mục không tràn khung, tên thương hiệu cắt tối đa 2 dòng; menu hamburger bật từ 1020px trở xuống (trước là 860px).
+- Sửa ảnh ô Nghiên cứu: trước trỏ tới `/images/Research/embedded.jpg` (không tồn tại), nay dùng `Embedded-system.png`.
+- Đã bỏ: dải số liệu ngay dưới hero, bento có ô to/ô rộng, các chip nổi trên hero, 2 nút ở hero (giờ mỗi slide một nút).
+
+### Bổ sung theo st.com — 2026-10-07 (thêm vào, giữ nguyên UI hiện tại)
+
+| Thêm mới | File | Ghi chú |
+|---|---|---|
+| Thanh "Truy cập nhanh" | `components/HomeQuickStart.tsx` | Dưới carousel; sửa danh sách link ở đầu file. |
+| Khối tab "Tài nguyên cho bạn" | `components/HomeTopics.tsx` + dựng dữ liệu trong `app/page.tsx` | Tab Tài liệu / Khóa học / Inventory, mỗi tab 3 mục đầu từ Sheet; tab chưa có dữ liệu thì ẩn; dùng được phím ←/→/Home/End. |
+| Banner "Sự kiện nổi bật" | `components/HomeEventBanner.tsx` | Chỉ hiện khi tab Events có dòng đánh dấu `featured`. |
+| Dải "Bắt đầu từ đâu" | `components/HomeStartHere.tsx` | 3 cột Học / Tra cứu / Làm, số đếm thật từ Sheet (khóa học, tài liệu, vật tư); cột có 0 mục thì ẩn. |
+| Liên kết tiện ích trên cùng | `components/Header.tsx` | Tuyển sinh, Tài liệu, Khóa học, Liên hệ ở dải trên header (ẩn trên điện thoại). |
+| Link "Bỏ qua tới nội dung" | `app/layout.tsx` | Hiện khi bấm Tab đầu tiên; mọi `<main>` có `id="main"`. |
+
+CSS nằm cuối `app/home.css` và `app/globals.css`. Chưa làm: ô đăng ký nhận bản tin của footer st.com (cần nơi lưu email).
+
+### Inventory kiểu bảng thông số, trang chi tiết vật tư, Đã lưu — 2026-10-08
+
+Tham khảo cách Infineon tổ chức thông tin (bảng thông số, trang sản phẩm, bookmark). Không cần thêm tab hay cột nào trong Sheet, mọi thứ dùng các cột Inventory / Resources / Courses đang có.
+
+| Tính năng | File | Ghi chú |
+|---|---|---|
+| Inventory dạng Thẻ / Bảng | `components/InventoryExplorer.tsx` | Nút chuyển Thẻ / Bảng; bấm tiêu đề cột để sắp xếp (tăng, giảm, về thứ tự Sheet); ô "Sắp xếp" cho dạng thẻ. |
+| Bộ lọc nằm trong link | `InventoryExplorer.tsx` | `?q=&cat=&st=&view=table&sort=quantity:desc`. Gửi link là người nhận thấy đúng kết quả đã lọc. |
+| So sánh 2–3 vật tư | `InventoryExplorer.tsx` | Ô "So sánh" ở mỗi thẻ/dòng, thanh nổi ở đáy màn hình, bảng so sánh Esc để đóng. |
+| Trang chi tiết vật tư | `app/resources/inventory/[slug]/page.tsx` | Đường dẫn lấy từ tên (`/resources/inventory/stm32f103c8t6-type-c`), trùng tên thì thêm `-2`. Hiện thông số, datasheet, nơi mua, người đang dùng, vật tư cùng danh mục. |
+| Tài liệu / khóa học liên quan | `lib/inventory.ts` (`relatedKeys`) | Tự nối theo mã linh kiện (từ có chữ số, từ 4 ký tự) trong model / tên vật tư với tiêu đề, mô tả, topic của Tài liệu và nội dung Khóa học. Muốn một tài liệu hiện ở vật tư nào thì ghi mã linh kiện đó vào tiêu đề, topic hoặc mô tả. |
+| ★ Đã lưu | `lib/saved.ts`, `components/SaveButton.tsx`, `SavedList.tsx`, `app/saved/page.tsx` | Lưu trong trình duyệt (localStorage), không cần đăng nhập. Có ở vật tư (thẻ, bảng, chi tiết), tài liệu, khóa học. Link "★ Đã lưu (n)" ở dải trên cùng và menu điện thoại. |
+| Đã học + tiến độ | `components/LessonDone.tsx` | Ô tròn ở mỗi bài có link của khóa học, thanh "Đã học x/y" theo từng nhánh. Cũng lưu trong trình duyệt. |
+
+- Dùng chung: `lib/inventory.ts` (slug, trạng thái, từ khóa liên quan), `lib/format.ts` thêm `fold`, `slugify`.
+- Xóa import `Link` thừa ở `components/HomeNews.tsx`.
+- Chưa dọn: `components/SearchDialog.tsx`, `lib/search.ts`, `app/api/search/` đang không được dùng ở đâu.

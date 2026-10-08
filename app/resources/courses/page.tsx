@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PageHero } from "@/components/PageHero";
 import { SafeImage } from "@/components/SafeImage";
 import { toneOf } from "@/lib/format";
 import { getCourses } from "@/lib/sheet-data";
@@ -19,20 +20,17 @@ export default async function CoursesPage() {
   return (
     <>
       <Header />
-      <main>
-        <section className="page-hero">
-          <div className="container">
-            <p className="eyebrow">Resources / Courses</p>
-            <h1>Khóa học</h1>
-            <p className="lead">Lộ trình học theo từng môn. Mỗi bài là một link dẫn thẳng tới video, slide hoặc tài liệu, xếp theo thứ tự nên học.</p>
-            {courses.length > 0 ? (
-              <div className="resource-hero-stats">
-                <span><strong>{courses.length}</strong> môn học</span>
-                <span><strong>{lessonTotal}</strong> bài</span>
-              </div>
-            ) : null}
-          </div>
-        </section>
+      <main id="main">
+        <PageHero
+          eyebrow="Resources / Courses"
+          title="Khóa học"
+          intro="Lộ trình học theo từng môn. Mỗi bài là một link dẫn thẳng tới video, slide hoặc tài liệu, xếp theo thứ tự nên học."
+          parent={{ label: "Tài nguyên", href: "/resources" }}
+          stats={[
+            { value: courses.length, label: "môn học" },
+            { value: lessonTotal, label: "bài" }
+          ]}
+        />
 
         <section className="section no-top">
           <div className="container">

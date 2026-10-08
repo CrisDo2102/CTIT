@@ -1,5 +1,6 @@
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PageHero } from "@/components/PageHero";
 import { ResourceExplorer } from "@/components/ResourceExplorer";
 import { getResources } from "@/lib/sheet-data";
 
@@ -11,23 +12,18 @@ export default async function DocumentsPage() {
   return (
     <>
       <Header />
-      <main>
-        <section className="page-hero">
-          <div className="container">
-            <p className="eyebrow">Resources / Documents</p>
-            <h1>Tài liệu</h1>
-            <p className="lead">
-              Sách, PDF, video, link học tập và tài liệu kỹ thuật.
-            </p>
-            {resources.length > 0 ? (
-              <div className="resource-hero-stats">
-                <span><strong>{resources.length}</strong> tài liệu</span>
-                {categoryCount > 0 ? <span><strong>{categoryCount}</strong> lĩnh vực</span> : null}
-                {featuredCount > 0 ? <span><strong>{featuredCount}</strong> nổi bật</span> : null}
-              </div>
-            ) : null}
-          </div>
-        </section>
+      <main id="main">
+        <PageHero
+          eyebrow="Resources / Documents"
+          title="Tài liệu"
+          intro="Sách, PDF, video, link học tập và tài liệu kỹ thuật."
+          parent={{ label: "Tài nguyên", href: "/resources" }}
+          stats={[
+            { value: resources.length, label: "tài liệu" },
+            { value: categoryCount, label: "lĩnh vực" },
+            { value: featuredCount, label: "nổi bật" }
+          ]}
+        />
 
         <section className="section no-top">
           <div className="container">

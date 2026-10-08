@@ -9,7 +9,7 @@ export default async function NewsPage() {
   return (
     <>
       <Header />
-      <main>
+      <main id="main">
         <NewsView items={items} />
       </main>
       <Footer />

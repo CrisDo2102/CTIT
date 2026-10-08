@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AdminGuide } from "@/components/AdminGuide";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PageHero } from "@/components/PageHero";
 import { guides } from "@/lib/admin-guide";
 
 export const metadata: Metadata = {
@@ -19,17 +20,12 @@ export default function AdminPage() {
   return (
     <>
       <Header />
-      <main>
-        <section className="page-hero">
-          <div className="container">
-            <p className="eyebrow">Content studio</p>
-            <h1>Admin</h1>
-            <p className="lead">
-              Nội dung web lấy từ Google Sheet, mỗi trang một tab. Không có form nhập tay: sửa trực tiếp tab tương ứng,
-              trang này chỉ để tra cách điền, đúng tên cột và lấy link CSV của từng tab.
-            </p>
-          </div>
-        </section>
+      <main id="main">
+        <PageHero
+          eyebrow="Content studio"
+          title="Admin"
+          intro="Nội dung web lấy từ Google Sheet, mỗi trang một tab. Không có form nhập tay: sửa trực tiếp tab tương ứng, trang này chỉ để tra cách điền, đúng tên cột và lấy link CSV của từng tab."
+        />
         <section className="section no-top">
           <AdminGuide csv={csv} />
         </section>

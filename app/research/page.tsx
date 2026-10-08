@@ -9,7 +9,7 @@ export default async function ResearchPage() {
   return (
     <>
       <Header />
-      <main>
+      <main id="main">
         <ResearchHero />
         <ResearchExplorer data={data} />
       </main>

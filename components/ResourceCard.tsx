@@ -1,4 +1,5 @@
 import { SafeImage } from "@/components/SafeImage";
+import { SaveButton } from "@/components/SaveButton";
 import type { Resource, ResourceType } from "@/data/resources";
 import { toneOf } from "@/lib/format";
 
@@ -63,6 +64,10 @@ export function ResourceCard({ resource, spotlight }: Props) {
   return (
     <article className={`card resource-card${spotlight ? " is-spotlight" : ""}`}>
       <div className="resource-cover">
+        <SaveButton
+          className="on-image"
+          item={{ id: `tai-lieu:${resource.url || resource.title}`, kind: "Tài liệu", title: resource.title, sub: [resource.type, resource.topic].filter(Boolean).join(" · "), href: resource.url }}
+        />
         <SafeImage
           src={resource.cover ?? ""}
           alt={resource.title}

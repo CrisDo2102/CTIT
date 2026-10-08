@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <>
       <StaticBar />
-      <main aria-busy="true" aria-live="polite">
+      <main id="main" aria-busy="true" aria-live="polite">
         <span className="sr-only">Đang tải…</span>
         <section className="state-page is-loading">
           <div className="container">

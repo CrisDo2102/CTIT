@@ -12,7 +12,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   return (
     <>
       <StaticBar />
-      <main>
+      <main id="main">
         <section className="state-page">
           <div className="container">
             <p className="state-code" aria-hidden="true">Lỗi</p>

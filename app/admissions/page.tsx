@@ -11,7 +11,7 @@ export default async function AdmissionsPage() {
   return (
     <>
       <Header />
-      <main>
+      <main id="main">
         <AdmissionsView data={data} />
       </main>
       <Footer />
