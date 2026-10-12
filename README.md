@@ -889,10 +889,10 @@ Không đổi giao diện hay cách hoạt động, chỉ làm gọn code. `tsc 
 
 ### Bảo mật trang /admin (2026-10-06)
 
-- **/admin có mật khẩu.** File `proxy.ts` khoá `/admin` bằng HTTP Basic Auth: trình duyệt hiện hộp nhập, tên đăng nhập nhập gì cũng được, mật khẩu là biến `ADMIN_PASSWORD`. Chạy thật mà chưa đặt biến này thì `/admin` trả 503 (tắt hẳn, không bao giờ mở); chạy `npm run dev` mà chưa đặt thì vẫn vào được để tiện sửa. Trên Vercel: Settings → Environment Variables → thêm `ADMIN_PASSWORD` (16 ký tự trở lên) → Redeploy.
+- **/admin có mật khẩu.** File `proxy.ts` khoá `/admin` bằng HTTP Basic Auth: trình duyệt hiện hộp nhập, tên đăng nhập nhập gì cũng được, mật khẩu là biến `ADMIN_PASSWORD`. Chạy thật mà chưa đặt biến này thì `/admin` trả 503 (tắt hẳn, không bao giờ mở); chạy `npm run dev` mà chưa đặt thì vẫn vào được để tiện sửa. Trên Vercel: Settings → Environment Variables → thêm `ADMIN_PASSWORD` (tối thiểu 12 ký tự, nên 16 trở lên) → Redeploy.
 - **Bỏ nút "Mở Google Sheet"** khỏi trang `/admin` và bỏ biến `SHEET_EDIT_URL`. Link sửa sheet không nên nằm trên web. Muốn mở sheet thì dùng bookmark riêng; nên để sheet ở chế độ chỉ người được mời mới sửa được.
 - **`SUPABASE_*`, `ADMIN_SECRET`** không còn được code nào dùng: xoá khỏi `.env.local` và khỏi Vercel, đồng thời đổi (rotate) key trên Supabase nếu key đó từng là key thật.
-- **Header bảo mật** trong `next.config.ts`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; riêng `/admin` thêm `no-store` và `noindex`. Chưa đặt CSP vì ảnh lấy cả từ Google Drive.
+- **Header bảo mật** trong `next.config.ts`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; riêng `/admin` thêm `no-store` và `noindex`. CSP đã được thêm ở đợt 2026-10-09 (xem mục "Bảo mật và sửa lỗi trùng lặp" ở cuối file).
 - `sitemap.ts` và `robots.ts` không còn liệt kê `/admin`, sitemap có đủ các trang công khai.
 
 ### Menu điện thoại và trang trạng thái (2026-10-06)
@@ -1015,3 +1015,139 @@ Tham khảo cách Infineon tổ chức thông tin (bảng thông số, trang s�
 - Dùng chung: `lib/inventory.ts` (slug, trạng thái, từ khóa liên quan), `lib/format.ts` thêm `fold`, `slugify`.
 - Xóa import `Link` thừa ở `components/HomeNews.tsx`.
 - Chưa dọn: `components/SearchDialog.tsx`, `lib/search.ts`, `app/api/search/` đang không được dùng ở đâu.
+
+## Bảo mật và sửa lỗi trùng lặp — 2026-10-09
+
+Đợt này không làm thêm giao diện mới, chỉ siết bảo mật, sửa lỗi trùng lặp và hai lỗi UI. `tsc --noEmit` và `next build` chạy sạch; đã chạy thử bản production để kiểm tra /admin và header.
+
+### Việc cần làm trên máy chủ / tài khoản (code không tự làm được)
+
+- **Đổi (rotate) `SUPABASE_SERVICE_ROLE_KEY` trên Supabase** nếu key đó là key thật, rồi xoá `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_SECRET` khỏi `.env.local` và khỏi Vercel. Code không còn dùng các biến này. Không gửi file `.env.local` (hoặc zip có chứa nó) cho ai.
+- `ADMIN_PASSWORD` trên Vercel phải dài ít nhất 12 ký tự, nếu không `/admin` tự tắt (503).
+- Nên bật **Vercel Firewall → Rate Limiting** cho đường dẫn `/admin`. Bộ chống dò mật khẩu trong code nằm trong bộ nhớ từng instance nên trên serverless chỉ chặn được phần nào.
+
+### Sửa giao diện
+
+- **Ảnh "Các hướng hoạt động" (`/admissions`)**: bấm vào ảnh là phóng to như Nghiên cứu và Tin tức. Dùng `PeekImage` trong `TrackCard` (`app/admissions/AdmissionsView.tsx`), CSS `.adm-peek*` trong `app/admissions/admissions.css`. Ảnh hiện đủ (contain) + nền mờ thay vì bị cắt. Bấm phần chữ của thẻ vẫn mở link như cũ.
+- **Thẻ Inventory**: nhãn trạng thái ("Có người sử dụng"...) chuyển sang góc trái ảnh, nút ★ ở góc phải, hết đè nhau (`.inventory-image .inventory-status` trong `app/globals.css`). Nhãn dài bị cắt bằng dấu "…". Trang chi tiết vật tư: nhãn trạng thái dùng `position: static` trong `.item-status-row` để nằm đúng hàng.
+
+### Bảo mật
+
+| Hạng mục | File | Nội dung |
+| --- | --- | --- |
+| Header + CSP | `next.config.ts` | Thêm `Content-Security-Policy` (default/connect `'self'`, ảnh `https:`, `object-src 'none'`, `base-uri`, `form-action`, `frame-ancestors`, `frame-src` chỉ Spline), `Strict-Transport-Security` (chỉ khi chạy thật), `Cross-Origin-Opener-Policy`, `X-DNS-Prefetch-Control`, mở rộng `Permissions-Policy`. Script vẫn cần `'unsafe-inline'` vì Next.js chèn script nội tuyến; muốn bỏ phải dùng nonce (mọi trang thành render động, mất cache). Dev có thêm `'unsafe-eval'`. |
+| Admin | `proxy.ts` | Sai 5 lần liên tiếp từ một IP thì khoá 15 phút (HTTP 429, có `Retry-After`). So mật khẩu qua SHA-256, không dừng sớm. Chạy thật mà `ADMIN_PASSWORD` thiếu hoặc dưới 12 ký tự thì `/admin` trả 503. Lần mở trang đầu (chưa gửi mật khẩu) không tính là sai. |
+| Lọc link | `lib/safe-url.ts` (mới) | `safeHttpUrl` chỉ nhận `http(s)`, chặn `javascript:`, `data:`, link có `user@`, ký tự điều khiển, link quá dài. `safeHref` cho phép thêm đường dẫn nội bộ `/...` nhưng chặn `//evil.com`. |
+| Link từ Sheet | `lib/sheet-data.ts` | Mọi cột url (Resources, datasheet, nơi mua, News, Events, Campus, Research, Admissions) đi qua `safeHttpUrl`. Dòng Resources có url không hợp lệ bị bỏ qua (dev có log). |
+| Ảnh | `lib/photo-url.ts` | `resolvePhotoUrl` chặn scheme lạ, `//host`, `\`, `..`; tên file được mã hoá từng đoạn nên ký tự `#` `?` `%` trong tên không làm hỏng đường dẫn. |
+| Tải Sheet | `lib/sheet-data.ts` (`fetchSheetRows`) | Chỉ nhận `https://` thuộc `docs.google.com`, `*.google.com`, `*.googleusercontent.com`; timeout 10 giây; giới hạn 5MB. Link khác bị từ chối kèm cảnh báo trong log. **Nếu dùng link CSV không phải Google thì phải sửa `SHEET_HOST` ở đầu hàm.** |
+| Đã lưu ★ | `lib/saved.ts` | Dữ liệu `localStorage` được kiểm tra từng mục: bỏ mục hỏng, bỏ mục trùng `id`, cắt độ dài, tối đa 200 mục, `href` đi qua `safeHref`. |
+| Spline | `app/research/ResearchExplorer.tsx` | `NEXT_PUBLIC_SPLINE_URL` chỉ được dùng khi là `https://*.spline.design/...`; iframe có `sandbox` và `referrerPolicy="no-referrer"`. |
+
+### Sửa lỗi trùng lặp
+
+- **Key React trùng**: `components/SearchDialog.tsx` (nhiều kết quả cùng link, ví dụ mọi Học viên đều trỏ `/schools`), `components/StudentsShowcase.tsx` (hai học viên cùng tên cùng trường), `app/news/NewsView.tsx` (cùng title + order). Đều thêm chỉ số vào key.
+- **Mục trùng trong danh sách**: `app/api/search/route.ts` bỏ mục trùng (loại + link + tên); `app/sitemap.ts` bỏ URL trùng bằng `Set`.
+- **Dòng trùng trong Google Sheet** (`lib/sheet-data.ts`, hàm `dropDuplicates` / `dedupeBy` ở `lib/safe-url.ts`, giữ dòng đầu tiên, dev có log số dòng bỏ):
+  - Resources: cùng title + url.
+  - Students: cùng trường + tên + ngành + khoa.
+  - News: cùng section + title + date + url.
+  - Events: cùng title + date + place + url.
+  - Campus: cùng title + date + ảnh.
+  - Inventory: **chỉ** gom dòng giống hệt ở mọi cột. Cùng tên nhưng khác số lượng, vị trí hoặc người dùng vẫn được giữ (là hai món khác nhau). Slug của hai món cùng tên vẫn là `ten`, `ten-2`.
+
+### Kiểm tra sau khi deploy
+
+1. Mở `/admin` không mật khẩu → hộp đăng nhập (401). Nhập sai 5 lần → 429.
+2. Mở DevTools → Network, xem header của trang chủ có `Content-Security-Policy`. Nếu Console báo vi phạm CSP (ví dụ ảnh/iframe từ nguồn mới), thêm nguồn đó vào `csp` trong `next.config.ts`.
+3. `/admissions`: bấm ảnh một hướng hoạt động → phóng to; bấm ra ngoài hoặc Esc để đóng.
+4. `/resources/inventory`: thẻ có nhãn trạng thái ở góc trái, ★ ở góc phải.
+
+### Chưa làm / lưu ý
+
+- Chưa dùng nonce cho CSP (xem trên).
+- Chống dò mật khẩu `/admin` chỉ là best-effort; cần Vercel Firewall để chặn tuyệt đối.
+- Chưa có kiểm thử tự động; các thay đổi trên được kiểm bằng `tsc`, `next build` và chạy thử bản production.
+
+## Giao diện bổ sung theo st.com — 2026-10-09
+
+Tham khảo trang chủ st.com (không dùng logo/màu của ST). Không cần thêm tab hay cột trong Sheet. CSS mới nằm trong `app/extras.css` (nhập ở `app/layout.tsx`, sau `globals.css`). `tsc` và `next build` chạy sạch; chưa kiểm bằng mắt trên trình duyệt, nên sau khi chạy `npm run dev` hãy xem lại các điểm ở cuối mục này.
+
+| Tính năng | File | Ghi chú |
+|---|---|---|
+| Ô tìm kiếm toàn trang (đã có code nhưng trước đây chưa gắn vào đâu và chưa có CSS) | `components/SearchDialog.tsx`, `components/SearchTrigger.tsx`, `components/Header.tsx` | Nút "Tìm kiếm" ở dải trên header (desktop) và nút kính lúp cạnh menu (từ 1020px trở xuống). Mở bằng nút, `Ctrl/⌘+K` hoặc phím `/`. Dữ liệu từ `/api/search`. |
+| Chip lọc theo loại + số kết quả | `SearchDialog.tsx` | Tất cả / Trang / Tài liệu / Inventory / Khóa học / Tin tức / Sự kiện / Học viên, chỉ hiện loại có kết quả. |
+| Lịch sử tìm kiếm, gợi ý, mục đã lưu | `SearchDialog.tsx`, `lib/search-history.ts` | Khi chưa gõ: "Tìm gần đây" (tối đa 8, lưu `localStorage`, xoá từng mục hoặc tất cả), "Gợi ý", và 4 mục ★ đã lưu gần nhất. |
+| Bộ lọc Inventory kiểu product selector | `components/InventoryExplorer.tsx` | Thanh bên với nhóm Danh mục / Hãng / Trạng thái (tick nhiều ô; cùng nhóm = HOẶC, khác nhóm = VÀ), số kết quả cạnh mỗi ô, "Xem thêm", công tắc "Chỉ hiện món còn hàng", dải chip bộ lọc đang áp dụng, nút "Xóa tất cả". Trên điện thoại bộ lọc là ngăn kéo từ đáy. Link giữ bộ lọc: `?cat=A&cat=B&mk=Hãng&st=Trạng thái&stock=1`. Link cũ `?cat=...&st=...` vẫn chạy. |
+| Thanh điều hướng trong trang | `components/PageSubNav.tsx` | Dính dưới header, làm sáng mục đang đọc khi cuộn. Đang dùng ở trang chi tiết vật tư (Tổng quan / Thông số / Tài liệu liên quan / Cùng danh mục); dùng lại ở trang khác bằng `<PageSubNav items={[{ id, label }]} />` rồi đặt `id` cho từng phần. |
+| Nút "Sao chép link" | `components/CopyLink.tsx` | Ở trang chi tiết vật tư, cạnh Datasheet / Nơi mua / ★. |
+| Sự kiện sắp tới dạng thẻ ngày | `components/HomeUpcomingEvents.tsx`, `app/page.tsx` | Trang chủ: khối ngày lớn + loại + nơi + giờ + tiêu đề. Chỉ hiện sự kiện từ hôm nay trở đi (giờ Việt Nam), ngày dạng `2026-10-13` hoặc `13/10/2026`. Không có sự kiện nào hợp lệ thì tự quay về danh sách cũ (`FeedList`). |
+| Footer | `components/Footer.tsx` | Dải "Muốn cùng làm với CTIT?" (Tham gia CTIT, Lịch sự kiện), thêm cột Hỗ trợ, hàng liên kết cuối trang. Chưa làm ô nhận bản tin của st.com vì cần nơi lưu email. |
+
+Cần xem lại bằng mắt: (1) nút tìm kiếm trên dải trên header có đủ chỗ không; (2) nút kính lúp cạnh menu ở 860–1020px; (3) thanh `PageSubNav` có dính đúng dưới header không; (4) màu chữ nút trong dải kêu gọi của footer (nền tối); (5) ngăn kéo bộ lọc Inventory trên điện thoại.
+
+### Ô "Khám phá CTIT" có ảnh tự đổi — 2026-10-09
+
+Trang chủ, khối "Khám phá CTIT" (8 ô): mỗi ô hiện ảnh của chính mục đó và tự đổi ảnh mỗi vài giây.
+
+| Ô | Ảnh lấy từ |
+|---|---|
+| 01 Giới thiệu | Logo (`logo` trong tab About; trống thì dùng `/images/About/logo.png`), hiện đủ trên nền sáng |
+| 02 Tuyển sinh | Mọi ảnh của các "hướng hoạt động" trong tab Admissions |
+| 03 Trường & Khoa | Tạm chưa có ảnh (không dùng ảnh học viên), ô hiện số thứ tự. Khi có ảnh khác, điền đường dẫn vào `"/schools": pics([...])` trong `app/page.tsx` |
+| 04 Nghiên cứu | Mọi ảnh trong tab Research (hướng, dự án, thành tích, ấn phẩm) |
+| 05 Tin tức / 06 Sự kiện / 08 Khuôn viên | Mọi ảnh trong tab News / Events / Campus |
+| 07 Tài nguyên | Ảnh bìa Tài liệu + ảnh Khóa học + ảnh Inventory |
+
+- Code: `components/HomeBento.tsx` (client, nhận `images` từ `app/page.tsx`), CSS ở cuối `app/extras.css`.
+- Cách chạy: đổi ảnh mỗi 3,8–5,2 giây, các ô so le nhau (không đổi cùng lúc), chuyển bằng hiệu ứng mờ dần, có chấm báo vị trí (tối đa 8 chấm) và số thứ tự ở góc. Ảnh kế tiếp được tải trước. Mỗi ô lấy tối đa 24 ảnh, bỏ ảnh trống và trùng.
+- Dừng đổi khi bật "giảm chuyển động" của hệ điều hành hoặc khi tab đang ẩn. Ảnh lỗi (sai tên, chưa bỏ file vào folder) tự bị loại khỏi vòng xoay. Mục nào không có ảnh nào thì hiện số thứ tự như cũ.
+- Muốn đổi tốc độ: sửa `3800` và `2200` trong `TileMedia`. Muốn mục nào hiện đủ ảnh thay vì cắt: thêm vào `CONTAIN`.
+- Đã kiểm: `tsc`, `next build`, và HTML trang chủ (ô Giới thiệu ra logo). Chưa kiểm với dữ liệu Sheet thật và bằng mắt trên trình duyệt.
+
+### Trang Đã lưu, tiến độ Khóa học, bộ lọc Tài liệu — 2026-10-09
+
+Không cần thêm cột hay tab trong Sheet. CSS mới ở cuối `app/extras.css`. Đã kiểm `tsc`, `next build` và các trang trả về 200; chưa thử bằng mắt với dữ liệu thật.
+
+**Trang `/saved`** (`components/SavedList.tsx`, `lib/saved.ts`)
+- Ô tìm trong danh sách đã lưu, chip lọc theo nhóm (Vật tư / Tài liệu / Khóa học) có số lượng, sắp xếp (mới lưu trước, cũ nhất, A → Z).
+- Mỗi mục hiện "Lưu hôm nay / 3 ngày trước...".
+- "Chọn nhiều" để bỏ lưu hàng loạt; "Sao chép danh sách" và "Tải về (.md)" (link nội bộ được đổi thành link đầy đủ để gửi cho người khác).
+- Bỏ lưu / Xóa tất cả không còn hộp xác nhận mà có thanh **Hoàn tác** 8 giây. Hoàn tác trả mục về đúng thời điểm lưu cũ.
+- `useSaved` thêm `removeMany` và `restore`; `useDone` thêm `setMany`.
+
+**Khóa học** (`components/CourseProgressUI.tsx`)
+- Trang danh sách: dải "Tiến độ của bạn" (tổng bài đã học, số khóa đã xong) kèm nút **Học tiếp** tới khóa đang học dở; mỗi thẻ khóa có thanh tiến độ nhỏ, đủ bài thì hiện "✓ Hoàn thành". Chưa học bài nào thì các phần này không hiện.
+- Trang một khóa: nút chính đổi theo tiến độ (Bắt đầu học → **Học tiếp: <tên bài chưa xong>** → Học lại từ đầu); thêm "Đánh dấu cả nhánh đã học", "Đặt lại tiến độ" và lời chúc khi xong nhánh.
+- Tiến độ vẫn lưu trong trình duyệt (`ctit-done`), id bài vẫn là `<khóa>:<nhánh>:<số bài>`, nên dữ liệu cũ dùng tiếp được.
+
+**Tài liệu** (`components/ResourceExplorer.tsx`, `components/FacetGroup.tsx`)
+- Bộ lọc thanh bên kiểu product selector như Inventory: Lĩnh vực / Loại / Cấp độ / Nguồn (nhóm nào chỉ có một giá trị thì tự ẩn), tick nhiều ô, số kết quả cạnh mỗi ô, chip bộ lọc đang áp dụng, ngăn kéo trên điện thoại.
+- Thêm công tắc "Chỉ hiện mục đã lưu ★" và sắp xếp (mặc định / A → Z / Z → A). Lĩnh vực vẫn giữ đúng thứ tự trong Sheet.
+- Link giữ bộ lọc: `?q=&cat=&type=&lv=&src=&saved=1&sort=az`.
+- `FacetGroup` được tách ra dùng chung cho Inventory và Tài liệu.
+
+### Gọn lại và giảm độ phức tạp thuật toán — 2026-10-11
+
+Không đổi giao diện hay hành vi; đã đối chiếu kết quả cũ và mới. Số đo chạy bằng Node trên dữ liệu ngẫu nhiên (máy tạm, chỉ để so sánh tương đối).
+
+| Chỗ | Trước | Sau | Kết quả |
+|---|---|---|---|
+| Bộ lọc facet của Inventory và Tài liệu (`lib/facets.ts`, mới) | Mỗi nhóm lọc lại toàn bộ dữ liệu để đếm: O(N·F²); hai explorer chép lại cùng một đoạn logic | Một lượt duyệt O(N·F): mỗi món đếm số nhóm nó "trượt", trượt 0 thì vào kết quả và mọi số đếm, trượt đúng 1 nhóm thì chỉ tính cho nhóm đó. Đổi cách sắp xếp không phải lọc lại. Đọc/ghi link và tick/bỏ tick cũng dùng chung | Đối chiếu 300 bộ dữ liệu ngẫu nhiên: 0 chỗ lệch. Nhanh khoảng 2 lần (N=20.000: 4,3 ms → 1,9 ms). Hai file explorer ngắn đi, thêm bộ lọc mới chỉ cần khai báo getter |
+| Nút ★ và ô "đã học" (`lib/saved.ts`) | Mỗi nút tự đọc và kiểm tra lại cả danh sách `localStorage`: n nút × m mục mỗi lần đổi; `has` là hàm mới mỗi lần render nên các `useMemo` dùng nó bị tính lại | Nhớ kết quả phân tích của chuỗi gần nhất, cả trang chỉ phân tích một lần mỗi khi dữ liệu đổi; `has` ổn định (`useCallback`); bỏ lưu / hoàn tác / đánh dấu dùng chung một đường | O(n·m) → O(m) mỗi lần đổi |
+| Tìm kiếm (`lib/search.ts`) | Mỗi phím gõ bỏ dấu lại tất cả mục (NFD + regex), `indexOf` trong hàm sắp xếp | Bỏ dấu một lần cho mỗi mục (`WeakMap`), thứ hạng loại tra bằng `Map` | 5.000 mục: 10,6 ms → 1,8 ms mỗi lần gõ, kết quả giống hệt. Với dữ liệu thật vài trăm mục thì cả hai đều chưa đáng kể |
+| `components/SavedList.tsx` | Nhóm theo loại bằng lọc lại cho từng loại | Gom một lượt bằng `Map` | O(N·K) → O(N) |
+| `lib/sheet-data.ts` (`checkLocalImages`, chỉ chạy khi dev) | Tìm file bằng quét mảng cho từng ảnh | Tra bằng `Set` và `Map` | O(ảnh × file) → O(ảnh + file) |
+
+Muốn thêm một nhóm lọc mới cho Inventory hoặc Tài liệu: thêm khoá vào `FACET_KEYS`, một dòng vào `GET`, `TITLE`, `PARAM` ở đầu file explorer, rồi thêm giá trị vào `options`.
+
+### Sự kiện: Thêm vào lịch và Lịch tháng — 2026-10-12
+
+Không cần thêm cột trong Sheet. Dùng các cột sẵn có của tab Events: `date` (YYYY-MM-DD), `time`, `place`, `summary`, `url`.
+
+- **Thêm vào lịch** (`components/AddToCalendar.tsx`, `lib/calendar.ts`): ở sự kiện nổi bật, từng dòng "Lịch sắp tới" và trong Lịch tháng (chỉ sự kiện từ hôm nay trở đi). Hai cách: link **Google Calendar** (mở tab mới) và tải file **.ics** (Apple, Outlook...).
+  - Giờ lấy từ cột `time` bằng chữ tự do: `18:00 - 20:00`, `18h30–20h`, `9 giờ`. Chỉ ghi một giờ thì mặc định kéo dài 2 tiếng; ghi qua nửa đêm (`22:00 - 01:00`) thì kết thúc sang hôm sau; không có giờ (hoặc chữ như "Cả ngày") thì thành sự kiện cả ngày.
+  - Giờ được hiểu là giờ Việt Nam (UTC+7) và đổi sang UTC để lịch của người xem ở múi giờ nào cũng hiện đúng. Sự kiện chưa có ngày dạng `YYYY-MM-DD` thì không hiện nút.
+  - File .ics đã escape ký tự đặc biệt, xuống dòng đúng chuẩn (CRLF, cắt dòng theo byte để không vỡ chữ có dấu).
+- **Lịch tháng** (`components/EventsMonth.tsx`): nút chuyển **Danh sách | Lịch tháng** ở đầu trang `/events` (chỉ hiện khi có ít nhất một sự kiện có ngày hợp lệ). Lưới bắt đầu từ Thứ hai, có nút tháng trước / sau / Hôm nay, ô có sự kiện hiện tên (trên điện thoại chỉ hiện chấm). Bấm một ngày để xem chi tiết, chưa chọn ngày thì liệt kê mọi sự kiện của tháng. Mở ở tháng hiện tại; nếu tháng đó không có sự kiện thì nhảy tới sự kiện sắp tới gần nhất. Vẫn tuân theo bộ lọc nhãn ở trên. Sự kiện chưa có ngày chỉ nằm ở chế độ Danh sách.
+- Đã kiểm: `lib/calendar.ts` bằng 22 phép thử (giờ, múi giờ, qua nửa đêm, cả ngày, gấp dòng, lưới tháng nhuận); HTML của hai component bằng 15 phép thử với dữ liệu mẫu; `tsc`, `next build`. Chưa xem bằng mắt trên trình duyệt và chưa thử nhập file .ics vào ứng dụng lịch thật.

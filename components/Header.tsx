@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
+import { SearchDialog } from "@/components/SearchDialog";
+import { SearchTrigger } from "@/components/SearchTrigger";
 import { SavedLink } from "@/components/SaveButton";
 import { contact, nav } from "@/lib/site-config";
 import { getAboutInfo } from "@/lib/sheet-data";
@@ -27,6 +29,7 @@ export async function Header() {
             <Link href="/admissions">Tuyển sinh</Link>
             <Link href="/resources/documents">Tài liệu</Link>
             <Link href="/resources/courses">Khóa học</Link>
+            <SearchTrigger />
             <SavedLink />
             <a href={`mailto:${contact.email}`}>Liên hệ</a>
           </nav>
@@ -43,9 +46,11 @@ export async function Header() {
             <span>Closed Thinking Institute of Technology</span>
           </Link>
           <MainNav items={navItems} />
+          <SearchTrigger variant="icon" className="search-trigger-mobile" />
           <MobileNav items={[...navItems, { href: "/saved", label: "★ Đã lưu" }]} resourceLinks={resourceLinks} />
         </div>
       </header>
+      <SearchDialog />
     </>
   );
 }

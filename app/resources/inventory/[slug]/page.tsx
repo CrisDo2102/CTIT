@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { CopyLink } from "@/components/CopyLink";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { InventoryIcon } from "@/components/icons";
 import { PageHero } from "@/components/PageHero";
+import { PageSubNav } from "@/components/PageSubNav";
 import { SafeImage } from "@/components/SafeImage";
 import { SaveButton } from "@/components/SaveButton";
 import { toneOf } from "@/lib/format";
@@ -74,15 +76,24 @@ export default async function InventoryItemPage({ params }: Props) {
           }
         />
 
+        <PageSubNav
+          items={[
+            { id: "overview", label: "Tổng quan" },
+            { id: "specs", label: "Thông số" },
+            { id: "related", label: "Tài liệu liên quan" },
+            ...(sameCategory.length > 0 ? [{ id: "more", label: "Cùng danh mục" }] : [])
+          ]}
+        />
+
         <section className="section no-top">
           <div className="container item-layout">
             <div className="item-main">
-              <div className="item-status-row">
+              <div className="item-status-row" id="overview">
                 <span className={statusClass(item.status)}>{statusLabel(item.status)}</span>
                 {item.currentUser ? <span className="item-user">Đang sử dụng: <strong>{item.currentUser}</strong></span> : null}
               </div>
 
-              <dl className="item-specs">
+              <dl className="item-specs" id="specs">
                 {specs.filter(([, value]) => value).map(([label, value]) => (
                   <div key={label}>
                     <dt>{label}</dt>
@@ -94,6 +105,7 @@ export default async function InventoryItemPage({ params }: Props) {
               <div className="item-actions">
                 {item.datasheet ? <a className="btn" href={item.datasheet} target="_blank" rel="noopener noreferrer">Datasheet<span className="sr-only"> (mở tab mới)</span></a> : null}
                 {item.purchaseUrl ? <a className="btn secondary" href={item.purchaseUrl} target="_blank" rel="noopener noreferrer">Nơi mua<span className="sr-only"> (mở tab mới)</span></a> : null}
+                <CopyLink />
                 <SaveButton
                   variant="pill"
                   item={{ id: `vat-tu:${item.slug}`, kind: "Vật tư", title: item.title, sub: [item.category, item.model].filter(Boolean).join(" · "), href: `/resources/inventory/${item.slug}` }}
@@ -101,7 +113,7 @@ export default async function InventoryItemPage({ params }: Props) {
               </div>
             </div>
 
-            <aside className="item-side">
+            <aside className="item-side" id="related">
               <h2>Tài liệu và khóa học liên quan</h2>
               {relatedDocs.length === 0 && relatedCourses.length === 0 ? (
                 <p className="item-empty">Chưa có tài liệu nào nhắc tới {item.model || item.title}. Ghi mã linh kiện vào tiêu đề, topic hoặc mô tả của tài liệu trong Sheet thì sẽ tự hiện ở đây.</p>
@@ -123,7 +135,7 @@ export default async function InventoryItemPage({ params }: Props) {
           </div>
 
           {sameCategory.length > 0 ? (
-            <div className="container item-more">
+            <div className="container item-more" id="more">
               <h2>Cùng danh mục “{item.category}”</h2>
               <ul>
                 {sameCategory.map((entry) => (

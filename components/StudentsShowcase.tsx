@@ -254,10 +254,10 @@ export function StudentsShowcase({ students }: Props) {
                 </div>
 
                 <div className="student-grid">
-                  {group.students.map((student) => (
+                  {group.students.map((student, studentIndex) => (
                     <article
                       className="student-card"
-                      key={`${group.school}-${student.name}`}
+                      key={`${group.school}-${student.name}-${studentIndex}`}
                     >
                       <div className="student-card-top">
                         <div className="student-photo">

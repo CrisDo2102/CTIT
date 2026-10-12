@@ -8,7 +8,7 @@ const extraPages = ["/resources/documents", "/resources/inventory", "/resources/
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const courses = await getCourses();
-  const pages = [...nav.map((item) => item.href), ...extraPages, ...courses.map((course) => `/resources/courses/${course.slug}`)];
+  const pages = [...new Set([...nav.map((item) => item.href), ...extraPages, ...courses.map((course) => `/resources/courses/${course.slug}`)])];
   return [
     { url: siteUrl, lastModified: now, changeFrequency: "weekly", priority: 1 },
     ...pages.map((href) => ({

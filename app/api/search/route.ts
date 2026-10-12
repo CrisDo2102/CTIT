@@ -46,5 +46,14 @@ export async function GET() {
     entries.push({ kind: "Học viên", title: s.name, sub: clip([s.school, s.major || s.faculty].filter(Boolean).join(" · ")), href: "/schools" });
   }
 
-  return NextResponse.json(entries.filter((e) => e.title));
+  // Bỏ mục trùng (cùng loại + cùng link + cùng tên) để ô tìm kiếm không hiện hai dòng giống nhau.
+  const seen = new Set<string>();
+  const unique = entries.filter((e) => {
+    if (!e.title) return false;
+    const key = `${e.kind}|${e.href}|${e.title}`.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return NextResponse.json(unique);
 }

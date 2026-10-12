@@ -7,6 +7,8 @@
 //     ?id=ID) -> tu dong doi sang dang xem anh truc tiep
 //   - Link URL day du khac, vd: "https://i.imgur.com/xxxx.jpg" -> dung thang
 
+import { safeHttpUrl } from "@/lib/safe-url";
+
 export type PhotoFolder = "students" | "about" | "resources" | "resourceInventory" | "campus" | "news" | "events" | "admissions" | "research" | "courses";
 
 // Ten folder THAT trong public/images/, viet dung hoa/thuong nhu tren may
@@ -49,13 +51,21 @@ export function resolvePhotoUrl(photo: string, folder: PhotoFolder): string {
     return driveDirectUrl;
   }
 
-  const isAbsoluteUrl = /^https?:\/\//i.test(trimmed);
-  const isAbsolutePath = trimmed.startsWith("/");
-  if (isAbsoluteUrl || isAbsolutePath) {
-    return trimmed;
+  // Link day du: chi nhan http(s) (chan javascript:, data:, ...).
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+    return /^https?:\/\//i.test(trimmed) ? safeHttpUrl(trimmed) : "";
   }
 
-  return `/images/${IMAGE_FOLDER_NAMES[folder]}/${trimmed}`;
+  // Duong dan bat dau bang "/" chi duoc la duong dan noi bo: chan "//evil.com", "\\", "..".
+  if (trimmed.startsWith("/")) {
+    return /^\/(?![/\\])/.test(trimmed) && !trimmed.split("/").includes("..") ? trimmed : "";
+  }
+
+  // Ten file trong public/images/<folder>: khong cho thoat khoi folder.
+  if (trimmed.includes("\\") || trimmed.split("/").includes("..")) {
+    return "";
+  }
+  return `/images/${IMAGE_FOLDER_NAMES[folder]}/${trimmed.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 // Nhan dien link Google Drive (bat ky dang nao co chua file id) va tra ve

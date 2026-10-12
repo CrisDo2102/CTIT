@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
+import { CourseCardProgress, LearningSummary } from "@/components/CourseProgressUI";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
 import { SafeImage } from "@/components/SafeImage";
@@ -16,6 +17,9 @@ export const metadata: Metadata = {
 export default async function CoursesPage() {
   const courses = await getCourses();
   const lessonTotal = courses.reduce((sum, course) => sum + course.lessonCount, 0);
+  // id các bài đã có link của từng khóa (khớp với ô "đã học" ở trang khóa học).
+  const lessonIds = (course: (typeof courses)[number]) =>
+    course.tracks.flatMap((track) => track.lessons.flatMap((lesson, index) => (lesson.url ? [`${course.slug}:${track.slug}:${index}`] : [])));
 
   return (
     <>
@@ -34,6 +38,7 @@ export default async function CoursesPage() {
 
         <section className="section no-top">
           <div className="container">
+            <LearningSummary courses={courses.map((course) => ({ slug: course.slug, title: course.title, ids: lessonIds(course) }))} />
             {courses.length === 0 ? (
               <p className="course-empty">Các khóa học đang được cập nhật. Quay lại sau nhé.</p>
             ) : (
@@ -65,6 +70,7 @@ export default async function CoursesPage() {
                           </span>
                         )}
                       </div>
+                      <CourseCardProgress ids={lessonIds(course)} />
                     </div>
                   </Link>
                 ))}

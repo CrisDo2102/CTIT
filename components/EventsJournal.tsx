@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AddToCalendar } from "@/components/AddToCalendar";
+import { EventsMonth } from "@/components/EventsMonth";
 import { SafeImage } from "@/components/SafeImage";
 import type { EventItem } from "@/lib/dashboard-types";
 import { formatDate } from "@/lib/format";
@@ -75,6 +77,7 @@ function PinIcon() {
 export function EventsJournal({ items, today: serverToday }: Props) {
   const [today, setToday] = useState(serverToday);
   const [tag, setTag] = useState(""); // "" = Tất cả
+  const [view, setView] = useState<"list" | "month">("list");
   const [visible, setVisible] = useState(PAGE_SIZE); // số sự kiện đã diễn ra đang hiện
   const [open, setOpen] = useState<number | null>(null); // index trong mảng `past`
   const openerRef = useRef<HTMLElement | null>(null);
@@ -173,14 +176,16 @@ export function EventsJournal({ items, today: serverToday }: Props) {
     );
   }
 
+  const hasDates = items.some((item) => parseIso(item.date));
   const featureDate = feature ? parseIso(feature.date) : null;
   const featureCountdown = feature ? countdown(feature.date, today) : "";
 
   return (
     <section className="section no-top events-journal">
       <div className="container">
-        {tags.length > 1 ? (
+        {tags.length > 1 || hasDates ? (
           <div className="ev-toolbar">
+            {tags.length > 1 ? (
             <div className="type-chips" role="tablist" aria-label="Lọc sự kiện theo nhãn">
               <button type="button" role="tab" aria-selected={tag === ""} className={`chip ${tag === "" ? "is-active" : ""}`} onClick={() => pickTag("")}>
                 Tất cả <em>{items.length}</em>
@@ -198,9 +203,20 @@ export function EventsJournal({ items, today: serverToday }: Props) {
                 </button>
               ))}
             </div>
+            ) : <span />}
+            {hasDates ? (
+              <div className="ev-view" role="tablist" aria-label="Cách xem sự kiện">
+                <button type="button" role="tab" aria-selected={view === "list"} className={view === "list" ? "is-active" : undefined} onClick={() => setView("list")}>Danh sách</button>
+                <button type="button" role="tab" aria-selected={view === "month"} className={view === "month" ? "is-active" : undefined} onClick={() => setView("month")}>Lịch tháng</button>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
+        {view === "month" ? (
+          <EventsMonth items={shown} today={today} />
+        ) : (
+        <>
         {feature ? (
           <article className="ev-feature">
             <div className="ev-feature-body">
@@ -234,6 +250,7 @@ export function EventsJournal({ items, today: serverToday }: Props) {
                   Xem chi tiết / Đăng ký<span aria-hidden="true"> ↗</span>
                 </a>
               ) : null}
+              <AddToCalendar event={feature} className="is-feature" />
             </div>
             <div className="ev-feature-media">
               <SafeImage
@@ -325,6 +342,7 @@ export function EventsJournal({ items, today: serverToday }: Props) {
                                 Xem chi tiết / Đăng ký<span aria-hidden="true"> ↗</span>
                               </a>
                             ) : null}
+                            <AddToCalendar event={item} />
                           </div>
                           {item.image ? (
                             <div className="ev-thumb">
@@ -383,6 +401,8 @@ export function EventsJournal({ items, today: serverToday }: Props) {
             ) : null}
           </section>
         ) : null}
+        </>
+        )}
       </div>
 
       {current ? (

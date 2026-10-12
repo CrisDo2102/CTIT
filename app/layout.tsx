@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./extras.css";
 import { ScrollUI } from "@/components/ScrollUI";
 
 export const metadata: Metadata = {

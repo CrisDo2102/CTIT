@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { FacetGroup } from "@/components/FacetGroup";
 import { InventoryIcon } from "@/components/icons";
 import { SafeImage } from "@/components/SafeImage";
 import { SaveButton } from "@/components/SaveButton";
+import { countSelected, emptySelected, readSelected, runFacets, toggleValue, uniqueValues, writeSelected, type Getters, type Selected } from "@/lib/facets";
 import { toneOf } from "@/lib/format";
 import { statusClass, statusLabel, type InventoryEntry } from "@/lib/inventory";
 
@@ -49,60 +51,75 @@ function sortItems(items: InventoryEntry[], sort: Sort): InventoryEntry[] {
   });
 }
 
+// Bộ lọc nhiều lựa chọn kiểu "product selector" của st.com (logic chung ở lib/facets.ts).
+const FACET_KEYS = ["cat", "maker", "status"] as const;
+type FacetKey = (typeof FACET_KEYS)[number];
+const GET: Getters<InventoryEntry, FacetKey> = { cat: (item) => item.category, maker: (item) => item.manufacturer, status: (item) => item.status };
+const TITLE: Record<FacetKey, string> = { cat: "Danh mục", maker: "Hãng", status: "Trạng thái" };
+const PARAM: Record<FacetKey, string> = { cat: "cat", maker: "mk", status: "st" };
+const NONE = emptySelected(FACET_KEYS);
+
 export function InventoryExplorer({ initialItems }: { initialItems: InventoryEntry[] }) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All");
-  const [status, setStatus] = useState("All");
+  const [facets, setFacets] = useState<Selected<FacetKey>>(NONE);
+  const [inStock, setInStock] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [view, setView] = useState<View>("grid");
   const [sort, setSort] = useState<Sort>(null);
   const [compare, setCompare] = useState<string[]>([]);
   const [comparing, setComparing] = useState(false);
   const [ready, setReady] = useState(false);
 
-  const categories = useMemo(() => [...new Set(initialItems.map((item) => item.category).filter(Boolean))], [initialItems]);
-  const statuses = useMemo(() => [...new Set(initialItems.map((item) => item.status).filter(Boolean))], [initialItems]);
+  const options = useMemo(
+    () => ({ cat: uniqueValues(initialItems, GET.cat), maker: uniqueValues(initialItems, GET.maker), status: uniqueValues(initialItems, GET.status) }),
+    [initialItems]
+  );
 
-  // Đọc bộ lọc từ link (?q=&cat=&st=&view=&sort=) khi mở trang, để link gửi cho người khác ra đúng kết quả.
+  // Chuỗi để tìm kiếm tính sẵn một lần, khỏi nối lại mỗi lần gõ phím.
+  const haystacks = useMemo(
+    () => new Map(initialItems.map((item) => [item.slug, [item.category, item.title, item.manufacturer, item.model, item.description, item.location, item.id].join(" ").toLowerCase()])),
+    [initialItems]
+  );
+
+  // Đọc bộ lọc từ link (?q=&cat=&mk=&st=&stock=1&view=&sort=) khi mở trang, để link gửi cho người khác ra đúng kết quả.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const cat = params.get("cat");
-    const st = params.get("st");
     setQuery(params.get("q") ?? "");
-    setCategory(cat && categories.includes(cat) ? cat : "All");
-    setStatus(st && statuses.includes(st) ? st : "All");
+    setFacets(readSelected(params, FACET_KEYS, PARAM, options));
+    setInStock(params.get("stock") === "1");
     setView(params.get("view") === "table" ? "table" : "grid");
     setSort(parseSort(params.get("sort")));
     setReady(true);
-  }, [categories, statuses]);
+  }, [options]);
 
   // Ghi bộ lọc ngược lại vào link (không thêm lịch sử trình duyệt).
   useEffect(() => {
     if (!ready) return;
     const params = new URLSearchParams();
     if (query.trim()) params.set("q", query.trim());
-    if (category !== "All") params.set("cat", category);
-    if (status !== "All") params.set("st", status);
+    writeSelected(params, FACET_KEYS, PARAM, facets);
+    if (inStock) params.set("stock", "1");
     if (view === "table") params.set("view", "table");
     if (sort) params.set("sort", sortValue(sort));
     const qs = params.toString();
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
-  }, [ready, query, category, status, view, sort]);
+  }, [ready, query, facets, inStock, view, sort]);
 
-  const filtered = useMemo(() => {
-    const keyword = query.trim().toLowerCase();
-    const list = initialItems.filter((item) => {
-      const matchesCategory = category === "All" || item.category === category;
-      const matchesStatus = status === "All" || item.status === status;
-      const haystack = [item.category, item.title, item.manufacturer, item.model, item.description, item.location, item.id].join(" ").toLowerCase();
-      return matchesCategory && matchesStatus && (!keyword || haystack.includes(keyword));
-    });
-    return sortItems(list, sort);
-  }, [initialItems, query, category, status, sort]);
+  const keyword = query.trim().toLowerCase();
+  // Một lượt duyệt cho cả kết quả lẫn số đếm của từng ô; đổi cách sắp xếp không phải lọc lại.
+  const { results, counts } = useMemo(
+    () => runFacets(initialItems, FACET_KEYS, GET, facets, (item) => (!inStock || item.quantity > 0) && (!keyword || (haystacks.get(item.slug) ?? "").includes(keyword))),
+    [initialItems, haystacks, facets, inStock, keyword]
+  );
+  const filtered = useMemo(() => sortItems(results, sort), [results, sort]);
+
+  const activeCount = countSelected(facets) + (inStock ? 1 : 0);
+  const toggleFacet = (key: FacetKey, value: string) => setFacets((current) => ({ ...current, [key]: toggleValue(current[key], value) }));
 
   const totalQuantity = initialItems.reduce((sum, item) => sum + (Number.isFinite(item.quantity) ? item.quantity : 0), 0);
   const availableCount = initialItems.filter((item) => /available|có sẵn|sẵn sàng|in stock/i.test(item.status)).length;
   const lowCount = initialItems.filter((item) => /low|thấp|sắp|limited/i.test(item.status)).length;
-  const filtering = Boolean(query) || category !== "All" || status !== "All";
+  const filtering = Boolean(query) || activeCount > 0;
 
   const compared = compare.map((slug) => initialItems.find((item) => item.slug === slug)).filter((item): item is InventoryEntry => Boolean(item));
   const toggleCompare = (slug: string) =>
@@ -111,8 +128,8 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
 
   function reset() {
     setQuery("");
-    setCategory("All");
-    setStatus("All");
+    setFacets(NONE);
+    setInStock(false);
   }
 
   // Bấm tiêu đề cột: lần 1 tăng dần, lần 2 giảm dần, lần 3 về thứ tự trong Sheet.
@@ -153,31 +170,40 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
       <div className="inventory-toolbar">
         <div className="resource-search inventory-search">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></svg>
-          <input className="input" type="search" placeholder="Tìm STM32, ESP32, CAN, Hakko..." value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input className="input" type="search" placeholder="Tìm STM32, ESP32, CAN, Hakko..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Tìm vật tư" />
         </div>
-        {categories.length > 0 ? (
-          <div className="inventory-filter-row">
-            <span className="chip-group-label">Danh mục</span>
-            <div className="type-chips compact-chips">
-              <button type="button" className={`chip ${category === "All" ? "is-active" : ""}`} onClick={() => setCategory("All")}>Tất cả <em>{initialItems.length}</em></button>
-              {categories.map((item) => <button type="button" className={`chip ${category === item ? "is-active" : ""}`} key={item} onClick={() => setCategory(item)}>{item}</button>)}
-            </div>
-          </div>
-        ) : null}
-        {statuses.length > 1 ? (
-          <div className="inventory-filter-row">
-            <span className="chip-group-label">Trạng thái</span>
-            <div className="type-chips compact-chips">
-              <button type="button" className={`chip ${status === "All" ? "is-active" : ""}`} onClick={() => setStatus("All")}>Tất cả</button>
-              {statuses.map((item) => <button type="button" className={`chip ${status === item ? "is-active" : ""}`} key={item} onClick={() => setStatus(item)}>{statusLabel(item)}</button>)}
-            </div>
-          </div>
-        ) : null}
       </div>
 
+      <div className="inv-layout">
+        <aside id="inv-facets" className={`inv-facets${filtersOpen ? " is-open" : ""}`} aria-label="Bộ lọc vật tư">
+          <div className="inv-facets-head">
+            <strong>Bộ lọc{activeCount > 0 ? <em>{activeCount}</em> : null}</strong>
+            <button type="button" className="link-reset" onClick={() => setFiltersOpen(false)}>Xong</button>
+          </div>
+          {FACET_KEYS.filter((key) => options[key].length > (key === "status" ? 1 : 0)).map((key) => (
+            <FacetGroup
+              key={key}
+              title={TITLE[key]}
+              values={options[key]}
+              counts={counts[key]}
+              selected={facets[key]}
+              label={key === "status" ? statusLabel : undefined}
+              onToggle={(value) => toggleFacet(key, value)}
+            />
+          ))}
+          <label className="inv-switch">
+            <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} />
+            <span>Chỉ hiện món còn hàng</span>
+          </label>
+        </aside>
+
+        <div className="inv-results">
       <div className="inventory-result-line">
         <span><strong>{filtered.length}</strong> / {initialItems.length} mặt hàng</span>
         <div className="inventory-view-tools">
+          <button type="button" className="inv-filter-btn" aria-expanded={filtersOpen} aria-controls="inv-facets" onClick={() => setFiltersOpen((open) => !open)}>
+            Bộ lọc{activeCount > 0 ? ` (${activeCount})` : ""}
+          </button>
           {filtering ? <button type="button" className="link-reset" onClick={reset}>Xoá bộ lọc</button> : null}
           <label className="inventory-sort">
             <span>Sắp xếp</span>
@@ -194,6 +220,22 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
           </div>
         </div>
       </div>
+
+      {activeCount > 0 ? (
+        <ul className="inv-active" aria-label="Bộ lọc đang áp dụng">
+          {FACET_KEYS.flatMap((key) =>
+            facets[key].map((value) => (
+              <li key={`${key}:${value}`}>
+                <button type="button" onClick={() => toggleFacet(key, value)} aria-label={`Bỏ lọc ${TITLE[key]}: ${key === "status" ? statusLabel(value) : value}`}>
+                  <small>{TITLE[key]}</small>{key === "status" ? statusLabel(value) : value}<i aria-hidden="true">✕</i>
+                </button>
+              </li>
+            ))
+          )}
+          {inStock ? <li><button type="button" onClick={() => setInStock(false)} aria-label="Bỏ lọc còn hàng"><small>Kho</small>Còn hàng<i aria-hidden="true">✕</i></button></li> : null}
+          <li><button type="button" className="is-clear" onClick={reset}>Xóa tất cả</button></li>
+        </ul>
+      ) : null}
 
       {filtered.length === 0 ? (
         <div className="empty-state"><InventoryIcon /> Chưa có mặt hàng phù hợp. Thử xoá bộ lọc hoặc đổi từ khóa tìm kiếm.</div>
@@ -272,6 +314,9 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
           ))}
         </div>
       )}
+
+        </div>
+      </div>
 
       {compared.length > 0 ? (
         <div className="compare-bar" role="region" aria-label="So sánh vật tư">

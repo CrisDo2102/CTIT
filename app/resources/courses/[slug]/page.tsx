@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
 import { CourseProgress, LessonDone } from "@/components/LessonDone";
+import { ResumeButton, TrackTools } from "@/components/CourseProgressUI";
 import { SafeImage } from "@/components/SafeImage";
 import { SaveButton } from "@/components/SaveButton";
 import { TypeIcon } from "@/components/ResourceCard";
@@ -51,7 +52,8 @@ export default async function CoursePage({ params, searchParams }: Props) {
   const wanted = Array.isArray(trackParam) ? trackParam[0] : trackParam;
   const track = course.tracks.find((item) => item.slug === wanted) ?? course.tracks[0];
   const groups = groupLessons(track.lessons);
-  const firstLink = track.lessons.find((lesson) => lesson.url)?.url;
+  const trackIds = track.lessons.flatMap((lesson, index) => (lesson.url ? [`${course.slug}:${track.slug}:${index}`] : []));
+  const playable = track.lessons.flatMap((lesson, index) => (lesson.url ? [{ id: `${course.slug}:${track.slug}:${index}`, title: lesson.title, url: lesson.url }] : []));
 
   return (
     <>
@@ -94,21 +96,18 @@ export default async function CoursePage({ params, searchParams }: Props) {
               </nav>
             ) : null}
 
-            {track.name || track.description || firstLink ? (
+            {track.name || track.description || playable.length > 0 ? (
               <div className="course-track-head">
                 <div>
                   {track.name ? <h2>{track.name}</h2> : null}
                   {track.description ? <p>{track.description}</p> : null}
                 </div>
-                {firstLink ? (
-                  <a className="btn" href={firstLink} target="_blank" rel="noopener noreferrer">
-                    Bắt đầu học<span className="sr-only"> (mở tab mới)</span>
-                  </a>
-                ) : null}
+                <ResumeButton lessons={playable} />
               </div>
             ) : null}
 
-            <CourseProgress ids={track.lessons.flatMap((lesson, index) => (lesson.url ? [`${course.slug}:${track.slug}:${index}`] : []))} />
+            <CourseProgress ids={trackIds} />
+            <TrackTools ids={trackIds} />
 
             {groups.map((group, groupIndex) => (
               <section key={`${group.name}-${groupIndex}`} className="course-group">

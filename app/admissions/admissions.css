@@ -63,7 +63,10 @@
 .adm-track{position:relative;display:block;height:100%;overflow:hidden;border-radius:28px;background:#fff;border:1px solid var(--tsinghua-border);transition:transform .4s,box-shadow .4s}
 .adm-track:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
 .adm-track-media{position:relative;aspect-ratio:16/10;overflow:hidden;display:grid;place-items:center;background:var(--gradient-brand-soft)}
-.adm-track-media img{width:100%;height:100%;object-fit:cover;transition:transform .7s}.adm-track:hover .adm-track-media img{transform:scale(1.07)}
+.adm-peek{position:absolute;inset:0;display:block;overflow:hidden}
+.adm-peek-bg{position:absolute;inset:-14%;width:128%;height:128%;object-fit:cover;filter:blur(24px) saturate(1.15) brightness(.92);pointer-events:none}
+.adm-peek-img{position:relative;display:block;width:100%;height:100%;object-fit:contain}
+.adm-track-n{z-index:2}
 .adm-track-mono{font-size:64px;font-weight:800;background:var(--gradient-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
 .adm-track-n{position:absolute;top:14px;left:16px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.9);font-size:12px;font-weight:800;letter-spacing:.1em}
 .adm-track-body{position:relative;padding:22px 64px 24px 24px}

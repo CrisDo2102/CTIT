@@ -206,7 +206,7 @@ export function NewsView({ items }: { items: NewsItem[] }) {
               <Reveal><FeatureCard item={hero} /></Reveal>
               {side.length ? (
                 <div className="nw-side-stack">
-                  {side.map((x, i) => <Reveal i={i + 1} key={`${x.title}-${x.order}`}><SideCard item={x} /></Reveal>)}
+                  {side.map((x, i) => <Reveal i={i + 1} key={`${x.title}-${x.order}-${i}`}><SideCard item={x} /></Reveal>)}
                 </div>
               ) : null}
             </div>
@@ -230,7 +230,7 @@ export function NewsView({ items }: { items: NewsItem[] }) {
               </div>
             ) : null}
             <div className="nw-grid">
-              {shownLatest.map((x, i) => <Reveal i={i % 3} key={`${x.title}-${x.order}`}><Card item={x} /></Reveal>)}
+              {shownLatest.map((x, i) => <Reveal i={i % 3} key={`${x.title}-${x.order}-${i}`}><Card item={x} /></Reveal>)}
             </div>
           </div>
         </section>
@@ -242,7 +242,7 @@ export function NewsView({ items }: { items: NewsItem[] }) {
           <div className="nw-wrap">
             <SectionHead n={num("nw-media")} title="Báo chí nói về CTIT" note="Truyền thông đưa tin" />
             <div className="nw-rows">
-              {media.map((x, i) => <Reveal i={i % 3} key={`${x.title}-${x.order}`}><MediaRow item={x} i={i} /></Reveal>)}
+              {media.map((x, i) => <Reveal i={i % 3} key={`${x.title}-${x.order}-${i}`}><MediaRow item={x} i={i} /></Reveal>)}
             </div>
           </div>
         </section>
@@ -254,7 +254,7 @@ export function NewsView({ items }: { items: NewsItem[] }) {
           <div className="nw-wrap">
             <SectionHead n={num("nw-features")} title="Chuyên đề & góc nhìn" note="Câu chuyện từ CTIT" light />
             <div className="nw-grid">
-              {features.map((x, i) => <Reveal i={i % 3} key={`${x.title}-${x.order}`}><Card item={x} dark /></Reveal>)}
+              {features.map((x, i) => <Reveal i={i % 3} key={`${x.title}-${x.order}-${i}`}><Card item={x} dark /></Reveal>)}
             </div>
           </div>
         </section>

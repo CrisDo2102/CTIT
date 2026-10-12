@@ -19,6 +19,13 @@ const icons: Record<string, React.ReactNode> = {
   )
 };
 
+const supportLinks = [
+  { href: "/saved", label: "★ Đã lưu" },
+  { href: "/resources/documents", label: "Tìm tài liệu" },
+  { href: "/resources/inventory", label: "Tra cứu vật tư" },
+  { href: "/sitemap.xml", label: "Sơ đồ trang" }
+];
+
 const resourceLinks = [
   { href: "/resources/documents", label: "Tài liệu" },
   { href: "/resources/inventory", label: "Inventory" },
@@ -29,6 +36,17 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="container">
+        <div className="foot-cta">
+          <div>
+            <h3>Muốn cùng làm với CTIT?</h3>
+            <p>Xem cách tham gia, các hướng hoạt động và lịch sắp tới.</p>
+          </div>
+          <div className="foot-cta-actions">
+            <Link href="/admissions" className="foot-cta-btn">Tham gia CTIT <span aria-hidden="true">→</span></Link>
+            <Link href="/events" className="foot-cta-btn is-ghost">Lịch sự kiện</Link>
+          </div>
+        </div>
+
         <div className="foot-grid">
           <div className="foot-about">
             <Link href="/" className="brand footer-brand" aria-label="CTIT - Trang chủ">
@@ -70,6 +88,15 @@ export function Footer() {
           </div>
 
           <div className="foot-col">
+            <h4>Hỗ trợ</h4>
+            <ul>
+              {supportLinks.map((n) => (
+                <li key={n.href}><Link href={n.href}>{n.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="foot-col">
             <h4>Liên hệ</h4>
             <ul>
               <li><a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a></li>
@@ -80,6 +107,11 @@ export function Footer() {
 
         <div className="foot-bottom">
           <span>©{new Date().getFullYear()} CTIT. All Rights Reserved</span>
+          <nav className="foot-legal" aria-label="Liên kết cuối trang">
+            <Link href="/about">Giới thiệu</Link>
+            <Link href="/saved">Đã lưu</Link>
+            <a href="#main">Lên đầu trang ↑</a>
+          </nav>
         </div>
       </div>
     </footer>

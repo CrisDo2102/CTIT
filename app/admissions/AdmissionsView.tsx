@@ -5,6 +5,7 @@ import type { AdmissionsData, AdmissionsTrack } from "@/lib/dashboard-types";
 import { contact, socials } from "@/lib/site-config";
 import "./admissions.css";
 import { Reveal } from "@/components/motion";
+import { PeekImage } from "@/components/PeekImage";
 import { ArrowIcon } from "@/components/icons";
 import { padIndex } from "@/lib/format";
 
@@ -35,7 +36,7 @@ function TrackCard({ track, i }: { track: AdmissionsTrack; i: number }) {
   const inner = (
     <>
       <div className="adm-track-media">
-        {track.image ? <img src={track.image} alt="" loading="lazy" /> : <span className="adm-track-mono" aria-hidden="true">{track.title.slice(0, 2).toUpperCase()}</span>}
+        {track.image ? <PeekImage src={track.image} alt={track.title} wrapperClass="adm-peek" bgClass="adm-peek-bg" imgClass="adm-peek-img" /> : <span className="adm-track-mono" aria-hidden="true">{track.title.slice(0, 2).toUpperCase()}</span>}
         <span className="adm-track-n">{padIndex(i)}</span>
       </div>
       <div className="adm-track-body">

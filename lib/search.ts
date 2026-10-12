@@ -21,24 +21,33 @@ export function fold(text: string): string {
     .toLowerCase();
 }
 
+// Bỏ dấu (NFD + regex) là phần tốn nhất của mỗi lần gõ. Mỗi mục chỉ cần tính một lần: lần gõ sau dùng lại.
+const prepared = new WeakMap<SearchEntry, { title: string; hay: string }>();
+function prepare(entry: SearchEntry) {
+  let cached = prepared.get(entry);
+  if (!cached) {
+    const title = fold(entry.title);
+    cached = { title, hay: `${title} ${fold(entry.sub)} ${fold(entry.kind)}` };
+    prepared.set(entry, cached);
+  }
+  return cached;
+}
+
+const kindRank = new Map(kindOrder.map((kind, i) => [kind, i]));
+
 export function searchEntries(entries: SearchEntry[], query: string, limit = 24): SearchEntry[] {
   const words = fold(query).split(/\s+/).filter(Boolean);
   if (words.length === 0) return [];
   const scored: { entry: SearchEntry; score: number }[] = [];
   for (const entry of entries) {
-    const title = fold(entry.title);
-    const hay = `${title} ${fold(entry.sub)} ${fold(entry.kind)}`;
+    const { title, hay } = prepare(entry);
     if (!words.every((w) => hay.includes(w))) continue;
-    let score = 0;
+    let score = entry.kind === "Trang" ? 1 : 0;
     for (const w of words) {
-      if (title.startsWith(w)) score += 4;
-      else if (title.includes(` ${w}`)) score += 3;
-      else if (title.includes(w)) score += 2;
-      else score += 1;
+      score += title.startsWith(w) ? 4 : title.includes(` ${w}`) ? 3 : title.includes(w) ? 2 : 1;
     }
-    if (entry.kind === "Trang") score += 1;
     scored.push({ entry, score });
   }
-  scored.sort((a, b) => b.score - a.score || kindOrder.indexOf(a.entry.kind) - kindOrder.indexOf(b.entry.kind));
+  scored.sort((a, b) => b.score - a.score || kindRank.get(a.entry.kind)! - kindRank.get(b.entry.kind)!);
   return scored.slice(0, limit).map((s) => s.entry);
 }

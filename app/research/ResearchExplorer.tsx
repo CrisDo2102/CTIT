@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type PointerEvent } from "react";
 import type { ResearchData, ResearchItem } from "@/lib/dashboard-types";
+import { safeHttpUrl } from "@/lib/safe-url";
 import { PeekImage } from "@/components/PeekImage";
 import "./research.css";
 import { Reveal, useCountUp } from "@/components/motion";
@@ -36,7 +37,9 @@ const unmagnet = (e: PointerEvent<HTMLElement>) => { e.currentTarget.style.trans
 
 export function ResearchHero() {
   const ref = useRef<HTMLElement>(null);
-  const spline = process.env.NEXT_PUBLIC_SPLINE_URL;
+  // Chỉ nhúng iframe từ spline.design qua https (khớp frame-src trong next.config.ts).
+  const splineRaw = safeHttpUrl(process.env.NEXT_PUBLIC_SPLINE_URL);
+  const spline = /^https:\/\/([a-z0-9-]+\.)*spline\.design\//i.test(splineRaw) ? splineRaw : "";
 
   const onMove = (e: PointerEvent<HTMLElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -66,7 +69,7 @@ export function ResearchHero() {
         </div>
         <div className="rx-stage" aria-hidden="true">
           {spline ? (
-            <iframe src={spline} title="CTIT 3D" loading="lazy" />
+            <iframe src={spline} title="CTIT 3D" loading="lazy" sandbox="allow-scripts allow-same-origin" referrerPolicy="no-referrer" />
           ) : (
             <>
               <div className="rx-chip">

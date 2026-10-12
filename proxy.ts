@@ -1,17 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // Khoá trang /admin bằng HTTP Basic Auth (trình duyệt tự hiện hộp nhập mật khẩu).
-// - Mật khẩu lấy từ biến môi trường ADMIN_PASSWORD (tên đăng nhập nhập gì cũng được).
-// - Chạy thật (production) mà chưa đặt ADMIN_PASSWORD: chặn hẳn, không bao giờ để mở.
-// - Chạy dev (npm run dev) mà chưa đặt: cho vào để tiện sửa.
+// - Mật khẩu lấy từ ADMIN_PASSWORD (tên đăng nhập nhập gì cũng được).
+// - Production mà thiếu hoặc quá ngắn (< 12 ký tự): chặn hẳn, không bao giờ để mở / để mật khẩu yếu.
+// - Dev (npm run dev) chưa đặt: cho vào để tiện sửa.
+// - Chống dò mật khẩu: sai 5 lần liên tiếp từ cùng một IP thì khoá 15 phút (HTTP 429).
+//   Bộ đếm nằm trong bộ nhớ từng instance nên là lớp chặn "best effort" trên serverless;
+//   mật khẩu dài là lớp chính. Cần chặn tuyệt đối thì bật Vercel Firewall rate limit cho /admin.
 
-function safeEqual(a: string, b: string): boolean {
-  // So sánh không dừng sớm, để không lộ độ dài phần đúng qua thời gian phản hồi.
-  const length = Math.max(a.length, b.length);
-  let diff = a.length ^ b.length;
-  for (let i = 0; i < length; i++) {
-    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
-  }
+const MIN_PASSWORD_LENGTH = 12;
+const MAX_FAILS = 5;
+const LOCK_MS = 15 * 60 * 1000;
+const fails = new Map<string, { count: number; until: number; last: number }>();
+
+async function sha256(text: string): Promise<Uint8Array> {
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
+}
+
+// So sánh hai chuỗi qua hash SHA-256 (độ dài cố định) và không dừng sớm,
+// nên không lộ độ dài hay phần đúng của mật khẩu qua thời gian phản hồi.
+async function safeEqual(a: string, b: string): Promise<boolean> {
+  const [ha, hb] = await Promise.all([sha256(a), sha256(b)]);
+  let diff = 0;
+  for (let i = 0; i < ha.length; i++) diff |= ha[i] ^ hb[i];
   return diff === 0;
 }
 
@@ -27,29 +38,62 @@ function readPassword(header: string | null): string | null {
   }
 }
 
-export function proxy(request: NextRequest) {
+function clientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  return (forwarded?.split(",")[0] || request.headers.get("x-real-ip") || "unknown").trim();
+}
+
+function prune(now: number) {
+  if (fails.size < 500) return;
+  for (const [ip, entry] of fails) {
+    if (entry.until < now && now - entry.last > LOCK_MS) fails.delete(ip);
+  }
+  // Giữ bộ nhớ có trần: quá 5000 IP thì xoá bớt phần cũ nhất.
+  if (fails.size > 5000) {
+    for (const ip of [...fails.keys()].slice(0, fails.size - 5000)) fails.delete(ip);
+  }
+}
+
+const baseHeaders = { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" };
+
+export async function proxy(request: NextRequest) {
   const expected = process.env.ADMIN_PASSWORD ?? "";
+  const production = process.env.NODE_ENV === "production";
 
   if (!expected) {
-    if (process.env.NODE_ENV !== "production") return NextResponse.next();
-    return new NextResponse("Trang admin đang tắt: chưa đặt ADMIN_PASSWORD trên máy chủ.", {
-      status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
+    if (!production) return NextResponse.next();
+    return new NextResponse("Trang admin đang tắt: chưa đặt ADMIN_PASSWORD trên máy chủ.", { status: 503, headers: baseHeaders });
+  }
+  if (production && expected.length < MIN_PASSWORD_LENGTH) {
+    return new NextResponse(`Trang admin đang tắt: ADMIN_PASSWORD phải dài ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`, { status: 503, headers: baseHeaders });
+  }
+
+  const ip = clientIp(request);
+  const now = Date.now();
+  prune(now);
+  const record = fails.get(ip);
+  if (record && record.until > now) {
+    return new NextResponse("Thử sai quá nhiều lần. Vui lòng quay lại sau ít phút.", {
+      status: 429,
+      headers: { ...baseHeaders, "Retry-After": String(Math.ceil((record.until - now) / 1000)) }
     });
   }
 
   const given = readPassword(request.headers.get("authorization"));
-  if (given !== null && safeEqual(given, expected)) {
+  if (given !== null && (await safeEqual(given, expected))) {
+    fails.delete(ip);
     return NextResponse.next();
+  }
+
+  // Chỉ tính là "sai" khi người dùng thật sự gửi mật khẩu (lần đầu mở trang chưa có header thì không tính).
+  if (given !== null) {
+    const count = (record?.count ?? 0) + 1;
+    fails.set(ip, { count: count >= MAX_FAILS ? 0 : count, until: count >= MAX_FAILS ? now + LOCK_MS : 0, last: now });
   }
 
   return new NextResponse("Cần mật khẩu để vào trang admin.", {
     status: 401,
-    headers: {
-      "WWW-Authenticate": 'Basic realm="CTIT Admin", charset="UTF-8"',
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-store"
-    }
+    headers: { ...baseHeaders, "WWW-Authenticate": 'Basic realm="CTIT Admin", charset="UTF-8"' }
   });
 }
 

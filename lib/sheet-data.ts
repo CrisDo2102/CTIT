@@ -9,6 +9,7 @@ import type {
 } from "@/lib/dashboard-types";
 import type { CampusItem, Course, CourseLesson, CourseTrack, EventItem, FeedItem } from "@/lib/dashboard-types";
 import type { Resource } from "@/data/resources";
+import { dedupeBy, safeHttpUrl } from "@/lib/safe-url";
 import { imageFolderName, isLocalImageRef, resolvePhotoUrl, type PhotoFolder } from "@/lib/photo-url";
 
 export type InventoryItem = {
@@ -86,6 +87,30 @@ function parseCsv(text: string): string[][] {
 
 const isDev = process.env.NODE_ENV !== "production";
 
+// Chỉ tải CSV từ Google (link "Publish to web"). Chặn link lạ trong biến môi trường để
+// server không bị dùng làm cầu gọi tới địa chỉ nội bộ/bên thứ ba (SSRF) nếu env bị sửa nhầm.
+const SHEET_HOST = /(^|\.)(docs\.google\.com|google\.com|googleusercontent\.com)$/i;
+const SHEET_TIMEOUT_MS = 10_000;
+const SHEET_MAX_BYTES = 5 * 1024 * 1024;
+
+function isAllowedSheetUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password && SHEET_HOST.test(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+/** Gom các dòng giống hệt nhau (do copy/paste thừa trong Sheet), giữ dòng đầu tiên. */
+function dropDuplicates<T>(label: string, items: T[], keyOf: (item: T) => string): T[] {
+  const { items: unique, removed } = dedupeBy(items, (item) => keyOf(item).trim().toLowerCase());
+  if (removed > 0 && isDev) {
+    console.warn(`[${label}] Bỏ ${removed} dòng trùng lặp (giống hệt dòng phía trên trong Sheet).`);
+  }
+  return unique;
+}
+
 async function fetchSheetRows(url: string, label = "Sheet"): Promise<string[][]> {
   if (!url) {
     if (isDev) {
@@ -94,17 +119,34 @@ async function fetchSheetRows(url: string, label = "Sheet"): Promise<string[][]>
     return [];
   }
 
+  if (!isAllowedSheetUrl(url)) {
+    console.warn(`[${label}] Link CSV bị từ chối: phải là https://docs.google.com/... (Publish to web). Kiểm tra biến môi trường.`);
+    return [];
+  }
+
   try {
     // npm run dev: luon lay du lieu moi nhat tu sheet (khong cache), sua sheet
     // xong F5 la thay. Chay that (build/start): cache 60 giay.
-    const res = await fetch(url, isDev ? { cache: "no-store" } : { next: { revalidate: 60 } });
+    const res = await fetch(url, {
+      ...(isDev ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
+      signal: AbortSignal.timeout(SHEET_TIMEOUT_MS)
+    });
     if (!res.ok) {
       if (isDev) {
         console.warn(`[${label}] Không tải được sheet (HTTP ${res.status}). Kiểm tra link CSV trong .env.local.`);
       }
       return [];
     }
+    const declared = Number(res.headers.get("content-length") ?? 0);
+    if (declared > SHEET_MAX_BYTES) {
+      console.warn(`[${label}] Sheet quá lớn (${declared} byte), bỏ qua.`);
+      return [];
+    }
     const text = await res.text();
+    if (text.length > SHEET_MAX_BYTES) {
+      console.warn(`[${label}] Sheet quá lớn, bỏ qua.`);
+      return [];
+    }
     return parseCsv(text);
   } catch (error) {
     if (isDev) {
@@ -172,6 +214,8 @@ function checkLocalImages(label: string, folder: PhotoFolder, refs: string[]): v
   }
 
   const files = readdirSync(dir).filter((file) => file.toLowerCase() !== "readme.txt");
+  const fileSet = new Set(files);
+  const byLowerName = new Map(files.map((file) => [file.toLowerCase(), file]));
   const used = new Set<string>();
   for (const ref of refs) {
     if (!isLocalImageRef(ref)) {
@@ -188,11 +232,11 @@ function checkLocalImages(label: string, folder: PhotoFolder, refs: string[]): v
       }
       continue;
     }
-    if (files.includes(name)) {
+    if (fileSet.has(name)) {
       used.add(name);
       continue;
     }
-    const similar = files.find((file) => file.toLowerCase() === name.toLowerCase());
+    const similar = byLowerName.get(name.toLowerCase());
     if (similar) {
       used.add(similar);
       console.warn(`[${label}] Ảnh "${name}" sai hoa/thường, file thật là "${similar}" (Linux/Vercel sẽ không hiện).`);
@@ -401,17 +445,27 @@ export async function getResources(): Promise<Resource[]> {
   }
 
   const usedIds = new Set<string>();
+  const seenResources = new Set<string>();
   const imageRefs: string[] = [];
   const resources: Resource[] = [];
   let skipped = 0;
+  let duplicates = 0;
 
   for (const row of body) {
     const title = cellAt(row, titleIndex);
-    const url = cellAt(row, urlIndex);
+    const url = safeHttpUrl(cellAt(row, urlIndex));
     if (!title || !url) {
       skipped += 1;
       continue;
     }
+
+    // Cung tieu de + cung link = trung (copy/paste thua trong Sheet): chi giu dong dau.
+    const resourceKey = `${title.toLowerCase()}|${url.toLowerCase()}`;
+    if (seenResources.has(resourceKey)) {
+      duplicates += 1;
+      continue;
+    }
+    seenResources.add(resourceKey);
 
     // Anh bia: cot cover, hoac cot id neu id la ten file anh co duoi.
     const imageRef = pickImageRef(cellAt(row, coverIndex), cellAt(row, idIndex));
@@ -437,7 +491,10 @@ export async function getResources(): Promise<Resource[]> {
 
   if (isDev) {
     if (skipped > 0) {
-      console.warn(`[Resources] Bỏ qua ${skipped} dòng thiếu title hoặc url.`);
+      console.warn(`[Resources] Bỏ qua ${skipped} dòng thiếu title hoặc url (hoặc url không phải http/https).`);
+    }
+    if (duplicates > 0) {
+      console.warn(`[Resources] Bỏ ${duplicates} dòng trùng lặp (cùng title và url).`);
     }
     checkLocalImages("Resources/Documents", "resources", imageRefs);
   }
@@ -511,8 +568,8 @@ export async function getInventory(): Promise<InventoryItem[]> {
       description: cellAt(row, descriptionIndex),
       unit: cellAt(row, unitIndex),
       quantity,
-      datasheet: cellAt(row, datasheetIndex),
-      purchaseUrl: cellAt(row, purchaseUrlIndex),
+      datasheet: safeHttpUrl(cellAt(row, datasheetIndex)),
+      purchaseUrl: safeHttpUrl(cellAt(row, purchaseUrlIndex)),
       location: cellAt(row, locationIndex),
       status: cellAt(row, statusIndex),
       currentUser: cellAt(row, currentUserIndex),
@@ -521,7 +578,9 @@ export async function getInventory(): Promise<InventoryItem[]> {
   }
 
   if (isDev) checkLocalImages("Resources/Inventory", "resourceInventory", imageRefs);
-  return items;
+  // Chỉ gom dòng GIỐNG HỆT NHAU ở mọi cột. Hai dòng cùng tên nhưng khác số lượng, vị trí
+  // hoặc người dùng vẫn được giữ lại (là hai món khác nhau).
+  return dropDuplicates("Inventory", items, (item) => JSON.stringify(item));
 }
 
 export async function getStudents(): Promise<Student[]> {
@@ -576,25 +635,28 @@ export async function getStudents(): Promise<Student[]> {
       photo: pickImageRef(cellAt(row, photoIndex), cellAt(row, idIndex))
     }))
     .filter((student) => student.school && student.name);
+  const uniqueStudents = dropDuplicates("Students", students, (student) =>
+    [student.school, student.name, student.major, student.faculty].join("|")
+  );
 
   if (isDev) {
     const schoolCount = new Set(students.map((student) => student.school)).size;
     console.log(`[Students] ${students.length} học viên | ${schoolCount} trường có dữ liệu sau khi lọc.`);
   }
 
-  checkLocalImages("Students", "students", students.map((student) => student.photo));
+  checkLocalImages("Students", "students", uniqueStudents.map((student) => student.photo));
 
   // Chi can dien "Tên đầy đủ" 1 lan cho moi truong: dong nao de trong se lay
   // ten day du cua dong dau tien cung truong (khop theo ten viet tat).
   const fullBySchool = new Map<string, string>();
-  for (const student of students) {
+  for (const student of uniqueStudents) {
     const key = student.school.toLowerCase();
     if (student.schoolFull && !fullBySchool.has(key)) {
       fullBySchool.set(key, student.schoolFull);
     }
   }
 
-  return students.map((student) => ({
+  return uniqueStudents.map((student) => ({
     ...student,
     schoolFull: student.schoolFull || fullBySchool.get(student.school.toLowerCase()) || ""
   }));
@@ -675,7 +737,7 @@ export async function getNews(): Promise<NewsItem[]> {
       title,
       date: cellAt(row, col.date),
       summary: cellAt(row, col.content),
-      url: cellAt(row, col.url),
+      url: safeHttpUrl(cellAt(row, col.url)),
       image: resolvePhotoUrl(image, "news"),
       tag: cellAt(row, col.category),
       category: cellAt(row, col.category)
@@ -692,7 +754,7 @@ export async function getNews(): Promise<NewsItem[]> {
     checkLocalImages("News", "news", imageRefs);
   }
 
-  return items.sort((a, b) => {
+  return dropDuplicates("News", items, (item) => [item.section, item.title, item.date, item.url].join("|")).sort((a, b) => {
     const sectionOrder = ["headlines", "latest", "media", "features"];
     const sa = sectionOrder.indexOf(a.section);
     const sb = sectionOrder.indexOf(b.section);
@@ -763,7 +825,7 @@ export async function getCampus(): Promise<CampusItem[]> {
       title,
       date,
       summary,
-      url: cellAt(row, col.url),
+      url: safeHttpUrl(cellAt(row, col.url)),
       image,
       tag: cellAt(row, col.tag),
       place: cellAt(row, col.place),
@@ -795,7 +857,7 @@ export async function getCampus(): Promise<CampusItem[]> {
   }
 
   checkLocalImages("Campus", "campus", items.map((item) => item.image));
-  return items.map((item) => ({ ...item, image: resolvePhotoUrl(item.image, "campus") }));
+  return dropDuplicates("Campus", items, (item) => [item.title, item.date, item.image].join("|")).map((item) => ({ ...item, image: resolvePhotoUrl(item.image, "campus") }));
 }
 
 // ---- Tab Events ----
@@ -865,7 +927,7 @@ export async function getEvents(): Promise<EventItem[]> {
       date,
       time: cellAt(row, col.time),
       summary,
-      url: cellAt(row, col.url),
+      url: safeHttpUrl(cellAt(row, col.url)),
       image,
       tag: cellAt(row, col.tag),
       place: cellAt(row, col.place),
@@ -894,7 +956,7 @@ export async function getEvents(): Promise<EventItem[]> {
   }
 
   checkLocalImages("Events", "events", items.map((item) => item.image));
-  return items.map((item) => ({ ...item, image: resolvePhotoUrl(item.image, "events") }));
+  return dropDuplicates("Events", items, (item) => [item.title, item.date, item.place ?? "", item.url].join("|")).map((item) => ({ ...item, image: resolvePhotoUrl(item.image, "events") }));
 }
 
 // ---- Tab Research: 1 tab duy nhat cho ca trang /research ----
@@ -987,7 +1049,7 @@ export async function getResearchInfo(): Promise<ResearchData> {
       title: cellAt(row, col.title),
       content: cellAt(row, col.content),
       date: cellAt(row, col.date),
-      url: cellAt(row, col.url),
+      url: safeHttpUrl(cellAt(row, col.url)),
       image,
       tag: cellAt(row, col.tag),
       category: cellAt(row, col.category)
@@ -1146,7 +1208,7 @@ export async function getAdmissionsInfo(): Promise<AdmissionsData> {
       title: cellAt(row, col.title),
       content: cellAt(row, col.content),
       date: cellAt(row, col.date),
-      url: cellAt(row, col.url),
+      url: safeHttpUrl(cellAt(row, col.url)),
       image
     });
   });

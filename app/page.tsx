@@ -5,32 +5,54 @@ import { FeedList } from "@/components/FeedList";
 import { HomeCarousel, type HeroSlide } from "@/components/HomeCarousel";
 import { HomeNews } from "@/components/HomeNews";
 import { ResourceCard } from "@/components/ResourceCard";
-import { HomeBento } from "@/components/HomeBento";
+import { HomeBento, type TileImages } from "@/components/HomeBento";
 import { HomeStats } from "@/components/HomeStats";
 import { HomeQuickStart } from "@/components/HomeQuickStart";
 import { HomeTopics, type Topic } from "@/components/HomeTopics";
 import { HomeEventBanner } from "@/components/HomeEventBanner";
+import { HomeUpcomingEvents, upcomingEvents } from "@/components/HomeUpcomingEvents";
 import { HomeStartHere } from "@/components/HomeStartHere";
 import { Reveal } from "@/components/motion";
-import { getCourses, getEvents, getInventory, getNews, getOverviewStats, getResources } from "@/lib/sheet-data";
+import { getAboutInfo, getAdmissionsInfo, getCampus, getCourses, getEvents, getInventory, getNews, getOverviewStats, getResearchInfo, getResources } from "@/lib/sheet-data";
+import { resolvePhotoUrl } from "@/lib/photo-url";
 import "./home.css";
 
 // Ảnh slide đầu tiên. Đổi tại đây nếu muốn ảnh khác (ảnh nằm trong /public/images).
 const HERO_IMAGE = "/images/Campus/mot_vai_thanh_vien_cua_ctit.jpg";
 
+// Gom ảnh cho từng ô "Khám phá CTIT": mọi ảnh có trong mục đó, bỏ ảnh trống/trùng, tối đa 24 ảnh mỗi ô.
+const pics = (list: (string | undefined)[], max = 24) => [...new Set(list.filter((src): src is string => Boolean(src)))].slice(0, max);
+
 const clip = (text: string, max = 160) => (text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text);
 
 export default async function HomePage() {
-  const [news, events, resources, stats, courses, inventory] = await Promise.all([
+  const [news, events, resources, stats, courses, inventory, about, admissions, research, campus] = await Promise.all([
     getNews(),
     getEvents(),
     getResources(),
     getOverviewStats(),
     getCourses(),
-    getInventory()
+    getInventory(),
+    getAboutInfo(),
+    getAdmissionsInfo(),
+    getResearchInfo(),
+    getCampus()
   ]);
+  const tileImages: TileImages = {
+    // Giới thiệu: logo (nếu Sheet không ghi logo thì dùng file logo mặc định).
+    "/about": pics([about?.logo ? resolvePhotoUrl(about.logo, "about") : "/images/About/logo.png"]),
+    "/admissions": pics(admissions.tracks.map((track) => track.image)),
+    // Trường & Khoa: tạm không dùng ảnh học viên. Khi có ảnh khác, điền đường dẫn vào đây, ví dụ pics(["/images/Schools/a.jpg", "/images/Schools/b.jpg"]).
+    "/schools": pics([]),
+    "/research": pics([...research.focus, ...research.project, ...research.achievement, ...research.publication].map((item) => item.image)),
+    "/news": pics(news.map((item) => item.image)),
+    "/events": pics(events.map((item) => item.image)),
+    "/resources": pics([...resources.map((item) => item.cover), ...courses.map((course) => course.image), ...inventory.map((item) => item.image)]),
+    "/campus": pics(campus.map((item) => item.image))
+  };
   const featured = resources.filter((resource) => resource.featured).slice(0, 3);
   const featuredEvent = events.find((event) => event.featured);
+  const upcoming = upcomingEvents(events, 3);
 
   // Khối có tab "Tài nguyên cho bạn": 3 mục đầu của mỗi nhóm (tab nào chưa có dữ liệu thì không hiện).
   const topicSources: Topic[] = [
@@ -130,7 +152,7 @@ export default async function HomePage() {
                 <p>Chọn một chủ đề để bắt đầu.</p>
               </div>
             </Reveal>
-            <HomeBento />
+            <HomeBento images={tileImages} />
           </div>
         </section>
 
@@ -167,7 +189,11 @@ export default async function HomePage() {
                 <h2>Sự kiện sắp tới</h2>
                 <Link href="/events">Xem tất cả</Link>
               </div>
-              <FeedList items={events.slice(0, 3)} env="EVENTS_SHEET_CSV_URL" />
+              {upcoming.length > 0 ? (
+                <HomeUpcomingEvents items={upcoming} />
+              ) : (
+                <FeedList items={events.slice(0, 3)} env="EVENTS_SHEET_CSV_URL" />
+              )}
             </Reveal>
           </div>
         </section>
