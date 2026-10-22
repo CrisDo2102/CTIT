@@ -91,9 +91,25 @@ export const guides: Guide[] = [
     path: "/news",
     env: "NEWS_SHEET_CSV_URL",
     imageFolder: "public/images/News/",
-    columns: FEED_COLUMNS,
-    rules: ["Dòng mới nhất để trên cùng, thứ tự dòng = thứ tự hiển thị."],
-    sample: [["title", "date", "summary", "url", "image", "tag"], ["Tuyển thành viên khóa mới", "2026-09-20", "CTIT mở đơn đăng ký.", "https://...", "tuyen-thanh-vien.jpg", "Thông báo"]]
+    columns: [
+      { name: "section", desc: "Tin nằm ở khu nào của trang: headlines (Tiêu điểm) / latest (Tin mới nhất) / media (Báo chí) / features (Chuyên đề). Viết tiếng Việt cũng được: Tiêu điểm, Tin mới nhất, Báo chí, Chuyên đề. THIẾU cột này thì trang Tin tức trống.", required: true },
+      { name: "order", desc: "Thứ tự trong khu đó (1, 2, 3...). Trống thì theo thứ tự dòng." },
+      { name: "title", desc: "Tiêu đề bài.", required: true },
+      { name: "content", desc: "Mô tả 1–2 câu (cột tên summary hoặc Mô tả cũng được)." },
+      { name: "date", desc: "Ngày, ghi 2026-09-20 (năm-tháng-ngày)." },
+      { name: "url", desc: "Link xem bài đầy đủ. Chỉ nhận http:// hoặc https://." },
+      { name: "id", desc: "Tên file ảnh CÓ ĐUÔI trong public/images/News/, khớp chính xác hoa/thường; hoặc đặt cột tên image để dùng link ảnh." },
+      { name: "category", desc: "Nhãn phân loại (cột tên tag cũng được), vd Thông báo, Kỹ thuật." }
+    ],
+    rules: [
+      "Dòng có section không nhận ra thì bị bỏ qua (xem cảnh báo trong terminal khi chạy npm run dev).",
+      "Thứ tự dòng trong cùng một khu = thứ tự hiển thị, trừ khi có điền cột order."
+    ],
+    sample: [
+      ["section", "order", "title", "content", "date", "url", "id", "category"],
+      ["headlines", "1", "Tuyển thành viên khóa mới", "CTIT mở đơn đăng ký.", "2026-09-20", "https://...", "tuyen-thanh-vien.jpg", "Thông báo"],
+      ["latest", "1", "Hệ thống BMS cho xe điện", "Cân bằng cell và bảo vệ pin.", "2026-09-05", "https://...", "bms.jpg", "Kỹ thuật"]
+    ]
   },
   {
     key: "events",

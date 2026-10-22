@@ -1,5 +1,6 @@
 "use client";
 
+import { NoData } from "@/components/NoData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { SafeImage } from "@/components/SafeImage";
 import type { CampusItem } from "@/lib/dashboard-types";
@@ -128,10 +129,7 @@ export function CampusJournal({ items }: Props) {
     return (
       <section className="section no-top">
         <div className="container">
-          <div className="empty-state">
-            Chưa có ảnh. Kiểm tra biến môi trường <code>CAMPUS_SHEET_CSV_URL</code> trong <code>.env.local</code> và tab Campus
-            (cột <code>title</code> bắt buộc).
-          </div>
+          <NoData what="ảnh khuôn viên" env="CAMPUS_SHEET_CSV_URL" note={<>và tab Campus (cột <code>title</code> bắt buộc)</>} />
         </div>
       </section>
     );

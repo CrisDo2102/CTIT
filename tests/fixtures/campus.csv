@@ -1,0 +1,7 @@
+title,date,summary,url,image,tag,place,featured
+Một vài thành viên của CTIT,{{today-5}},Ảnh chụp sau buổi sinh hoạt định kỳ.,https://example.com/album/1,mot_vai_thanh_vien_cua_ctit.jpg,Đời sống,Lab A1,x
+Cơ học toàn quốc 2026,{{today-20}},Đội CTIT tham dự cuộc thi Cơ học toàn quốc.,https://example.com/album/2,co_hoc_toan_quoc_2026.JPG,Cuộc thi,Hà Nội,
+Bàn hàn sau buổi thực hành,{{today-12}},Góc làm việc của nhóm.,,mot_vai_thanh_vien_cua_ctit.jpg,Lab,Lab A1,
+Buổi workshop cuối tuần,{{today-25}},Các bạn cùng debug mạch.,,co_hoc_toan_quoc_2026.JPG,Workshop,Lab A2,
+Sinh hoạt ngoài trời,{{today-35}},Hoạt động gắn kết thành viên.,,mot_vai_thanh_vien_cua_ctit.jpg,Đời sống,Sân trường,
+Buổi thi lập trình nhúng,{{today-50}},Các đội làm bài trong 3 giờ.,,co_hoc_toan_quoc_2026.JPG,Cuộc thi,Lab B1,

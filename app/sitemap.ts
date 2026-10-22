@@ -3,7 +3,7 @@ import { getCourses } from "@/lib/sheet-data";
 import { nav, siteUrl } from "@/lib/site-config";
 
 // Chỉ liệt kê trang công khai. /admin cố ý không có ở đây (và bị khoá bằng mật khẩu).
-const extraPages = ["/resources/documents", "/resources/inventory", "/resources/courses"];
+const extraPages = ["/resources/documents", "/resources/inventory", "/resources/courses", "/changelog"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();

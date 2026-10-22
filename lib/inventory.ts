@@ -16,20 +16,51 @@ export function withSlugs(items: InventoryItem[]): InventoryEntry[] {
   });
 }
 
-export function statusLabel(status: string): string {
+/**
+ * Phân loại trạng thái ghi trong Sheet (tiếng Việt hoặc tiếng Anh) thành một nhóm duy nhất. Nhãn, màu và các ô thống kê
+ * đều dùng hàm này nên không thể lệch nhau.
+ *  - low: sắp hết · out: hết hàng · warn: đang mượn / đang sửa · inuse: đang có người dùng
+ *  - ok: còn hàng / sẵn sàng (mọi giá trị khác không rơi vào các nhóm trên) · unknown: để trống
+ * Thứ tự kiểm tra QUAN TRỌNG: "sắp hết" chứa chữ "hết", nên phải kiểm tra "sắp" trước "hết",
+ * nếu không "Sắp hết" bị coi là "Hết hàng" (lỗi từng có).
+ */
+export type StatusKind = "low" | "out" | "warn" | "inuse" | "ok" | "unknown";
+
+export function statusKind(status: string): StatusKind {
   const value = status.trim().toLowerCase();
-  if (!value) return "Chưa cập nhật";
-  if (/(out|hết|empty|unavailable)/.test(value)) return "Hết hàng";
-  if (/(low|thấp|sắp|limited)/.test(value)) return "Sắp hết";
-  return status;
+  if (!value) return "unknown";
+  if (/(low|thấp|sắp|limited)/.test(value)) return "low";
+  if (/(out|hết|empty|unavailable)/.test(value)) return "out";
+  if (/(borrow|mượn|repair|sửa|maintenance)/.test(value)) return "warn";
+  if (/(in use|in-use|đang dùng|đang sử dụng|có người|người sử dụng|being used)/.test(value)) return "inuse";
+  return "ok";
+}
+
+export function statusLabel(status: string): string {
+  switch (statusKind(status)) {
+    case "unknown":
+      return "Chưa cập nhật";
+    case "low":
+      return "Sắp hết";
+    case "out":
+      return "Hết hàng";
+    default:
+      return status;
+  }
 }
 
 export function statusClass(status: string): string {
-  const value = status.trim().toLowerCase();
-  if (/(out|hết|empty|unavailable)/.test(value)) return "inventory-status is-out";
-  if (/(low|thấp|sắp|limited)/.test(value)) return "inventory-status is-low";
-  if (/(borrow|mượn|repair|sửa|maintenance)/.test(value)) return "inventory-status is-warn";
-  return "inventory-status is-ok";
+  switch (statusKind(status)) {
+    case "out":
+      return "inventory-status is-out";
+    case "low":
+      return "inventory-status is-low";
+    case "warn":
+    case "inuse":
+      return "inventory-status is-warn";
+    default:
+      return "inventory-status is-ok";
+  }
 }
 
 /**

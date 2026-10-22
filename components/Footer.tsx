@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { appVersion } from "@/data/changelog";
 import { contact, nav, socials } from "@/lib/site-config";
 
 const icons: Record<string, React.ReactNode> = {
@@ -51,7 +52,7 @@ export function Footer() {
           <div className="foot-about">
             <Link href="/" className="brand footer-brand" aria-label="CTIT - Trang chủ">
               <span className="footer-logo-wrap">
-                <img src="/images/About/logo.png" alt="" className="footer-logo" />
+                <img src="/images/About/logo.png" alt="" className="footer-logo" width={30} height={30} loading="lazy" decoding="async" />
               </span>
               <span className="footer-brand-copy">
                 <strong>CTIT</strong>
@@ -106,7 +107,12 @@ export function Footer() {
         </div>
 
         <div className="foot-bottom">
-          <span>©{new Date().getFullYear()} CTIT. All Rights Reserved</span>
+          <span>
+            ©{new Date().getFullYear()} CTIT. All Rights Reserved
+            <Link href="/changelog" className="foot-version" title="Xem các cập nhật gần đây">
+              v{appVersion}{process.env.NEXT_PUBLIC_BUILD_STAMP ? ` · dựng ${process.env.NEXT_PUBLIC_BUILD_STAMP}` : ""} · Có gì mới
+            </Link>
+          </span>
           <nav className="foot-legal" aria-label="Liên kết cuối trang">
             <Link href="/about">Giới thiệu</Link>
             <Link href="/saved">Đã lưu</Link>

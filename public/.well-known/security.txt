@@ -1,0 +1,4 @@
+# Cách báo lỗ hổng bảo mật của website CTIT (chuẩn RFC 9116).
+Contact: mailto:dothanhdat020405@gmail.com
+Expires: 2027-10-13T00:00:00.000Z
+Preferred-Languages: vi, en

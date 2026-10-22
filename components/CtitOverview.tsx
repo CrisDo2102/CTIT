@@ -1,3 +1,4 @@
+import { NoData } from "@/components/NoData";
 import type { OverviewStat } from "@/lib/dashboard-types";
 import { CountUp, Reveal } from "@/components/motion";
 
@@ -15,10 +16,7 @@ export function CtitOverview({ stats }: Props) {
         </div>
 
         {stats.length === 0 ? (
-          <div className="empty-state">
-            Chưa có dữ liệu tổng quan. Kiểm tra biến môi trường{" "}
-            <code>OVERVIEW_SHEET_CSV_URL</code> trong <code>.env.local</code>.
-          </div>
+          <NoData what="tổng quan" env="OVERVIEW_SHEET_CSV_URL" />
         ) : (
           <div className="overview-grid">
             {stats.map((stat, index) => (

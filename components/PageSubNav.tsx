@@ -10,15 +10,19 @@ export function PageSubNav({ items, label = "Trong trang này" }: { items: SubNa
   const [active, setActive] = useState(items[0]?.id ?? "");
   const navRef = useRef<HTMLElement>(null);
 
-  // Dính ngay dưới header, theo chiều cao thật của header (đổi theo kích thước màn hình).
+  // Báo chiều cao của thanh này qua --subnav-h để scroll-padding chừa đủ chỗ (top dính do CSS: var(--header-h)).
   useEffect(() => {
-    const place = () => {
-      const header = document.querySelector<HTMLElement>(".header");
-      if (navRef.current) navRef.current.style.top = `${header ? Math.round(header.getBoundingClientRect().height) : 0}px`;
+    const node = navRef.current;
+    if (!node) return;
+    const root = document.documentElement;
+    const apply = () => root.style.setProperty("--subnav-h", `${Math.round(node.getBoundingClientRect().height)}px`);
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--subnav-h");
     };
-    place();
-    addEventListener("resize", place);
-    return () => removeEventListener("resize", place);
   }, []);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
+import { HeaderScroll } from "@/components/HeaderScroll";
 import { SearchDialog } from "@/components/SearchDialog";
 import { SearchTrigger } from "@/components/SearchTrigger";
 import { SavedLink } from "@/components/SaveButton";
@@ -16,13 +17,14 @@ const resourceLinks = [
   { href: "/resources/courses", label: "Khóa học" }
 ];
 
-export async function Header() {
+// overlay: header "nổi" trong suốt trên ảnh hero (chỉ trang chủ dùng), cuộn xuống thì thành nền kính mờ. Mặc định: header trắng dính như các trang khác.
+export async function Header({ overlay = false }: { overlay?: boolean } = {}) {
   const about = await getAboutInfo();
   const logoSrc = about?.logo ? resolvePhotoUrl(about.logo, "about") : "";
 
   return (
     <>
-      <div className="top-strip">
+      <div className={`top-strip${overlay ? " is-overlay" : ""}`}>
         <div className="container top-strip-inner">
           <span>Automotive Engineering Technology</span>
           <nav className="top-links" aria-label="Liên kết tiện ích">
@@ -35,11 +37,11 @@ export async function Header() {
           </nav>
         </div>
       </div>
-      <header className="header">
+      <header className={`header${overlay ? " is-overlay" : ""}`}>
         <div className="container header-inner">
           <Link href="/" className="brand" aria-label="Closed Thinking Institute of Technology - Trang chủ">
             {logoSrc ? (
-              <img src={logoSrc} alt="Logo CTIT" className="brand-logo" />
+              <img src={logoSrc} alt="Logo CTIT" className="brand-logo" width={42} height={42} decoding="async" />
             ) : (
               <span className="brand-mark">CT</span>
             )}
@@ -50,6 +52,7 @@ export async function Header() {
           <MobileNav items={[...navItems, { href: "/saved", label: "★ Đã lưu" }]} resourceLinks={resourceLinks} />
         </div>
       </header>
+      {overlay ? <HeaderScroll /> : null}
       <SearchDialog />
     </>
   );

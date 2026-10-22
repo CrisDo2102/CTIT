@@ -892,6 +892,7 @@ h1 {
 .util { display: flex; gap: 18px; }
 .util a:hover { color: var(--tsinghua-purple); }
 .mainnav {
+  --nav-pad: 12px; /* khoảng đệm hai bên chữ; gạch chân thụt vào đúng bằng số này nên chỉ dài bằng chữ */
   display: flex;
   gap: 2px;
   min-width: 0;
@@ -899,17 +900,37 @@ h1 {
 }
 .mainnav > a,
 .nav-dropdown-trigger {
-  padding: 10px 12px;
+  position: relative;
+  padding: 10px var(--nav-pad);
   font-size: 14px;
   font-weight: 650;
   white-space: nowrap;
-  border-bottom: 2px solid transparent;
+}
+/* Gạch chân của mọi mục menu (kể cả "Tài nguyên"): một kiểu duy nhất, dài bằng chữ, giữa hai mục luôn có khe hở. */
+.mainnav > a::after,
+.nav-dropdown-trigger::after {
+  content: "";
+  position: absolute;
+  right: var(--nav-pad);
+  bottom: 4px;
+  left: var(--nav-pad);
+  height: 2px;
+  background: var(--tsinghua-purple);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 160ms ease;
 }
 .mainnav > a:hover,
 .mainnav > a.is-active,
 .nav-dropdown-trigger:hover,
 .nav-dropdown-trigger.is-active,
-.nav-dropdown:focus-within .nav-dropdown-trigger { color: var(--tsinghua-purple); border-color: var(--tsinghua-purple); }
+.nav-dropdown:focus-within .nav-dropdown-trigger { color: var(--tsinghua-purple); }
+.mainnav > a:hover::after,
+.mainnav > a.is-active::after,
+.nav-dropdown-trigger:hover::after,
+.nav-dropdown-trigger.is-active::after,
+.nav-dropdown:hover .nav-dropdown-trigger::after,
+.nav-dropdown:focus-within .nav-dropdown-trigger::after { transform: scaleX(1); }
 .nav-dropdown { position: relative; }
 .nav-dropdown-trigger { display: inline-flex; align-items: center; }
 .nav-dropdown-menu {
@@ -941,22 +962,6 @@ h1 {
 .nav-dropdown:focus-within .nav-dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
 .nav-dropdown:focus-within .nav-dropdown-trigger,
 .nav-dropdown:hover .nav-dropdown-trigger { color: var(--tsinghua-purple); }
-.nav-dropdown-trigger span { position: relative; }
-.nav-dropdown-trigger span::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -12px;
-  height: 2px;
-  background: var(--tsinghua-purple);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 160ms ease;
-}
-.nav-dropdown:hover .nav-dropdown-trigger span::after,
-.nav-dropdown-trigger.is-active span::after,
-.nav-dropdown:focus-within .nav-dropdown-trigger span::after { transform: scaleX(1); }
 .nav-mega-intro {
   display: flex;
   flex-direction: column;
@@ -2607,8 +2612,8 @@ h1 {
 
 /* Menu 8 mục + tên thương hiệu dài: cho tên thương hiệu co lại (tối đa 2 dòng), menu giữ nguyên độ rộng để không tràn khung */
 @media (min-width: 1021px) {
-  .mainnav { flex: none; gap: 0; }
-  .mainnav > a, .nav-dropdown-trigger { padding: 10px 9px; font-size: 13.5px; }
+  .mainnav { --nav-pad: 9px; flex: none; gap: 0; }
+  .mainnav > a, .nav-dropdown-trigger { font-size: 13.5px; }
   .header .brand { flex: 1 1 0; min-width: 0; font-size: 15px; line-height: 1.2; }
   .header .brand > span:last-child { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .brand-logo, .brand-mark { flex: none; }

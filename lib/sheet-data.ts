@@ -10,6 +10,7 @@ import type {
 import type { CampusItem, Course, CourseLesson, CourseTrack, EventItem, FeedItem } from "@/lib/dashboard-types";
 import type { Resource } from "@/data/resources";
 import { dedupeBy, safeHttpUrl } from "@/lib/safe-url";
+import { fetchSheetRows } from "@/lib/sheet-source";
 import { imageFolderName, isLocalImageRef, resolvePhotoUrl, type PhotoFolder } from "@/lib/photo-url";
 
 export type InventoryItem = {
@@ -34,73 +35,7 @@ const studentsSheetUrl = process.env.STUDENTS_SHEET_CSV_URL ?? "";
 const aboutSheetUrl = process.env.ABOUT_SHEET_CSV_URL ?? "";
 const resourcesSheetUrl = process.env.RESOURCES_SHEET_CSV_URL ?? "";
 
-/**
- * Parse mot chuoi CSV don gian (co ho tro field co dau ngoac kep chua dau phay).
- * Du du cho nhu cau doc Google Sheet publish-to-web dang CSV.
- */
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (inQuotes) {
-      if (char === '"' && next === '"') {
-        field += '"';
-        i++;
-      } else if (char === '"') {
-        inQuotes = false;
-      } else {
-        field += char;
-      }
-      continue;
-    }
-
-    if (char === '"') {
-      inQuotes = true;
-    } else if (char === ",") {
-      row.push(field);
-      field = "";
-    } else if (char === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else if (char === "\r") {
-      // bo qua, \n se ket thuc dong
-    } else {
-      field += char;
-    }
-  }
-
-  if (field.length > 0 || row.length > 0) {
-    row.push(field);
-    rows.push(row);
-  }
-
-  return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
-}
-
 const isDev = process.env.NODE_ENV !== "production";
-
-// Chỉ tải CSV từ Google (link "Publish to web"). Chặn link lạ trong biến môi trường để
-// server không bị dùng làm cầu gọi tới địa chỉ nội bộ/bên thứ ba (SSRF) nếu env bị sửa nhầm.
-const SHEET_HOST = /(^|\.)(docs\.google\.com|google\.com|googleusercontent\.com)$/i;
-const SHEET_TIMEOUT_MS = 10_000;
-const SHEET_MAX_BYTES = 5 * 1024 * 1024;
-
-function isAllowedSheetUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" && !url.username && !url.password && SHEET_HOST.test(url.hostname);
-  } catch {
-    return false;
-  }
-}
 
 /** Gom các dòng giống hệt nhau (do copy/paste thừa trong Sheet), giữ dòng đầu tiên. */
 function dropDuplicates<T>(label: string, items: T[], keyOf: (item: T) => string): T[] {
@@ -109,51 +44,6 @@ function dropDuplicates<T>(label: string, items: T[], keyOf: (item: T) => string
     console.warn(`[${label}] Bỏ ${removed} dòng trùng lặp (giống hệt dòng phía trên trong Sheet).`);
   }
   return unique;
-}
-
-async function fetchSheetRows(url: string, label = "Sheet"): Promise<string[][]> {
-  if (!url) {
-    if (isDev) {
-      console.warn(`[${label}] Chưa có link CSV trong .env.local nên phần này sẽ trống.`);
-    }
-    return [];
-  }
-
-  if (!isAllowedSheetUrl(url)) {
-    console.warn(`[${label}] Link CSV bị từ chối: phải là https://docs.google.com/... (Publish to web). Kiểm tra biến môi trường.`);
-    return [];
-  }
-
-  try {
-    // npm run dev: luon lay du lieu moi nhat tu sheet (khong cache), sua sheet
-    // xong F5 la thay. Chay that (build/start): cache 60 giay.
-    const res = await fetch(url, {
-      ...(isDev ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
-      signal: AbortSignal.timeout(SHEET_TIMEOUT_MS)
-    });
-    if (!res.ok) {
-      if (isDev) {
-        console.warn(`[${label}] Không tải được sheet (HTTP ${res.status}). Kiểm tra link CSV trong .env.local.`);
-      }
-      return [];
-    }
-    const declared = Number(res.headers.get("content-length") ?? 0);
-    if (declared > SHEET_MAX_BYTES) {
-      console.warn(`[${label}] Sheet quá lớn (${declared} byte), bỏ qua.`);
-      return [];
-    }
-    const text = await res.text();
-    if (text.length > SHEET_MAX_BYTES) {
-      console.warn(`[${label}] Sheet quá lớn, bỏ qua.`);
-      return [];
-    }
-    return parseCsv(text);
-  } catch (error) {
-    if (isDev) {
-      console.warn(`[${label}] Lỗi khi tải sheet:`, error);
-    }
-    return [];
-  }
 }
 
 // Chuan hoa ten cot de so khop: bo phan ghi chu trong ngoac, bo dau tieng Viet,

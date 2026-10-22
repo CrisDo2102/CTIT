@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSaved } from "@/lib/saved";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -15,6 +16,7 @@ type Props = {
 // Đóng khi bấm link, bấm ra ngoài, nhấn Esc hoặc khi đổi trang.
 export function MobileNav({ items, resourceLinks }: Props) {
   const [open, setOpen] = useState(false);
+  const { items: savedItems } = useSaved(); // hiện số mục đã lưu ở menu điện thoại (dải liên kết trên cùng bị ẩn ở màn hình nhỏ)
   const pathname = usePathname();
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export function MobileNav({ items, resourceLinks }: Props) {
           {items.map((item) => (
             <li key={item.href}>
               <Link href={item.href} className={isActive(item.href) ? "is-current" : undefined} aria-current={pathname === item.href ? "page" : undefined}>
-                {item.label}
+                {item.href === "/saved" && savedItems.length > 0 ? `${item.label} (${savedItems.length})` : item.label}
               </Link>
               {item.href === "/resources" ? (
                 <ul className="mobile-nav-sub">

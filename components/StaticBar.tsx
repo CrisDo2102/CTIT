@@ -7,7 +7,7 @@ export function StaticBar() {
     <header className="header">
       <div className="container header-inner">
         <Link href="/" className="brand" aria-label="CTIT - Trang chủ">
-          <img src="/images/About/logo.png" alt="" className="brand-logo" />
+          <img src="/images/About/logo.png" alt="" className="brand-logo" width={42} height={42} decoding="async" />
           <span>Closed Thinking Institute of Technology</span>
         </Link>
       </div>

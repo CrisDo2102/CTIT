@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { StaticBar } from "@/components/StaticBar";
+import { reportClientError } from "@/lib/report-client";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error(error);
+    reportClientError("boundary", error, { digest: error.digest });
   }, [error]);
 
   return (

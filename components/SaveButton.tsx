@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSaved, type SavedItem } from "@/lib/saved";
+import { showToast } from "@/lib/toast";
 
 type Props = {
   item: Omit<SavedItem, "at">;
@@ -27,7 +28,14 @@ export function SaveButton({ item, variant = "icon", className = "" }: Props) {
         // Nút có thể nằm trong thẻ <a>: không cho bấm sao mà chuyển trang.
         event.preventDefault();
         event.stopPropagation();
+        const wasSaved = saved;
         toggle(item);
+        const name = item.title.length > 42 ? `${item.title.slice(0, 41).trimEnd()}…` : item.title;
+        showToast({
+          message: wasSaved ? `Đã bỏ lưu “${name}”` : `Đã lưu “${name}”`,
+          action: { label: "Hoàn tác", run: () => toggle(item) },
+          link: wasSaved ? undefined : { label: "Xem Đã lưu", href: "/saved" }
+        });
       }}
     >
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round">

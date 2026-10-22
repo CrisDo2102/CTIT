@@ -1,3 +1,4 @@
+import { navMetadata } from "@/lib/page-meta";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
@@ -10,6 +11,8 @@ function DocumentIcon() {
 function CourseIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h10M4 18h6" /><path d="m16 14 5 3-5 3Z" /></svg>;
 }
+export const metadata = navMetadata("/resources");
+
 export default function ResourcesPage() {
   return (
     <>

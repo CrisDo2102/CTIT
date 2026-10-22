@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AdminGuide } from "@/components/AdminGuide";
+import { AdminMonitoring } from "@/components/AdminMonitoring";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
@@ -28,6 +29,9 @@ export default function AdminPage() {
         />
         <section className="section no-top">
           <AdminGuide csv={csv} />
+        </section>
+        <section className="section no-top">
+          <AdminMonitoring />
         </section>
       </main>
       <Footer />

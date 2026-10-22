@@ -1,0 +1,97 @@
+/* ===== Trang chủ điện ảnh: học cách trình bày của Tesla =====
+   Nguyên tắc: hero chiếm trọn màn hình, menu nổi trên ảnh rồi mờ kính khi cuộn, mỗi hướng hoạt động là một màn hình
+   riêng (một tiêu đề, hai nút), bớt mọi thứ không cần. Chỉ trang chủ dùng (import ở app/page.tsx). */
+
+/* ---------- Header nổi trên hero ---------- */
+.top-strip.is-overlay {
+  position: absolute; z-index: 60; inset: 0 0 auto 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .16); background: transparent; backdrop-filter: none; color: rgba(255, 255, 255, .88);
+}
+.top-strip.is-overlay a { color: rgba(255, 255, 255, .88); }
+.top-strip.is-overlay a:hover { color: #fff; text-decoration: underline; }
+.top-strip.is-overlay .search-trigger { border-color: rgba(255, 255, 255, .4); background: rgba(255, 255, 255, .12); color: #fff; }
+.top-strip.is-overlay .search-trigger kbd { border-color: rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .2); color: #fff; }
+
+.header.is-overlay {
+  position: fixed; top: var(--strip-h, 0px); right: 0; left: 0; z-index: 50;
+  border-bottom: 1px solid transparent; background: transparent; backdrop-filter: none;
+  transition: top .28s ease, background-color .28s ease, border-color .28s ease;
+}
+@media (min-width: 861px) { .header.is-overlay { top: var(--strip-h, 38px); } }
+.header.is-overlay.is-scrolled { top: 0; border-bottom-color: var(--line); background: rgba(255, 255, 255, .88); backdrop-filter: saturate(1.5) blur(20px); }
+
+/* Khi đang trong suốt: chữ trắng, gạch chân trắng */
+.header.is-overlay:not(.is-scrolled) :is(.brand, .mainnav > a, .nav-dropdown-trigger) { color: #fff; }
+.header.is-overlay:not(.is-scrolled) .brand small { color: rgba(255, 255, 255, .72); }
+.header.is-overlay:not(.is-scrolled) :is(.mainnav > a:hover, .mainnav > a.is-active, .nav-dropdown-trigger:hover, .nav-dropdown-trigger.is-active, .nav-dropdown:focus-within .nav-dropdown-trigger) { color: #fff; }
+.header.is-overlay:not(.is-scrolled) :is(.mainnav > a::after, .nav-dropdown-trigger::after) { background: #fff; }
+.header.is-overlay:not(.is-scrolled) .brand-mark { border-color: rgba(255, 255, 255, .4); }
+.header.is-overlay:not(.is-scrolled) .mobile-nav-toggle { border-color: rgba(255, 255, 255, .5); background: rgba(255, 255, 255, .12); }
+.header.is-overlay:not(.is-scrolled) .mobile-nav-toggle span { background: #fff; }
+.header.is-overlay:not(.is-scrolled) .search-trigger { border-color: rgba(255, 255, 255, .5); background: rgba(255, 255, 255, .12); color: #fff; }
+
+/* ---------- Hero toàn màn hình ---------- */
+.ti-hero.is-cinematic { height: 100svh; min-height: 580px; max-height: 1100px; }
+.ti-hero.is-cinematic .ti-slides { height: 100%; grid-template-rows: minmax(0, 1fr); }
+.ti-hero.is-cinematic .ti-slide { min-height: 0; }
+.ti-hero.is-cinematic .ti-slide::after {
+  background:
+    linear-gradient(180deg, rgba(8, 7, 20, .66) 0%, rgba(8, 7, 20, .12) 22%, rgba(8, 7, 20, .1) 38%, rgba(8, 7, 20, .72) 74%, rgba(8, 7, 20, .9) 100%);
+}
+/* Khối chữ nằm ở phần dưới của hero (không đặt giữa như ảnh phong cảnh): ảnh tập thể có mặt người ở giữa khung, chữ đè lên mặt thì mất ý nghĩa của bức ảnh. */
+.ti-hero.is-cinematic .ti-slide-inner { align-self: stretch; display: grid; align-items: end; justify-items: center; padding-block: 120px 132px; }
+.ti-hero.is-cinematic .ti-slide-bg { object-position: center 24%; }
+.ti-hero.is-cinematic .ti-slide-copy { max-width: 920px; text-align: center; }
+.ti-hero.is-cinematic .ti-eyebrow { margin-bottom: 20px; color: #e0e7ff; }
+/* Chữ trên ảnh thật: bóng chữ nhẹ để vẫn đọc được trên vùng sáng (áo trắng, tường). */
+.ti-hero.is-cinematic :is(.ti-eyebrow, .ti-title, .ti-text) { text-shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 4px 28px rgba(0, 0, 0, .5); }
+.ti-hero.is-cinematic .ti-title { font-size: clamp(2.3rem, 6vw, 5rem); font-weight: 700; line-height: 1.02; letter-spacing: -.045em; }
+.ti-hero.is-cinematic .ti-text { margin: 24px auto 0; max-width: 46ch; font-size: clamp(17px, 1.6vw, 21px); }
+.ti-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 36px; }
+.ti-actions .ti-cta { margin-top: 0; }
+.ti-hero.is-cinematic .ti-cta { border-color: #fff; background: #fff; color: #17131a; }
+.ti-hero.is-cinematic .ti-cta:hover { background: transparent; color: #fff; }
+.ti-hero.is-cinematic .ti-cta.is-ghost { border-color: rgba(255, 255, 255, .7); background: rgba(255, 255, 255, .08); color: #fff; backdrop-filter: blur(8px); }
+.ti-hero.is-cinematic .ti-cta.is-ghost:hover { background: #fff; color: #17131a; }
+.ti-hero.is-cinematic .ti-controls { bottom: 32px; }
+@media (max-width: 860px) {
+  .ti-hero.is-cinematic { min-height: 560px; }
+  .ti-hero.is-cinematic .ti-slide-inner { padding-block: 96px 124px; }
+}
+
+/* ---------- Mỗi hướng hoạt động một màn hình ---------- */
+.ct-tracks { background: #07060f; color: #fff; }
+.ct-panel {
+  position: relative; display: flex; align-items: center; min-height: min(92svh, 860px); overflow: hidden; border-top: 1px solid rgba(255, 255, 255, .08);
+  background:
+    radial-gradient(60% 80% at 16% 28%, hsl(var(--h) 70% 24% / .8), transparent 62%),
+    radial-gradient(48% 68% at 90% 88%, hsl(calc(var(--h) + 50) 80% 30% / .45), transparent 66%), #07060f;
+}
+.ct-panel-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); align-items: center; padding-block: 96px; }
+.ct-panel.is-flip .ct-panel-copy { order: 2; }
+.ct-kicker { margin: 0 0 18px; color: #a5b4fc; font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.ct-panel h2 { margin: 0 0 22px; color: #fff; font-size: clamp(2.2rem, 5vw, 4.4rem); font-weight: 700; line-height: 1.04; letter-spacing: -.04em; }
+.ct-lead { max-width: 46ch; margin: 0 0 34px; color: rgba(255, 255, 255, .8); font-size: clamp(16px, 1.4vw, 19px); line-height: 1.65; }
+.ct-actions { display: flex; flex-wrap: wrap; gap: 14px; }
+.ct-btn {
+  display: inline-flex; align-items: center; padding: 13px 26px; border: 2px solid #fff; background: #fff; color: #17131a;
+  font-weight: 800; transition: transform .2s ease, background-color .2s ease, color .2s ease;
+}
+.ct-btn:hover { transform: translateY(-2px); background: transparent; color: #fff; }
+.ct-btn.is-ghost { border-color: rgba(255, 255, 255, .6); background: transparent; color: #fff; }
+.ct-btn.is-ghost:hover { background: #fff; color: #17131a; }
+.ct-panel-media { display: grid; place-items: center; }
+.ct-panel-media img {
+  display: block; width: 100%; max-width: 640px; max-height: 56svh; padding: 14px; border-radius: 18px; background: #fff; object-fit: contain;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .14);
+}
+.ct-number { color: rgba(255, 255, 255, .1); font-size: clamp(8rem, 22vw, 18rem); font-weight: 900; letter-spacing: -.06em; line-height: 1; }
+@media (max-width: 860px) {
+  .ct-panel { min-height: 0; }
+  .ct-panel-grid { grid-template-columns: minmax(0, 1fr); padding-block: 72px; }
+  .ct-panel.is-flip .ct-panel-copy { order: 0; }
+  .ct-panel-media img { max-height: 44svh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .header.is-overlay, .ct-btn { transition: none; }
+}

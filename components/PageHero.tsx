@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { BackLink } from "@/components/BackLink";
 
 export type ParentLink = { label: string; href: string };
 export type HeroStat = { value: string | number; label: string };
@@ -27,9 +27,7 @@ export function PageHero({ eyebrow, title, intro, parent, stats = [], aside, chi
       <div className={`ph-inner${aside ? " has-aside" : ""}`}>
         <div className="ph-copy">
           {parent ? (
-            <Link href={parent.href} className="ph-back">
-              <span aria-hidden="true">←</span> {parent.label}
-            </Link>
+            <BackLink href={parent.href} label={parent.label} />
           ) : null}
           <p className="eyebrow">{eyebrow}</p>
           <h1>{title}</h1>

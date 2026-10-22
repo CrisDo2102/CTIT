@@ -1,5 +1,6 @@
 "use client";
 
+import { NoData } from "@/components/NoData";
 import { useMemo, useRef, useState } from "react";
 import { getDistinctSchools, groupStudentsBySchool } from "@/lib/student-utils";
 import { SafeImage } from "@/components/SafeImage";
@@ -220,10 +221,7 @@ export function StudentsShowcase({ students }: Props) {
         ) : null}
 
         {!hasData ? (
-          <div className="empty-state">
-            Chưa có dữ liệu học viên. Kiểm tra biến môi trường{" "}
-            <code>STUDENTS_SHEET_CSV_URL</code> trong <code>.env.local</code>.
-          </div>
+          <NoData what="học viên" env="STUDENTS_SHEET_CSV_URL" />
         ) : groups.length === 0 ? (
           <div className="empty-state">
             Không tìm thấy học viên nào khớp với bộ lọc hiện tại.

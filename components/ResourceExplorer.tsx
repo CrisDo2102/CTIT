@@ -1,7 +1,12 @@
 "use client";
 
+import { NoData } from "@/components/NoData";
 import { useEffect, useMemo, useState } from "react";
+import { EmptyResults } from "@/components/EmptyResults";
 import { FacetGroup } from "@/components/FacetGroup";
+import { FilterDrawerBackdrop } from "@/components/FilterDrawerBackdrop";
+import { rememberList } from "@/lib/list-memory";
+import { useScrollMemory } from "@/lib/scroll-memory";
 import { countSelected, emptySelected, readSelected, runFacets, toggleValue, uniqueValues, writeSelected, type Getters, type Selected } from "@/lib/facets";
 import { ResourceCard } from "@/components/ResourceCard";
 import type { Resource } from "@/data/resources";
@@ -30,6 +35,7 @@ export function ResourceExplorer({ initialResources }: Props) {
   const [sort, setSort] = useState<Sort>("sheet");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [ready, setReady] = useState(false);
+  useScrollMemory("/resources/documents", ready);
 
   // Giá trị của từng nhóm. Lĩnh vực giữ đúng thứ tự trong Sheet; Loại theo thứ tự chuẩn rồi tới loại lạ
   // (gõ nhầm chính tả vẫn có ô lọc, không bị ẩn); Cấp độ và Nguồn theo thứ tự xuất hiện.
@@ -69,6 +75,7 @@ export function ResourceExplorer({ initialResources }: Props) {
     if (sort !== "sheet") params.set("sort", sort);
     const qs = params.toString();
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+    rememberList("/resources/documents", qs ? `?${qs}` : "");
   }, [ready, query, facets, savedOnly, sort]);
 
   const keyword = query.trim().toLowerCase();
@@ -125,11 +132,10 @@ export function ResourceExplorer({ initialResources }: Props) {
       </div>
 
       {initialResources.length === 0 ? (
-        <div className="empty-state">
-          Chưa có dữ liệu tài liệu. Kiểm tra biến môi trường <code>RESOURCES_SHEET_CSV_URL</code> trong <code>.env.local</code>.
-        </div>
+        <NoData what="tài liệu" env="RESOURCES_SHEET_CSV_URL" />
       ) : (
         <div className={`inv-layout${visibleKeys.length === 0 ? " no-facets" : ""}`}>
+          <FilterDrawerBackdrop open={filtersOpen} onClose={() => setFiltersOpen(false)} />
           <aside id="doc-facets" className={`inv-facets${filtersOpen ? " is-open" : ""}`} aria-label="Bộ lọc tài liệu">
             <div className="inv-facets-head">
               <strong>Bộ lọc{activeCount > 0 ? <em>{activeCount}</em> : null}</strong>
@@ -150,11 +156,12 @@ export function ResourceExplorer({ initialResources }: Props) {
               <input type="checkbox" checked={savedOnly} onChange={(event) => setSavedOnly(event.target.checked)} />
               <span>Chỉ hiện mục đã lưu ★</span>
             </label>
-          </aside>
+          <button type="button" className="inv-apply" onClick={() => setFiltersOpen(false)}>Xem {filtered.length} kết quả</button>
+        </aside>
 
           <div className="inv-results">
             <p className="result-line">
-              <span>
+              <span role="status" aria-live="polite">
                 <strong>{filtered.length}</strong> / {initialResources.length} tài liệu
               </span>
               <span className="doc-tools">
@@ -198,12 +205,26 @@ export function ResourceExplorer({ initialResources }: Props) {
             </div>
 
             {filtered.length === 0 ? (
-              <div className="empty-state">
-                {savedOnly && !keyword && activeCount === 1 ? "Bạn chưa lưu tài liệu nào. Bấm ★ trên thẻ tài liệu để lưu." : "Không tìm thấy tài liệu phù hợp với bộ lọc hiện tại."}
-                <button type="button" className="btn ghost empty-reset" onClick={resetFilters}>
-                  Xoá bộ lọc
-                </button>
-              </div>
+              savedOnly && !keyword && activeCount === 1 ? (
+                <div className="empty-state">
+                  Bạn chưa lưu tài liệu nào. Bấm ★ trên thẻ tài liệu để lưu.
+                  <button type="button" className="btn ghost empty-reset" onClick={resetFilters}>Xem tất cả tài liệu</button>
+                </div>
+              ) : (
+                <EmptyResults
+                  message="Không tìm thấy tài liệu phù hợp."
+                  onReset={resetFilters}
+                  suggestions={[
+                    ...FACET_KEYS.filter((key) => facets[key].length > 0).map((key) => ({
+                      label: `${TITLE[key]}: ${facets[key].join(", ")}`,
+                      count: [...counts[key].values()].reduce((sum, n) => sum + n, 0),
+                      run: () => setFacets((current) => ({ ...current, [key]: [] }))
+                    })),
+                    ...(savedOnly ? [{ label: "Chỉ mục đã lưu ★", run: () => setSavedOnly(false) }] : []),
+                    ...(keyword ? [{ label: `Từ khóa “${query.trim()}”`, run: () => setQuery("") }] : [])
+                  ]}
+                />
+              )
             ) : null}
           </div>
         </div>

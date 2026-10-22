@@ -1,5 +1,6 @@
 "use client";
 
+import { NoDataMessage } from "@/components/NoData";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import type { NewsItem } from "@/lib/sheet-data";
@@ -263,7 +264,7 @@ export function NewsView({ items }: { items: NewsItem[] }) {
       {!items.length ? (
         <section className="nw-sec">
           <div className="nw-wrap nw-empty">
-            Chưa có bài viết nào. Kiểm tra tab News trong Google Sheet và biến <code>NEWS_SHEET_CSV_URL</code> trong <code>.env.local</code>.
+            <NoDataMessage what="bài viết" env="NEWS_SHEET_CSV_URL" note="và tab News trong Google Sheet" />
           </div>
         </section>
       ) : null}

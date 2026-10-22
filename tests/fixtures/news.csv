@@ -1,0 +1,14 @@
+section,order,title,content,date,url,id,category
+headlines,1,CTIT mở đơn tuyển thành viên đợt 2,"Đăng ký đến hết tháng, không yêu cầu kinh nghiệm.",{{today-1}},https://example.com/tin/tuyen-sinh,CTIT_tren_facebook.png,Thông báo
+headlines,2,Mạng trên ô tô hiện đại: từ CAN đến Ethernet,Tổng quan các mạng trong xe và xu hướng sắp tới.,{{today-4}},https://example.com/tin/mang-oto,mang_tren_o_to_hien_dai.png,Kỹ thuật
+headlines,3,Phần mềm ô tô và AUTOSAR,Vì sao ngành ô tô chuyển sang phần mềm định nghĩa xe.,{{today-9}},https://example.com/tin/autosar,automotive_software.png,Kỹ thuật
+latest,1,Hệ thống BMS cho xe điện hoạt động thế nào,Cân bằng cell và bảo vệ pin.,{{today-15}},https://example.com/tin/bms,bms.jpg,Kỹ thuật
+latest,2,"ECU, cảm biến và bộ điều khiển",Chuỗi từ cảm biến đến chấp hành.,{{today-22}},https://example.com/tin/ecu,ECU-sensor-controlle.png,Kỹ thuật
+latest,3,Hệ thống nhúng: bắt đầu từ đâu,Lộ trình cho người mới.,{{today-30}},https://example.com/tin/nhung,embedded.jpg,Kỹ thuật
+latest,4,Nhìn lại một học kỳ hoạt động,Những con số và khoảnh khắc đáng nhớ.,{{today-45}},,CTIT_tren_facebook.png,Hoạt động
+latest,5,Tin không có ảnh và không có link,Bản tin ngắn dùng để kiểm tra thẻ thiếu ảnh.,{{today-60}},,,Hoạt động
+media,1,Báo địa phương đưa tin về câu lạc bộ,Bài viết giới thiệu hoạt động của CTIT.,{{today-18}},https://example.com/bao/ctit,,Báo chí
+media,2,Phỏng vấn người sáng lập CTIT,Hành trình xây dựng câu lạc bộ kỹ thuật.,{{today-33}},https://example.com/bao/phong-van,,Báo chí
+features,1,Chuyên đề: Xe điện và bài toán pin,Phân tích các hướng công nghệ pin cho xe điện.,{{today-12}},https://example.com/chuyen-de/pin,bms.jpg,Chuyên đề
+features,2,Chuyên đề: Phần mềm trong xe,Từ ECU đến kiến trúc tập trung.,{{today-28}},,automotive_software.png,Chuyên đề
+latest,6,Tin có link độc (link phải bị gỡ nhưng tin vẫn hiện),Kiểm tra lọc link.,{{today-2}},javascript:alert(1),,Kỹ thuật

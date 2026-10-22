@@ -1,0 +1,17 @@
+# Mở pull request tự động khi có bản cập nhật cho thư viện. Gom bản vá và bản nhỏ vào một PR mỗi tuần để đỡ ồn.
+# Mỗi PR chạy CI (typecheck, lint, test, E2E), nên chỉ gộp khi tất cả xanh.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly

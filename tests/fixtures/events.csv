@@ -1,0 +1,12 @@
+title,date,time,place,summary,url,image,tag,featured
+Workshop CAN bus trên ATmega,{{today+2}},18:00 - 20:00,Lab A1,Buổi thực hành gửi nhận khung CAN và đọc tín hiệu bằng logic analyzer.,https://example.com/dk/can,gapgocuoituan.png,Workshop,x
+Seminar: Xe điện và hệ thống BMS,{{today+5}},14:00 - 16:00,"Phòng B1, Tòa nhà Thí nghiệm",Chia sẻ về kiến trúc BMS và bài toán cân bằng cell.,https://example.com/dk/bms,,Seminar,
+Họp câu lạc bộ tháng này,{{today+5}},19:00,Online qua Google Meet,Tổng kết hoạt động và phân công nhiệm vụ.,,,Thông báo,
+Hackathon Nhúng 24h,{{today+12}},08:00 - 17:00,Lab A1 và A2,"Thi lập trình nhúng theo đề bài bất ngờ, có giải thưởng.",https://example.com/dk/hackathon,gapgocuoituan.png,Cuộc thi,
+Workshop PCB với KiCad,{{today+33}},,Lab B2,Thiết kế mạch từ sơ đồ nguyên lý đến Gerber.,https://example.com/dk/kicad,,Workshop,
+Demo day cuối kỳ,{{today+34}},09:00 - 12:00,Hội trường lớn,Các nhóm trình bày sản phẩm.,,,Thông báo,
+Chương trình chưa chốt lịch,,,,Sẽ cập nhật ngày và địa điểm sau.,,,Thông báo,
+Gặp gỡ cuối tuần,{{today-3}},09:00,Quán cà phê gần trường,Trò chuyện thân mật giữa các thế hệ thành viên.,,gapgocuoituan.png,Thông báo,
+Workshop Arduino cho người mới,{{today-10}},18:00 - 20:00,Lab A1,Làm quen mạch và lập trình cơ bản.,https://example.com/dk/arduino,gapgocuoituan.png,Workshop,
+Seminar: Giao thông thông minh,{{today-40}},14:00,Phòng B1,Khái quát ITS và V2X.,,,Seminar,
+Tuyển thành viên khóa trước,{{today-70}},,Online,Buổi giới thiệu và phỏng vấn.,https://example.com/dk/old,,Thông báo,

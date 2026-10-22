@@ -21,7 +21,10 @@ function TileMedia({ href, index, images }: { href: string; index: number; image
   const [prev, setPrev] = useState<number | null>(null);
   const curRef = useRef(0);
   const sizeRef = useRef(images.length);
-  sizeRef.current = list.length;
+  // Ghi vào ref trong effect (không ghi lúc render) để bộ đếm giờ luôn đọc được số ảnh còn lại.
+  useEffect(() => {
+    sizeRef.current = list.length;
+  }, [list.length]);
 
   useEffect(() => {
     if (list.length < 2) return;

@@ -1,3 +1,4 @@
+import { NoData } from "@/components/NoData";
 import type { AboutInfo } from "@/lib/dashboard-types";
 import { resolvePhotoUrl } from "@/lib/photo-url";
 
@@ -12,10 +13,7 @@ export function AboutIntro({ about }: Props) {
   if (!about) {
     return (
       <section className="about-intro">
-        <div className="empty-state">
-          Chưa có dữ liệu About. Kiểm tra biến môi trường{" "}
-          <code>ABOUT_SHEET_CSV_URL</code> trong <code>.env.local</code>.
-        </div>
+        <NoData what="giới thiệu" env="ABOUT_SHEET_CSV_URL" />
       </section>
     );
   }

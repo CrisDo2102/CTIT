@@ -16,7 +16,8 @@ export type HeroSlide = {
 // Carousel đầu trang chủ (bố cục theo ti.com): ảnh tràn khung, chữ bên trái, mỗi slide 1 nút hành động.
 // Tự chuyển slide khi thanh tiến độ chạy xong (onAnimationEnd) nên tạm dừng/rê chuột là dừng đúng chỗ.
 // Bật "giảm chuyển động" thì không tự chạy, chỉ chuyển bằng nút.
-export function HomeCarousel({ slides }: { slides: HeroSlide[] }) {
+// exploreHref: nút phụ "Khám phá" cuộn xuống phần nội dung đầu tiên bên dưới hero.
+export function HomeCarousel({ slides, exploreHref = "#kham-pha" }: { slides: HeroSlide[]; exploreHref?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [hover, setHover] = useState(false);
@@ -25,7 +26,7 @@ export function HomeCarousel({ slides }: { slides: HeroSlide[] }) {
 
   return (
     <section
-      className="ti-hero"
+      className="ti-hero is-cinematic"
       aria-roledescription="carousel"
       aria-label="Nổi bật"
       onMouseEnter={() => setHover(true)}
@@ -45,15 +46,20 @@ export function HomeCarousel({ slides }: { slides: HeroSlide[] }) {
               aria-hidden={!active}
               inert={!active}
             >
-              {slide.image ? <img className="ti-slide-bg" src={slide.image} alt="" loading={i === 0 ? "eager" : "lazy"} /> : null}
+              {slide.image ? <img className="ti-slide-bg" src={slide.image} alt="" loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} /> : null}
               <div className="container ti-slide-inner">
                 <div className="ti-slide-copy">
                   <p className="ti-eyebrow">{slide.eyebrow}</p>
                   <h1 className="ti-title">{slide.title}</h1>
                   {slide.text ? <p className="ti-text">{slide.text}</p> : null}
-                  <Cta className="ti-cta" href={slide.href} {...extra}>
-                    {slide.cta} <span aria-hidden="true">→</span>
-                  </Cta>
+                  <div className="ti-actions">
+                    <Cta className="ti-cta" href={slide.href} {...extra}>
+                      {slide.cta} <span aria-hidden="true">→</span>
+                    </Cta>
+                    <a className="ti-cta is-ghost" href={exploreHref}>
+                      Khám phá <span aria-hidden="true">↓</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             </article>

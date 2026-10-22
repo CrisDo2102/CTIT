@@ -5,6 +5,8 @@ import { InventoryExplorer } from "@/components/InventoryExplorer";
 import { withSlugs } from "@/lib/inventory";
 import { getInventory } from "@/lib/sheet-data";
 
+export const metadata = { title: "Inventory", description: "Tra cứu vật tư, linh kiện và thiết bị của CTIT: số lượng, vị trí, trạng thái." };
+
 export default async function InventoryPage() {
   const items = withSlugs(await getInventory());
   const categories = new Set(items.map((item) => item.category).filter(Boolean)).size;

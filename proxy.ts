@@ -9,6 +9,8 @@ import { NextResponse, type NextRequest } from "next/server";
 //   mật khẩu dài là lớp chính. Cần chặn tuyệt đối thì bật Vercel Firewall rate limit cho /admin.
 
 const MIN_PASSWORD_LENGTH = 12;
+// Mật khẩu mẫu / dễ đoán (vd "change-this-to-a-long-password" trong .env.example): ở production thì tắt /admin thay vì để mở với mật khẩu ai cũng đoán được.
+const PLACEHOLDER_PASSWORD = /^(?:change|your[-_ ]?|password|passw0rd|admin|test|example|12345|qwerty)/i;
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60 * 1000;
 const fails = new Map<string, { count: number; until: number; last: number }>();
@@ -66,6 +68,10 @@ export async function proxy(request: NextRequest) {
   }
   if (production && expected.length < MIN_PASSWORD_LENGTH) {
     return new NextResponse(`Trang admin đang tắt: ADMIN_PASSWORD phải dài ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`, { status: 503, headers: baseHeaders });
+  }
+
+  if (production && PLACEHOLDER_PASSWORD.test(expected)) {
+    return new NextResponse("Trang admin đang tắt: ADMIN_PASSWORD vẫn là giá trị mẫu. Hãy đặt một chuỗi ngẫu nhiên dài.", { status: 503, headers: baseHeaders });
   }
 
   const ip = clientIp(request);

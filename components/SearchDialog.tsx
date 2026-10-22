@@ -28,6 +28,7 @@ export function SearchDialog() {
   const [history, setHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -60,11 +61,14 @@ export function SearchDialog() {
   useEffect(() => {
     if (!open) return;
     setHistory(readHistory());
+    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     inputRef.current?.focus();
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
+      // Đóng ô tìm kiếm thì trả con trỏ bàn phím về nút đã mở nó (người dùng bàn phím không bị "mất chỗ").
+      returnFocus.current?.focus?.();
     };
   }, [open]);
 
@@ -119,8 +123,7 @@ export function SearchDialog() {
   };
 
   const onInputKey = (event: React.KeyboardEvent) => {
-    if (event.key === "Escape") close();
-    else if (event.key === "ArrowDown") {
+    if (event.key === "ArrowDown") {
       event.preventDefault();
       setActive((i) => Math.min(i + 1, ordered.length - 1));
     } else if (event.key === "ArrowUp") {
@@ -129,6 +132,28 @@ export function SearchDialog() {
     } else if (event.key === "Enter" && ordered[active]) {
       event.preventDefault();
       go(ordered[active]);
+    }
+  };
+
+  // Phím trên cả hộp thoại (không chỉ khi con trỏ đang ở ô nhập): Esc đóng được từ bất kỳ nút nào bên trong,
+  // và Tab chạy vòng, không "rơi" ra trang phía sau.
+  const onDialogKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.stopPropagation();
+      close();
+      return;
+    }
+    if (event.key !== "Tab") return;
+    const nodes = [...event.currentTarget.querySelectorAll<HTMLElement>('input, button:not([disabled]), a[href]')].filter((node) => node.tabIndex >= 0);
+    if (nodes.length === 0) return;
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
     }
   };
 
@@ -141,7 +166,7 @@ export function SearchDialog() {
 
   return (
     <div className="search-overlay" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && close()}>
-      <div className="search-dialog" role="dialog" aria-modal="true" aria-label="Tìm kiếm trên CTIT">
+      <div className="search-dialog" role="dialog" aria-modal="true" aria-label="Tìm kiếm trên CTIT" onKeyDown={onDialogKey}>
         <div className="search-field">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2" /></svg>
           <input
@@ -243,6 +268,14 @@ export function SearchDialog() {
             </li>
           ))}
         </ul>
+
+        {typed ? (
+          <div className="search-more">
+            <span>Tìm “{query.trim()}” trong:</span>
+            <Link href={`/resources/documents?q=${encodeURIComponent(query.trim())}`} onClick={() => { addHistory(query); close(); }}>Tài liệu</Link>
+            <Link href={`/resources/inventory?q=${encodeURIComponent(query.trim())}`} onClick={() => { addHistory(query); close(); }}>Vật tư</Link>
+          </div>
+        ) : null}
 
         <div className="search-foot" aria-hidden="true">
           <span><kbd>↑</kbd><kbd>↓</kbd> chọn</span>

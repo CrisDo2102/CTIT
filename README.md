@@ -1151,3 +1151,249 @@ Không cần thêm cột trong Sheet. Dùng các cột sẵn có của tab Event
   - File .ics đã escape ký tự đặc biệt, xuống dòng đúng chuẩn (CRLF, cắt dòng theo byte để không vỡ chữ có dấu).
 - **Lịch tháng** (`components/EventsMonth.tsx`): nút chuyển **Danh sách | Lịch tháng** ở đầu trang `/events` (chỉ hiện khi có ít nhất một sự kiện có ngày hợp lệ). Lưới bắt đầu từ Thứ hai, có nút tháng trước / sau / Hôm nay, ô có sự kiện hiện tên (trên điện thoại chỉ hiện chấm). Bấm một ngày để xem chi tiết, chưa chọn ngày thì liệt kê mọi sự kiện của tháng. Mở ở tháng hiện tại; nếu tháng đó không có sự kiện thì nhảy tới sự kiện sắp tới gần nhất. Vẫn tuân theo bộ lọc nhãn ở trên. Sự kiện chưa có ngày chỉ nằm ở chế độ Danh sách.
 - Đã kiểm: `lib/calendar.ts` bằng 22 phép thử (giờ, múi giờ, qua nửa đêm, cả ngày, gấp dòng, lưới tháng nhuận); HTML của hai component bằng 15 phép thử với dữ liệu mẫu; `tsc`, `next build`. Chưa xem bằng mắt trên trình duyệt và chưa thử nhập file .ics vào ứng dụng lịch thật.
+
+### Cách cập nhật khi giải nén đè, và cách biết đang chạy đúng bản mới — 2026-10-12
+
+Zip cập nhật chỉ có **mã nguồn** (khoảng 11 MB, phần lớn là ảnh trong `public/images`). Không có `node_modules`, `.next` và `.env.local`, nên đè lên không làm mất dữ liệu cấu hình của bạn.
+
+1. Giải nén đè sao cho các thư mục `app/`, `components/`, `lib/`, `data/` của dự án được thay bằng bản mới (đừng để thành `CTIT/CTIT/...`). Giữ nguyên `.env.local` của bạn.
+2. **Xóa thư mục `.next`.** Nếu chạy bằng `npm start` mà chưa build lại thì vẫn đang chạy bản cũ nằm trong `.next`.
+3. `npm install`, rồi `npm run dev` (hoặc `npm run build` rồi `npm start`).
+4. Mở trang chủ, kéo xuống chân trang: dòng nhỏ **"v2026.10.12 · dựng <giờ> · Có gì mới"**. Thấy dòng này là đang chạy bản mới; bấm vào để xem trang `/changelog`. Không thấy nghĩa là trình duyệt đang nối vào bản cũ.
+5. Thêm một dấu hiệu nhìn là thấy ngay: **thanh màu chạy ở mép trên màn hình** mỗi khi bấm chuyển trang (`components/RouteProgress.tsx`).
+
+Mỗi lần cập nhật hãy thêm một mục lên đầu `data/changelog.ts`: số phiên bản ở chân trang và trang "Có gì mới" tự đổi theo.
+
+Ngoài ra: dòng CSP `upgrade-insecure-requests` giờ chỉ bật khi chạy trên Vercel (`process.env.VERCEL`). Trước đó chạy `npm start` ở `http://localhost` có thể làm vỡ CSS/JS trên một số trình duyệt vì bị ép sang https.
+
+### UX: thông báo, quay lại giữ bộ lọc, gợi ý khi rỗng, ngăn kéo bộ lọc, bàn phím — 2026-10-12
+
+Rà các luồng tìm tài liệu, tra vật tư, lưu mục và tìm kiếm, sửa những chỗ dùng chưa tiện:
+
+| Vấn đề | Cách xử lý | File |
+|---|---|---|
+| Bấm ★ chỉ thấy sao đổi màu, không biết đã lưu ở đâu, bấm nhầm không gỡ được | Thông báo nhỏ "Đã lưu “…”" kèm **Hoàn tác** và link **Xem Đã lưu** (5 giây, trình đọc màn hình đọc được) | `components/ToastHost.tsx`, `lib/toast.ts`, `components/SaveButton.tsx` |
+| Từ trang chi tiết vật tư bấm "← Inventory" thì mất bộ lọc đang đặt | Nhớ bộ lọc của danh sách trong tab (sessionStorage); nút quay lại về đúng bộ lọc, ghi chú "· giữ bộ lọc". Dùng chung cho mọi trang con qua `PageHero` | `lib/list-memory.ts`, `components/BackLink.tsx`, `components/PageHero.tsx` |
+| Lọc ra rỗng chỉ báo "thử xoá bộ lọc" | Gợi ý từng bộ lọc kèm số kết quả sẽ có nếu bỏ nó ("Bỏ **Hãng: ST** · 12 kết quả"), cộng nút bỏ từ khóa / còn hàng / đã lưu và Xóa tất cả. Số kết quả lấy sẵn từ bước đếm facet (không tính thêm), đã đối chiếu 694 trường hợp: lệch 0 | `components/EmptyResults.tsx`, hai explorer |
+| Bộ lọc trên điện thoại không đóng được bằng cách bấm ra ngoài, trang phía sau vẫn cuộn | Nền mờ bấm để đóng, phím Esc, khóa cuộn trang khi ngăn kéo mở | `components/FilterDrawerBackdrop.tsx` |
+| Ô tìm kiếm: Tab chạy ra trang phía sau, đóng xong mất vị trí bàn phím, không biết tìm tiếp ở đâu | Tab chạy vòng trong hộp thoại, đóng thì trả con trỏ về nút đã mở, thêm dòng "Tìm “…” trong: Tài liệu · Vật tư" (mở sẵn từ khóa, vì hai trang đọc `?q=`) | `components/SearchDialog.tsx` |
+| Số kết quả đổi khi lọc nhưng trình đọc màn hình không biết | Số kết quả của Inventory và Tài liệu có `role="status"` | hai explorer |
+
+Đã kiểm: `tsc`, `next build`, HTML render của `EmptyResults` / `ToastHost` / `SaveButton` / `FilterDrawerBackdrop`, và đối chiếu số gợi ý bỏ lọc. Chưa thử bằng tay trên trình duyệt (thông báo ★, ngăn kéo trên điện thoại, vòng Tab trong ô tìm kiếm); mục "Kiểm tra bằng tay" dưới đây:
+
+1. Bấm ★ ở một thẻ vật tư: thanh đen ở đáy hiện "Đã lưu …", bấm Hoàn tác thì sao tắt.
+2. Ở `/resources/inventory` tick vài bộ lọc, mở một món, bấm "← Inventory": về đúng bộ lọc đó.
+3. Gõ từ khóa không có kết quả hoặc tick hai nhóm không giao nhau: thấy các nút "Bỏ …· N kết quả".
+4. Thu hẹp cửa sổ dưới 960px, mở "Bộ lọc": bấm nền mờ hoặc Esc thì đóng.
+5. `Ctrl+K`, bấm Tab liên tục: con trỏ không ra khỏi hộp thoại; Esc đóng thì con trỏ về nút Tìm kiếm.
+
+### UX (đợt 2): tiêu đề trang, thông báo khi trống dữ liệu, bàn phím và cảm ứng — 2026-10-12
+
+| Vấn đề thấy khi rà | Cách xử lý | File |
+|---|---|---|
+| 9 chỗ (Sự kiện, Tin tức, Tuyển sinh, Học viên, Khuôn viên, Giới thiệu, Tổng quan, Tài liệu, danh sách tin/sự kiện ở trang chủ) hiện câu "Kiểm tra biến môi trường ... trong `.env.local`" cho cả người xem khi Sheet trống hoặc tải lỗi | `NoData` / `NoDataMessage`: khi `npm run dev` vẫn nói rõ biến nào cần kiểm tra; ở production chỉ hiện "Nội dung … đang được cập nhật. Bạn quay lại sau nhé." kèm nút về Trang chủ / Tài nguyên | `components/NoData.tsx` và các component trên |
+| 10 trong 18 trang không có tiêu đề riêng, tab trình duyệt trang nào cũng là "CTIT" | Tiêu đề và mô tả lấy từ `nav` trong `lib/site-config.ts` (`lib/page-meta.ts`), layout gắn hậu tố " · CTIT" (ví dụ "Sự kiện · CTIT"). Tài liệu và Inventory có tiêu đề riêng | `lib/page-meta.ts`, `app/layout.tsx`, `app/*/page.tsx` |
+| Trang 404 không có cách tìm tiếp | Thêm nút Tìm kiếm (Ctrl+K) | `app/not-found.tsx` |
+| Nhiều nút không có viền focus khi bấm Tab | Viền focus mặc định cho mọi phần tử bấm được (độ ưu tiên 0 nên kiểu riêng của từng thành phần vẫn thắng); ô nhập của hộp tìm kiếm có gạch chân khi focus | `app/extras.css` |
+| Nút và ô lọc nhỏ khó bấm trên điện thoại | Với màn hình cảm ứng (`pointer: coarse`) vùng bấm tối thiểu 44px cho chip, ô lọc, nút ★, nút điều hướng lịch | `app/extras.css` |
+| Cuộn mượt khi máy bật "giảm chuyển động" | Tắt cuộn mượt trong trường hợp đó | `app/extras.css` |
+
+Đã kiểm trên bản `next start`: tiêu đề của cả 15 địa chỉ, 6 trang không còn lộ câu kỹ thuật, 404 có nút Tìm kiếm; `NoData` ở cả hai chế độ (dev hiện tên biến, production hiện câu thân thiện). Chưa kiểm bằng tay: vòng focus và vùng bấm 44px trên thiết bị cảm ứng thật.
+
+Chưa làm: phóng to ảnh (`PeekImage`) chỉ dùng được bằng chuột, vì ảnh nằm trong thẻ link, thêm nút bấm bên trong sẽ thành "nút trong link". Người dùng bàn phím vẫn mở được bài/link của thẻ.
+
+### UX (đợt 3), làm theo tài liệu tìm trên mạng — 2026-10-12
+
+Nguồn tham khảo: Baymard Institute (UX bộ lọc), Algolia (UX tìm kiếm và bộ lọc), Contentsquare (bộ lọc trên điện thoại), W3C WCAG 2.2 (tiêu chí 2.4.11 Focus Not Obscured), các bài về khôi phục vị trí cuộn trong trang dựng bằng JavaScript.
+
+| Khuyến nghị | Trạng thái | Việc làm |
+|---|---|---|
+| Bấm Back từ trang chi tiết thì bộ lọc vẫn còn | Đã có từ trước | Bộ lọc nằm trong link (`?cat=...`), `BackLink` nhớ link danh sách |
+| Có số kết quả, bỏ lọc dễ dàng, hiện bộ lọc đang áp dụng | Đã có | Số kết quả cạnh mỗi ô, chip bộ lọc, nút Xóa tất cả |
+| Nút Bộ lọc trên điện thoại phải luôn thấy được khi cuộn | **Mới** | Thanh "N mặt hàng · Bộ lọc (n) · Sắp xếp" dính dưới header ở màn hình ≤ 960px (`app/extras.css`) |
+| Ngăn kéo bộ lọc có nút "Xem N kết quả" | **Mới** | Nút dính ở cuối ngăn kéo, `components/InventoryExplorer.tsx`, `ResourceExplorer.tsx` |
+| Quay lại danh sách phải về đúng vị trí cuộn | **Mới** | `lib/scroll-memory.ts`: nhớ vị trí lúc bấm sang trang khác, trả lại khi quay về bằng nút Back của trình duyệt hoặc nút "← Danh sách". Đợi danh sách lọc xong mới cuộn (trình duyệt tự khôi phục sẽ cuộn sớm và kẹt ở đáy trang còn ngắn). Chỉ dùng cho đúng bộ lọc cũ, còn mới trong 30 phút, dùng một lần; vào từ menu thì vẫn ở đầu trang |
+| Thanh dính không được che phần tử đang focus bằng bàn phím (WCAG 2.2, 2.4.11) | **Mới** | `components/StickyOffsets.tsx` đo chiều cao header thật vào `--header-h`; `PageSubNav` báo `--subnav-h`; `scroll-padding-top` tính từ hai biến này (trước đó là số cứng 130px) và thêm `scroll-padding-bottom` cho thanh thông báo ở đáy |
+
+Đã kiểm: `tsc`, `next build`, các trang trả 200, và 9 phép thử logic khôi phục cuộn (vào mới, bấm "← Danh sách", nút Back, khác bộ lọc, quá 30 phút, dữ liệu hỏng...). Chưa thử trên trình duyệt và điện thoại thật: cảm giác thanh dính, nút "Xem N kết quả", vị trí cuộn sau khi quay lại.
+
+Chưa làm: tài liệu cho rằng nên ẩn hẳn ô lọc không có kết quả; hiện đang làm mờ và khóa ô đó (vẫn thấy được còn bao nhiêu mục ở nhóm khác), có thể đổi nếu cần. Trên điện thoại, một số nguồn khuyên bộ lọc chỉ áp dụng khi bấm "Xem N kết quả" thay vì cập nhật ngay; hiện tại vẫn cập nhật ngay vì danh sách ngắn và chạy trên máy người dùng.
+
+### Sửa menu chính: gạch chân bị dính nhau — 2026-10-13
+
+Lỗi: đang ở trang Sự kiện, rê chuột vào Tài nguyên thì hai mục cùng bị gạch chân và nối liền thành một vệt dài (các mục menu dính sát nhau, gạch là viền dưới của cả ô link). Riêng "Tài nguyên" còn có thêm một gạch thứ hai nằm thấp hơn.
+
+Cách sửa (`app/globals.css`): mọi mục menu, kể cả "Tài nguyên", dùng chung một kiểu gạch chân là `::after`, thụt vào đúng bằng khoảng đệm (`--nav-pad`, 12px; 9px ở màn hình ≥ 1021px) nên chỉ dài bằng chữ và luôn có khe hở giữa hai mục. Đã bỏ viền dưới và `span::after` cũ.
+
+Đã kiểm bằng trình duyệt thật (Chromium không giao diện): dựng lại đúng tình huống lỗi trước và sau khi sửa; menu không tràn ngang ở 1021, 1100, 1280 và 1440px.
+
+## Kiểm thử, CI và vận hành — 2026-10-13
+
+Đợt này làm hai bước đầu trong lộ trình "đủ full stack": (1) kiểm thử + lint + CI, (2) chịu lỗi cho tầng dữ liệu và theo dõi tình trạng. Chưa có cơ sở dữ liệu hay tài khoản.
+
+**Sau khi giải nén đè, chạy `npm install`** (có thêm gói dev: Vitest, Playwright, ESLint, axe-core; `package-lock.json` đã đổi).
+
+### Lệnh
+
+| Lệnh | Việc |
+|---|---|
+| `npm run typecheck` | Kiểm tra kiểu TypeScript |
+| `npm run lint` | ESLint (cấu hình `eslint.config.mjs`, dựa trên `eslint-config-next`) |
+| `npm test` | 185 bài đơn vị (Vitest), chạy dưới 3 giây |
+| `npm run build` rồi `npm run test:e2e` | 45 bài trên trình duyệt thật (Playwright) × 2 cỡ màn hình (máy tính, Pixel 7) = 90 lượt, trong đó 15 lượt bỏ qua có chủ đích (bài chỉ dành cho máy tính hoặc chỉ dành cho điện thoại) |
+| `npm run check:secrets` | Quét khóa bí mật trong mã nguồn |
+| `npm run ci` | typecheck + lint + test + quét khóa + build, giống bước đầu của CI |
+
+E2E chạy trên bản build (`next start`), **không cấu hình Google Sheet nào** và đặt `ADMIN_PASSWORD` riêng (xem `playwright.config.ts`), nên không phụ thuộc mạng hay dữ liệu thật và không bị `.env.local` làm lệch. Lần đầu chạy máy mới: `npx playwright install chromium`. Nếu mạng không tải được trình duyệt, đặt `PW_CHROMIUM_PATH` trỏ tới một Chromium có sẵn.
+
+### Các bài kiểm thử đang bảo vệ điều gì
+
+| Nhóm | File | Bảo vệ |
+|---|---|---|
+| Bộ lọc facet | `tests/unit/facets.test.ts` | Thuật toán một lượt cho đúng kết quả và số đếm như cách lọc từng nhóm (300 bộ dữ liệu ngẫu nhiên) |
+| Lịch | `tests/unit/calendar.test.ts` | Đọc giờ từ chữ tự do, đổi giờ Việt Nam sang UTC, qua nửa đêm, sự kiện cả ngày, escape và gấp dòng file .ics, lưới tháng |
+| Link an toàn | `tests/unit/safe-url.test.ts` | Chặn `javascript:`, `data:`, `//host`, `user@host`, `..` trong link và đường dẫn ảnh |
+| Tìm kiếm | `tests/unit/search.test.ts` | Tìm không dấu ra có dấu, đủ mọi từ, thứ hạng |
+| Khôi phục cuộn | `tests/unit/scroll-memory.test.ts` | Chỉ trả vị trí khi thật sự quay lại, đúng bộ lọc, còn mới, dùng một lần, chịu được dữ liệu hỏng |
+| Tầng đọc Sheet | `tests/unit/sheet-source.test.ts` | Chặn link không phải Google, lỗi thì dùng bản tốt gần nhất, phục hồi khi Sheet trở lại, giới hạn dung lượng, `/api/health` không lộ link |
+| Tầng dữ liệu đầu-cuối | `tests/unit/sheet-data.test.ts` | CSV giả như Sheet trả về: bỏ link nguy hiểm, bỏ dòng trùng, đọc ô có dấu phẩy |
+| Component | `tests/unit/components.test.tsx` | Gợi ý khi lọc rỗng, câu thân thiện ở production (không lộ `.env.local`), nút thêm vào lịch, lịch tháng, số phiên bản ở chân trang |
+| Khung trang | `tests/e2e/shell.spec.ts` | Tiêu đề từng trang, 404, không tràn ngang ở cả hai cỡ màn hình |
+| Tìm kiếm | `tests/e2e/search.spec.ts` | Mở bằng nút và Ctrl+K, Tab chạy vòng, Esc đóng và trả con trỏ, lịch sử tìm kiếm, lối tìm tiếp |
+| Menu | `tests/e2e/nav.spec.ts` | Lỗi gạch chân dính nhau không quay lại; menu không tràn ở 1021px |
+| Bảo mật | `tests/e2e/security.spec.ts` | CSP và header, `/admin` (401, đúng mật khẩu, khóa 429 sau 5 lần sai), `/api/health`, `/api/search` |
+| Khả năng truy cập | `tests/e2e/a11y.spec.ts` | Quét axe-core (WCAG 2.x A/AA) 7 trang, chặn lỗi "serious" và "critical" |
+
+Mỗi nhóm được kiểm tra bằng cách **phá code cố ý** (bỏ bản dữ liệu dự phòng, đếm facet sai, cho `javascript:` lọt qua, đổi múi giờ, cho gạch chân dài hết ô) để chắc bài kiểm thử thật sự báo lỗi; cả năm lần đều bị bắt.
+
+### Tìm ra khi viết kiểm thử (đã sửa)
+
+- Phím **Esc chỉ đóng được ô tìm kiếm khi con trỏ đang ở ô nhập**; ở nút khác không có tác dụng. Giờ xử lý ở cấp cả hộp thoại.
+- Ba lỗi thật do ESLint chỉ ra: component khai báo bên trong lúc render (`HomeNews`), ghi vào ref lúc render (`HomeBento`), `aria-pressed` trên `role="gridcell"` sai chuẩn (`EventsMonth`, đã đổi sang nhóm nút bấm thường).
+
+### Chịu lỗi cho dữ liệu và `/api/health`
+
+- `lib/sheet-source.ts` (tách khỏi `sheet-data.ts`): mỗi lần tải Sheet có kết quả `ok`, `stale`, `failed`, `rejected` hoặc `missing`. Khi lần tải mới **lỗi (HTTP lỗi, quá thời gian, quá lớn) mà trước đó đã tải được**, trang dùng bản tốt gần nhất (`stale`) thay vì trống. Bản này nằm trong bộ nhớ của tiến trình, nên trên Vercel chỉ giữ khi instance còn sống: đây là lớp đỡ thêm, không thay cho bộ đệm 60 giây của Next.js. Lỗi tải giờ cũng được ghi log ở production (trước đây im lặng).
+- `GET /api/health`: tải thử từng Sheet đã cấu hình (kết quả đệm 60 giây nên gọi dồn dập cũng chỉ tải tối đa mỗi phút một lần). `200 ok` mọi Sheet tải được hoặc chưa cấu hình; `200 degraded` có Sheet đang dùng bản cũ; `503 down` có Sheet lỗi hẳn. Không trả về link hay nội dung, chỉ tên tab, trạng thái, số dòng, thời gian tải. Trỏ UptimeRobot / Better Stack vào đó để được báo khi Sheet hỏng.
+
+### CI
+
+`.github/workflows/ci.yml`: mỗi lần đẩy lên `main` hoặc mở pull request chạy typecheck, lint, test đơn vị, build, rồi E2E; lỗi thì lưu báo cáo Playwright 7 ngày.
+
+### Quyết định và giới hạn
+
+- ESLint: hai quy tắc để mức **cảnh báo** thay vì lỗi, có ghi lý do trong `eslint.config.mjs`: `react-hooks/set-state-in-effect` (nhiều component cố ý đọc link/`localStorage` sau khi trang hiện ra để tránh lỗi hydration; hiện còn 9 chỗ) và `@next/next/no-img-element` (ảnh lấy từ Google Drive theo link trong Sheet). Hiện 0 lỗi, 22 cảnh báo.
+- Kiểm tra axe-core ở E2E tắt hiệu ứng hiện dần (`reducedMotion`) vì đo màu lúc phần tử còn nửa trong suốt cho kết quả giả. Axe chỉ phát hiện được một phần lỗi truy cập; vẫn cần thử bằng tay với bàn phím và trình đọc màn hình.
+- Chưa có test cho các thành phần cần dữ liệu Sheet thật (ngăn kéo bộ lọc, ★ và Hoàn tác, tiến độ khóa học) ở mức E2E vì E2E cố ý chạy không có Sheet. Muốn thêm: dựng một Sheet thử hoặc một máy chủ CSV giả và đặt `*_SHEET_CSV_URL` trỏ vào (hiện bị chặn bởi danh sách tên miền Google cho phép).
+- Lần chạy E2E trong môi trường tạo ra bản này dùng Chromium có sẵn qua `PW_CHROMIUM_PATH`; CI trên GitHub dùng trình duyệt cài bằng `playwright install`. Workflow CI **chưa được chạy thật trên GitHub** (không có quyền ở đây), chỉ các lệnh bên trong nó đã được chạy.
+
+## Giám sát và vệ sinh bảo mật — 2026-10-14
+
+Hai gói đầu trong danh sách khoảng trống kiến trúc: (1) giám sát, (2) vệ sinh bảo mật. Hướng dẫn vận hành chi tiết nằm trong `docs/runbooks/` (`monitoring.md`, `secret-rotation.md`) và `SECURITY.md`.
+
+### Phát hiện quan trọng nhất: Next.js 16.2.9 có 17 lỗ hổng đã công bố
+
+`npm audit` cho thấy `next@16.2.9` (bản dự án đang ghim) nằm trong vùng ảnh hưởng của 17 thông báo bảo mật, gồm **3 mức critical** (thực thi mã từ xa liên quan API tối ưu ảnh và `next/og`), nhiều mức high (giả mạo yêu cầu phía server, vượt qua proxy trong một cấu hình Turbopack) và các lỗi đầu độc cache trang SSG/ISR. Đã nâng lên **`next@16.4.0`** (ghim chính xác, cùng dòng 16, không phải nâng cấp lớn): gói chạy thật **0 lỗ hổng**.
+
+Nâng cấp đã được kiểm chứng bằng toàn bộ bộ kiểm thử: typecheck, lint, bài đơn vị, build, và E2E (kể cả bài `/admin` khóa sau 5 lần sai); lần chạy trên bản 16.4.0: 58 lượt pass, 0 lỗi. Mức độ ảnh hưởng thực tế với dự án này khá thấp vì không dùng `next/image` hay `next/og`, nhưng vẫn nên ở bản đã vá.
+
+Còn 5 cảnh báo mức high **chỉ nằm trong công cụ dev** (chuỗi `eslint-config-next` → `braces`, lỗi dùng hết bộ nhớ khi xử lý chuỗi đặc biệt). Chúng không được đưa vào bản chạy thật và chỉ chạy trên máy lập trình khi lint chính mã của mình, nên chấp nhận; CI kiểm tra riêng gói chạy thật (`npm audit --omit=dev`). Bản sửa mà `npm audit` đề nghị là hạ xuống `eslint-config-next@14`, không nên làm theo.
+
+### Giám sát
+
+| Việc | Cách | File |
+|---|---|---|
+| Biết lỗi phía máy chủ | Next gọi `onRequestError` khi một yêu cầu lỗi: ghi nhật ký JSON `"event":"server_error"` (không kèm tiêu đề, cookie, tham số link) và báo ra kênh cảnh báo | `instrumentation.ts` |
+| Biết lỗi phía trình duyệt | Lỗi JavaScript chưa xử lý, lời hứa bị từ chối, và lỗi hiển thị trang (`app/error.tsx`, `app/global-error.tsx`) gửi về `/api/report`. Bỏ qua lỗi không phải của site (ResizeObserver, tải chunk lỗi sau khi vừa cập nhật), tối đa 5 báo cáo mỗi lần mở trang, cùng lỗi chỉ báo một lần | `lib/report-client.ts`, `components/ErrorReporter.tsx`, `app/api/report/route.ts` |
+| Cảnh báo chủ động | `ALERT_WEBHOOK_URL` (Discord hoặc Slack). Cùng lỗi tối đa một lần mỗi 15 phút, tối đa 20 tin mỗi giờ; URL phải là https và không phải địa chỉ nội bộ | `lib/alert.ts` |
+| Tự báo khi Google Sheet hỏng | `/api/health` gửi cảnh báo khi trạng thái là `degraded` hoặc `down`; công cụ giám sát bên ngoài gọi định kỳ vào đây sẽ vừa biết trang chết vừa kích hoạt cảnh báo | `app/api/health/route.ts` |
+| Kiểm tra kênh cảnh báo | Nút "Gửi cảnh báo thử" ở `/admin` (cần mật khẩu và kiểm tra cùng nguồn gốc để chống CSRF) | `app/admin/test-alert/route.ts`, `components/AdminMonitoring.tsx` |
+| Tốc độ người dùng thật | Vercel Speed Insights, chỉ nạp khi chạy trên Vercel (không cookie) | `app/layout.tsx` |
+| Nhật ký có cấu trúc | Một dòng JSON mỗi sự kiện, cắt chuỗi dài, để tìm trong Vercel Logs | `lib/log.ts` |
+
+`/api/report` là điểm công khai nên phòng thủ nhiều lớp: chỉ nhận cùng nguồn gốc (`Origin`, `Sec-Fetch-Site`), tối đa 4 KB, kiểm tra từng trường, 20 báo cáo mỗi 10 phút mỗi IP, và phần cảnh báo ra ngoài có giới hạn riêng.
+
+**Việc mày cần làm một lần (khoảng 15 phút, từng bước trong `docs/runbooks/monitoring.md`):** tạo webhook Discord/Slack và đặt `ALERT_WEBHOOK_URL` trên Vercel rồi redeploy; bấm "Gửi cảnh báo thử" ở `/admin`; thêm một monitor UptimeRobot hoặc Better Stack trỏ vào `/api/health`; bật Speed Insights trong Vercel.
+
+### Vệ sinh bảo mật
+
+- **Mật khẩu admin mẫu:** `proxy.ts` giờ tắt `/admin` (503) trên bản chạy thật nếu `ADMIN_PASSWORD` bắt đầu bằng giá trị mẫu hoặc dễ đoán (`change…`, `password…`, `admin…`, `your…`, `test…`, `example…`, `12345…`, `qwerty…`), cùng với quy tắc đã có (trống hoặc dưới 12 ký tự).
+- **Quét khóa bí mật** (`scripts/secret-scan.mjs`, `npm run check:secrets`, chạy trong CI): bắt khóa riêng, khóa AWS/GitHub/Stripe/Slack/Google, webhook Discord/Slack, khóa `service_role` của Supabase (cả dạng JWT lẫn dạng `sb_secret_`), link xuất bản thật của Google Sheet, biến tên "bí mật" gán giá trị dài thật, và file `.env` thật bị theo dõi trong git. Không bao giờ in giá trị ra màn hình. Bỏ qua giá trị mẫu (`YOUR_…`, `change-this…`) và khóa `anon` công khai.
+- **Dependabot** (`.github/dependabot.yml`): PR cập nhật thư viện hằng tuần (gom bản vá và bản nhỏ), cập nhật GitHub Actions hằng tháng. Mỗi PR chạy CI.
+- **CI** (`.github/workflows/ci.yml`): quyền tối thiểu `contents: read`; thêm bước quét khóa bí mật và job `audit` riêng (`npm audit --omit=dev --audit-level=high`).
+- **Điểm liên hệ bảo mật:** `public/.well-known/security.txt` (chuẩn RFC 9116, có `Expires`, **nhớ gia hạn trước ngày 13/10/2027**) và `SECURITY.md`.
+- **Hướng dẫn xử lý khóa:** `docs/runbooks/secret-rotation.md` (danh sách khóa, cách đổi từng loại, việc cần làm khi lộ khóa).
+
+**Còn việc phải làm thủ công trên GitHub** (code không làm thay được): bật Secret scanning + Push protection (repo → Settings → Code security) và bật bảo vệ nhánh `main` (bắt buộc CI xanh mới gộp).
+
+### Đính chính
+
+Ở các lần trao đổi trước tao đã nói `.env.local` trong zip ban đầu có khóa Supabase `service_role` **thật**. Điều đó **sai**: tao suy ra từ tên biến mà không kiểm tra giá trị. Giá trị thật là chuỗi mẫu (`YOUR_...`), nên không có khóa Supabase nào bị lộ qua file đó, và việc "đổi khóa Supabase" không còn cần thiết (chỉ cần nếu mày từng dán khóa thật vào Supabase). Điều **đáng lo hơn** tao tìm ra khi kiểm tra lại: `ADMIN_PASSWORD` trong `.env.local` là chuỗi mẫu kiểu `change-this-…`. Nếu giá trị đó (hoặc một mật khẩu đoán được) đang được đặt trên Vercel thì phải đổi ngay sang chuỗi ngẫu nhiên.
+
+### Chưa kiểm chứng được
+
+- Webhook chỉ được kiểm thử với `fetch` giả (định dạng Discord/Slack, giới hạn tần suất, xử lý lỗi), **chưa gửi thử vào Discord/Slack thật**. Nút "Gửi cảnh báo thử" ở `/admin` là cách mày kiểm tra.
+- Vercel Speed Insights chưa được thử trên Vercel thật (chỉ chắc là build và không chạy ngoài Vercel).
+- Workflow CI chưa chạy trên GitHub, `security.txt` và Dependabot chỉ kiểm tra cú pháp.
+- Bộ đếm giới hạn tần suất nằm trong bộ nhớ từng instance nên trên serverless là "hết sức có thể"; chặn tuyệt đối cần Vercel Firewall.
+
+## Dữ liệu mẫu, kiểm thử có dữ liệu và các lỗi tìm ra — 2026-10-15
+
+Trước đây mọi phần giao diện cần dữ liệu (bộ lọc, ★, tiến độ khóa học, lịch, ảnh tự đổi) **chưa từng được chạy với dữ liệu giống thật** trong môi trường kiểm thử, vì không có quyền đọc Google Sheet. Đợt này thêm một chế độ dữ liệu mẫu, rồi dùng nó để xem tận mắt và viết kiểm thử cho các phần đó. Kết quả: tìm ra và sửa 6 lỗi mà các bài kiểm thử cũ không thể thấy.
+
+### Chạy site bằng dữ liệu mẫu
+
+```
+npm run dev:fixtures      # mở http://localhost:3000, không cần .env.local, Google Sheet hay mạng
+npm run fixtures          # tạo lại các file CSV mẫu (tests/fixtures/*.csv) từ scripts/make-fixtures.mjs
+```
+
+- Dữ liệu mẫu (tiếng Việt, ảnh dùng file có sẵn trong `public/images`): 24 tài liệu, 26 món Inventory, 3 khóa học (nhiều bài, có nhánh), 11 sự kiện, 13 tin tức, ảnh khuôn viên, học viên, hướng nghiên cứu, tuyển sinh. Ngày trong dữ liệu mẫu viết dạng `{{today+3}}` và đổi thành ngày thật lúc đọc, nên "sắp diễn ra / đã diễn ra" luôn đúng dù chạy vào hôm nào.
+- Có chủ ý cài vài dòng "xấu" để kiểm tra bị loại đúng: dòng trùng, link `javascript:` và `data:`, dòng thiếu link, món thiếu id.
+- Cách hoạt động (`lib/sheet-source.ts`): đặt `SHEET_FIXTURES_DIR` và link Sheet dạng `https://docs.google.com/spreadsheets/d/e/FIXTURE-events/pub?output=csv` thì tab đó đọc từ `events.csv` trong thư mục đó thay vì gọi Google. Tên file chỉ nhận chữ, số, gạch nối (không đọc được file ngoài thư mục).
+- **An toàn:** tự tắt khi chạy trên Vercel (`VERCEL` được đặt), in cảnh báo lớn lúc khởi động, và `/api/health` trả `fixtures: true` khi đang bật để không ai nhầm với dữ liệu thật. Không đặt `SHEET_FIXTURES_DIR` trên máy chủ thật.
+
+### Kiểm thử
+
+| Lệnh | Việc |
+|---|---|
+| `npm test` | 217 bài đơn vị, trong đó `fixtures.test.ts` chạy dữ liệu mẫu qua đúng các hàm đọc thật |
+| `npm run build:fixtures` | Build bản dùng dữ liệu mẫu vào thư mục riêng `.next-fixtures` (không đụng `.next`) |
+| `npm run e2e:all` | `build` + `build:fixtures` + toàn bộ E2E |
+
+E2E giờ có hai nhóm, mỗi nhóm một server (xem `playwright.config.ts`): `tests/e2e` chạy **không có Sheet nào** (khung trang, bảo mật, trạng thái trống), `tests/e2e-data` chạy **với dữ liệu mẫu** (cổng 3101). Nhóm có dữ liệu kiểm tra:
+- **Inventory:** 26 món, bỏ dòng trùng, giữ hai món cùng tên, nhãn trạng thái, ô thống kê, tick bộ lọc cập nhật số đếm và link, gợi ý khi lọc ra rỗng, ngăn kéo bộ lọc trên điện thoại (Xem N kết quả, Esc, nền mờ, khóa cuộn), thanh bộ lọc dính, ô thống kê 2×2.
+- **Tài liệu:** 24 mục, 3 mục nổi bật, tiêu đề dài không vỡ bố cục, lọc HOẶC trong nhóm và VÀ giữa các nhóm, sắp xếp.
+- **★ và Đã lưu:** thông báo + Hoàn tác, dừng đếm giờ khi rê chuột (dùng đồng hồ giả), nhóm/tìm/chọn nhiều/sao chép, dữ liệu lưu hỏng không làm lỗi trang, số mục đã lưu.
+- **Khóa học:** nút Bắt đầu / Học tiếp / Học lại, thanh tiến độ, tiến độ riêng từng nhánh, thẻ khóa học và dải tổng kết, đặt lại.
+- **Sự kiện:** link Google Calendar đúng giờ, tải file `.ics` hợp lệ, lịch tháng (hôm nay, bấm ngày, đổi tháng, lọc nhãn), thẻ ngày ở trang chủ chỉ có sự kiện từ hôm nay.
+- **Trang chủ và tìm kiếm:** 7 ô có ảnh (ô Trường & Khoa chỉ hiện số), mọi ảnh tải được, ảnh tự đổi và dừng khi bật giảm chuyển động, tìm kiếm không dấu, chip lọc loại.
+- **Quay lại danh sách:** giữ bộ lọc và vị trí cuộn.
+- **Chất lượng mọi trang có dữ liệu (13 trang):** không tràn ngang, không có link `javascript:`/`data:`, không lỗi JavaScript, quét axe-core.
+
+### Lỗi tìm ra nhờ chạy với dữ liệu (đã sửa)
+
+1. **Nhãn trạng thái sai:** "Sắp hết" bị hiện là "Hết hàng" (và tô đỏ), vì mã kiểm tra chữ "hết" trước chữ "sắp". Bộ lọc Trạng thái vì thế có hai mục cùng ghi "Hết hàng". Sửa bằng một hàm phân loại duy nhất `statusKind` trong `lib/inventory.ts` cho nhãn, màu và số thống kê.
+2. **Ô "Đang có sẵn" luôn là 0** nếu Sheet ghi "Còn hàng" (mã chỉ nhận `available`, `có sẵn`, `sẵn sàng`, `in stock`). Giờ tính theo cùng phân loại ở trên.
+3. **Ô thống kê đầu của Inventory** ghi nhãn "Danh mục" nhưng hiện tổng số mặt hàng; đổi thành "Tổng mặt hàng".
+4. **Tìm kiếm vật tư mở danh sách lọc theo tên** thay vì trang chi tiết của đúng món; giờ mở `/resources/inventory/<slug>` (cùng cách đặt slug với trang Inventory).
+5. **Hướng dẫn trong `/admin` cho tab Tin tức sai:** ghi cột `title, date, summary, url, image, tag` trong khi code **bắt buộc có cột `section`** (`headlines` / `latest` / `media` / `features`). Làm theo hướng dẫn cũ sẽ ra 0 tin tức. Đã sửa `lib/admin-guide.ts`.
+6. **Bố cục điện thoại:** 4 ô thống kê của Inventory xếp dọc chiếm gần nửa màn hình trước món đầu tiên; giờ lưới 2×2.
+
+Cải tiến kèm theo (từ kiểm thử tìm ra): thông báo ★ hiện 8 giây thay vì 5 và **dừng đếm giờ khi rê chuột hoặc focus** (WCAG 2.2.1); menu điện thoại hiện số mục đã lưu (dải trên cùng bị ẩn ở màn hình nhỏ nên trước đây không thấy được); cột footer rộng hơn để email không bị ngắt giữa chừng.
+
+### Giới hạn
+
+- Dữ liệu mẫu không thay được dữ liệu thật: nó kiểm chứng giao diện và logic xử lý Sheet, **không** kiểm chứng việc đọc Google Sheet thật (độ trễ của Google, định dạng cột trong Sheet của bạn có thể khác mẫu). Nên chạy `npm run dev` với Sheet thật rồi đối chiếu.
+- Hầu hết cột trong mẫu theo hướng dẫn `/admin`; riêng tab Resources gộp 3 khối cạnh nhau (Tài liệu, Inventory, Khóa học) nên cột `level`, `source`, `featured` của Tài liệu được đặt ở cuối. Nếu Sheet thật đặt chúng ở chỗ khác, code vẫn tìm theo tên cột.
+- Chạy cả bộ E2E mất khoảng 12 phút trên máy có 3 trình duyệt song song (218 lượt).
+
+## Trang chủ điện ảnh (học cách trình bày của Tesla) và ảnh nhẹ hơn — 2026-10-16
+
+**Ý 0, ảnh:** logo `About/logo.png` từ 2000×2000 (1,4 MB) xuống 384×384 (116 KB), nhìn không khác; ảnh vật tư 2560×2560 xuống 1024. Giữ nguyên tên file nên Sheet không cần sửa. Ảnh trong `public/images` được trình duyệt giữ 1 ngày (`stale-while-revalidate` 7 ngày, không đặt `immutable` vì tên file không có mã băm: thay ảnh cùng tên thì có thể mất tới 1 ngày mới thấy). Logo header/footer có `width`/`height` chống nhảy bố cục; ảnh hero đầu có `fetchpriority="high"`. `tests/unit/asset-budget.test.ts` giữ ngân sách: không ảnh nào quá 700 KB hoặc 2600px, logo dưới 150 KB, tổng dưới 12 MB.
+
+**Ý 1, trang chủ:** hero cao đúng bằng màn hình; `Header overlay` (header nổi trong suốt trên ảnh, cuộn thì nền kính mờ, `components/HeaderScroll.tsx`); nút phụ "Khám phá" cuộn xuống; mỗi hướng hoạt động trong tab Admissions (mục track, tối đa 4) là một màn hình (`components/HomeTracks.tsx`); bỏ dải "Truy cập nhanh" dưới hero cho gọn. CSS riêng ở `app/cinematic.css` (chỉ trang chủ nạp). Các trang khác vẫn dùng header trắng dính.
+
+**Lưu ý thiết kế:** chữ hero đặt ở phần dưới ảnh, không đặt giữa như Tesla, vì ảnh tập thể có mặt người ở giữa khung. Ba ảnh hướng hoạt động hiện tại là sơ đồ kỹ thuật nhỏ (660–840 px, nền trắng) nên đặt trong khung thẻ chứ không phóng tràn nền. Muốn đẹp như Tesla cần ảnh thật khổ rộng (từ 1920px) của phòng lab, xe, mạch.
+
+**Đã kiểm chứng:** `tests/e2e-data/cinematic.spec.ts` (hero bằng chiều cao màn hình và ảnh đầu tải ưu tiên; header trong suốt rồi kính mờ khi cuộn và trả lại; ba hướng hoạt động đủ tiêu đề, hai nút; chữ và ảnh không dính mép màn hình; nút Khám phá cuộn tới đúng chỗ, tiêu đề không bị header che; các trang khác vẫn header trắng dính) và `tests/e2e/performance.spec.ts` (logo dưới 150 KB và có bộ đệm đúng; khi chưa có dữ liệu nút Khám phá trỏ tới `#kham-pha`): 22 lượt pass. Trang chủ qua axe (WCAG A/AA) không có lỗi nghiêm trọng và không tràn ngang. Chưa thử Firefox/Safari.

@@ -7,7 +7,8 @@ import { HomeNews } from "@/components/HomeNews";
 import { ResourceCard } from "@/components/ResourceCard";
 import { HomeBento, type TileImages } from "@/components/HomeBento";
 import { HomeStats } from "@/components/HomeStats";
-import { HomeQuickStart } from "@/components/HomeQuickStart";
+import { HomeTracks } from "@/components/HomeTracks";
+import "./cinematic.css";
 import { HomeTopics, type Topic } from "@/components/HomeTopics";
 import { HomeEventBanner } from "@/components/HomeEventBanner";
 import { HomeUpcomingEvents, upcomingEvents } from "@/components/HomeUpcomingEvents";
@@ -139,12 +140,12 @@ export default async function HomePage() {
 
   return (
     <>
-      <Header />
+      <Header overlay />
       <main id="main">
-        <HomeCarousel slides={slides} />
-        <HomeQuickStart />
+        <HomeCarousel slides={slides} exploreHref={admissions.tracks.length > 0 ? "#huong" : "#kham-pha"} />
+        <HomeTracks tracks={admissions.tracks} />
 
-        <section className="section">
+        <section className="section" id="kham-pha">
           <div className="container">
             <Reveal>
               <div className="section-title">

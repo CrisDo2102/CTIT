@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCourses, getEvents, getInventory, getNews, getResources, getStudents } from "@/lib/sheet-data";
+import { withSlugs } from "@/lib/inventory";
 import { nav } from "@/lib/site-config";
 import type { SearchEntry } from "@/lib/search";
 
@@ -30,8 +31,9 @@ export async function GET() {
   for (const r of ok(resources)) {
     entries.push({ kind: "Tài liệu", title: r.title, sub: clip([r.type, r.category || r.topic].filter(Boolean).join(" · ") || r.description), href: r.url || `/resources/documents?q=${encodeURIComponent(r.title)}`, external: Boolean(r.url) });
   }
-  for (const i of ok(inventory)) {
-    entries.push({ kind: "Inventory", title: i.title, sub: clip([i.category, i.manufacturer, i.model].filter(Boolean).join(" · ")), href: `/resources/inventory?q=${encodeURIComponent(i.title)}` });
+  // Mở thẳng trang chi tiết của đúng món đó (cùng cách đặt slug với trang Inventory), không mở danh sách lọc theo tên.
+  for (const i of withSlugs(ok(inventory))) {
+    entries.push({ kind: "Inventory", title: i.title, sub: clip([i.category, i.manufacturer, i.model].filter(Boolean).join(" · ")), href: `/resources/inventory/${i.slug}` });
   }
   for (const c of ok(courses)) {
     entries.push({ kind: "Khóa học", title: c.title, sub: clip(c.description), href: `/resources/courses/${c.slug}` });

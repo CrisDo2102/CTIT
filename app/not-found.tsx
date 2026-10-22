@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { SearchTrigger } from "@/components/SearchTrigger";
 import { nav } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -18,9 +19,10 @@ export default function NotFound() {
           <div className="container">
             <p className="state-code" aria-hidden="true">404</p>
             <h1>Không tìm thấy trang này</h1>
-            <p className="lead">Đường dẫn có thể đã gõ sai, hoặc trang đã được chuyển đi. Chọn một mục bên dưới để đi tiếp.</p>
+            <p className="lead">Đường dẫn có thể đã gõ sai, hoặc trang đã được chuyển đi. Bấm “Tìm kiếm” (hoặc Ctrl+K) để tìm đúng thứ bạn cần, hoặc chọn một mục bên dưới.</p>
             <div className="state-actions">
               <Link href="/" className="btn">Về trang chủ</Link>
+              <SearchTrigger className="state-search" />
             </div>
             <ul className="state-links">
               {nav.map((item) => (

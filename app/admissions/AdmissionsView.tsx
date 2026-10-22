@@ -1,5 +1,6 @@
 "use client";
 
+import { NoDataMessage } from "@/components/NoData";
 import { useEffect, useState } from "react";
 import type { AdmissionsData, AdmissionsTrack } from "@/lib/dashboard-types";
 import { contact, socials } from "@/lib/site-config";
@@ -278,8 +279,11 @@ export function AdmissionsView({ data }: { data: AdmissionsData }) {
       ) : (
         <section className="adm-sec">
           <div className="adm-wrap adm-empty">
-            Chưa có dữ liệu. Điền tab Admissions trong Google Sheet (cột <code>section</code>: status / step / requirement /
-            track / timeline / faq) rồi kiểm tra <code>ADMISSIONS_SHEET_CSV_URL</code> trong <code>.env.local</code>.
+            <NoDataMessage
+              what="tuyển sinh"
+              env="ADMISSIONS_SHEET_CSV_URL"
+              note={<>và tab Admissions (cột <code>section</code>: status / step / requirement / track / timeline / faq)</>}
+            />
           </div>
         </section>
       )}

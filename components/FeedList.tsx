@@ -1,3 +1,4 @@
+import { NoData } from "@/components/NoData";
 import type { FeedItem } from "@/lib/dashboard-types";
 import { PeekImage } from "@/components/PeekImage";
 
@@ -6,9 +7,7 @@ type Props = { items: FeedItem[]; env: string; gallery?: boolean };
 export function FeedList({ items, env, gallery }: Props) {
   if (items.length === 0) {
     return (
-      <div className="empty-state">
-        Chưa có dữ liệu. Kiểm tra biến môi trường <code>{env}</code> trong <code>.env.local</code>.
-      </div>
+      <NoData env={env} />
     );
   }
   return (

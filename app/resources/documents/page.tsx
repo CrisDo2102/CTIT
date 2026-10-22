@@ -4,6 +4,8 @@ import { PageHero } from "@/components/PageHero";
 import { ResourceExplorer } from "@/components/ResourceExplorer";
 import { getResources } from "@/lib/sheet-data";
 
+export const metadata = { title: "Tài liệu", description: "Datasheet, GitHub, hướng dẫn và nguồn học kỹ thuật được CTIT chọn lọc." };
+
 export default async function DocumentsPage() {
   const resources = await getResources();
   const categoryCount = new Set(resources.map((r) => r.category).filter(Boolean)).size;

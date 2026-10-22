@@ -66,17 +66,16 @@ export function EventsMonth({ items, today }: { items: EventItem[]; today: strin
         </div>
       </div>
 
-      <div className="evc-grid" role="grid" aria-label={`Lịch tháng ${cursor.month}/${cursor.year}`}>
-        {WEEKDAYS.map((name) => <span key={name} className="evc-dow" role="columnheader">{name}</span>)}
+      <div className="evc-grid" role="group" aria-label={`Lịch tháng ${cursor.month}/${cursor.year}`}>
+        {WEEKDAYS.map((name) => <span key={name} className="evc-dow" aria-hidden="true">{name}</span>)}
         {cells.map((iso, index) => {
-          if (!iso) return <span key={`blank-${index}`} className="evc-cell is-blank" role="gridcell" aria-hidden="true" />;
+          if (!iso) return <span key={`blank-${index}`} className="evc-cell is-blank" aria-hidden="true" />;
           const list = byDate.get(iso) ?? [];
           const cls = ["evc-cell", list.length ? "has-events" : "", iso === today ? "is-today" : "", iso < today ? "is-past" : "", iso === selected ? "is-selected" : ""].filter(Boolean).join(" ");
           return (
             <button
               key={iso}
               type="button"
-              role="gridcell"
               className={cls}
               disabled={list.length === 0}
               aria-pressed={iso === selected}

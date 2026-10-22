@@ -1,5 +1,6 @@
 "use client";
 
+import { NoData } from "@/components/NoData";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddToCalendar } from "@/components/AddToCalendar";
 import { EventsMonth } from "@/components/EventsMonth";
@@ -167,10 +168,7 @@ export function EventsJournal({ items, today: serverToday }: Props) {
     return (
       <section className="section no-top">
         <div className="container">
-          <div className="empty-state">
-            Chưa có dữ liệu. Kiểm tra biến môi trường <code>EVENTS_SHEET_CSV_URL</code> trong <code>.env.local</code> và
-            tab Events (cột <code>title</code> bắt buộc).
-          </div>
+          <NoData what="sự kiện" env="EVENTS_SHEET_CSV_URL" note={<>và tab Events (cột <code>title</code> bắt buộc)</>} />
         </div>
       </section>
     );

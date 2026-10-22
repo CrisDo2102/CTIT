@@ -1,0 +1,18 @@
+section,order,title,content,date,url,image
+status,1,Đang mở đăng ký đợt 2,Nhận hồ sơ đến hết tháng này.,,https://example.com/dang-ky,
+step,1,Điền form đăng ký,Hoàn thành form thông tin cơ bản.,,,
+step,2,Tham gia buổi gặp mặt,Làm quen với các hướng hoạt động.,,,
+step,3,Làm bài tập nhỏ,Một bài thực hành ngắn theo hướng bạn chọn.,,,
+step,4,Nhận kết quả,Thông báo qua email trong vòng một tuần.,,,
+requirement,1,Là sinh viên các ngành kỹ thuật,,,,
+requirement,2,Yêu thích điện tử và lập trình,,,,
+requirement,3,Dành được 4 giờ mỗi tuần,,,,
+track,1,Điện tử ô tô,"Mạng CAN, ECU, BMS, chẩn đoán xe.",,https://example.com/huong/oto,Automotive_electronics.png
+track,2,Hệ thống nhúng,"Vi điều khiển, RTOS, giao tiếp ngoại vi.",,https://example.com/huong/nhung,embeddedsystem.png
+track,3,Phương tiện và giao thông thông minh,"ITS, V2X, mô phỏng.",,,ptvgttm.png
+timeline,1,Mở đăng ký,,{{today-7}},,
+timeline,2,Gặp mặt thành viên mới,,{{today+7}},,
+timeline,3,Công bố kết quả,,{{today+21}},,
+faq,1,"Mình chưa biết gì về điện tử, có tham gia được không?",Được. Các bạn mới sẽ được hướng dẫn từ đầu.,,,
+faq,2,Có mất phí không?,Không. Câu lạc bộ không thu phí thành viên.,,,
+faq,3,Sinh viên năm nhất có tham gia được không?,"Được, nhiều thành viên bắt đầu từ năm nhất.",,,

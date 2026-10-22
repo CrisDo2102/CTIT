@@ -129,7 +129,7 @@
 @media (prefers-reduced-motion: reduce) { .inv-facets, .search-overlay { transition: none; animation: none; } }
 
 /* ---------- Thanh điều hướng trong trang ---------- */
-.subnav { position: sticky; top: 0; z-index: 15; border-bottom: 1px solid var(--tsinghua-border); background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); }
+.subnav { position: sticky; top: var(--header-h, 72px); z-index: 15; border-bottom: 1px solid var(--tsinghua-border); background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); }
 .subnav-inner { display: flex; align-items: center; gap: 24px; }
 .subnav-label { flex: none; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .subnav ul { display: flex; gap: 4px; margin: 0; padding: 0; overflow-x: auto; list-style: none; scrollbar-width: none; }
@@ -138,7 +138,8 @@
 .subnav a::after { content: ""; position: absolute; right: 14px; bottom: 0; left: 14px; height: 3px; background: var(--tsinghua-purple); transform: scaleX(0); transform-origin: left; transition: transform .25s; }
 .subnav a:hover, .subnav a.is-active { color: var(--ink); }
 .subnav a.is-active::after { transform: scaleX(1); }
-html { scroll-padding-top: 130px; }
+/* Chừa chỗ cho thanh dính khi trình duyệt cuộn tới phần tử đang focus hoặc #mục (WCAG 2.2, 2.4.11). Chiều cao đo thật bằng StickyOffsets / PageSubNav. */
+html { scroll-padding-top: calc(var(--header-h, 72px) + var(--subnav-h, 0px) + 16px); scroll-padding-bottom: 96px; }
 @media (max-width: 700px) { .subnav-label { display: none; } }
 @media (prefers-reduced-motion: reduce) { .subnav a, .subnav a::after { transition: none; } }
 
@@ -176,7 +177,7 @@ html { scroll-padding-top: 130px; }
 .foot-cta-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; background: #fff; color: var(--tsinghua-purple-2); font-size: 14px; font-weight: 800; transition: transform .2s; }
 .foot-cta-btn:hover { transform: translateY(-2px); }
 .foot-cta-btn.is-ghost { border: 1px solid rgba(255, 255, 255, .5); background: transparent; color: #fff; }
-.site-footer .foot-grid { grid-template-columns: 1.4fr 1.2fr .8fr .8fr 1.1fr; }
+.site-footer .foot-grid { grid-template-columns: 1.3fr 1.3fr .8fr .8fr 1.5fr; }
 .foot-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .foot-legal { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; }
 .foot-legal a { color: rgba(255, 255, 255, .7); transition: color .2s; }
@@ -201,6 +202,15 @@ html { scroll-padding-top: 130px; }
 .ti-tile-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .55); box-shadow: 0 0 0 1px rgba(11, 10, 31, .25); transition: background .3s, transform .3s; }
 .ti-tile-dots i.is-on { background: #fff; transform: scale(1.35); }
 @media (prefers-reduced-motion: reduce) { .ti-tile-media .ti-slide-img.is-in { animation: none; } .ti-tile-dots i { transition: none; } }
+
+/* ---------- Inventory: 4 ô thống kê thành lưới 2x2 trên màn hình hẹp (trước đây xếp dọc, chiếm gần nửa màn hình điện thoại) ---------- */
+@media (max-width: 860px) {
+  .inventory-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 22px; }
+  .inventory-kpi { min-height: 0; padding: 14px 16px; border-right: 1px solid var(--tsinghua-border); border-bottom: 1px solid var(--tsinghua-border); }
+  .inventory-kpi:nth-child(2n) { border-right: 0; }
+  .inventory-kpi:nth-last-child(-n + 2) { border-bottom: 0; }
+  .inventory-kpi strong { font-size: 28px; }
+}
 
 /* ---------- Tài liệu: bộ lọc + công cụ sắp xếp ---------- */
 .inv-layout.no-facets { grid-template-columns: 1fr; }
@@ -315,3 +325,106 @@ html { scroll-padding-top: 130px; }
   .evc-when { height: 52px; }
   .evc-nav { margin-left: 0; }
 }
+
+/* ---------- Thanh tiến trình chuyển trang ---------- */
+.route-progress { position: fixed; top: 0; right: 0; left: 0; z-index: 1000; height: 3px; pointer-events: none; opacity: 0; transition: opacity .3s .15s; }
+.route-progress i { display: block; height: 100%; background: var(--gradient-brand); box-shadow: 0 0 10px rgba(79, 70, 229, .6); transform: scaleX(0); transform-origin: left; }
+.route-progress.is-loading { opacity: 1; transition: none; }
+.route-progress.is-loading i { transform: scaleX(.85); transition: transform 9s cubic-bezier(.08, .7, .2, 1); }
+.route-progress.is-done { opacity: 1; transition: opacity .3s .15s; }
+.route-progress.is-done i { transform: scaleX(1); transition: transform .2s ease-out; }
+
+/* ---------- Trang "Có gì mới" + số phiên bản ở chân trang ---------- */
+.foot-version { margin-left: 14px; color: rgba(255, 255, 255, .55); font-size: 12px; transition: color .2s; }
+.foot-version:hover { color: #fff; text-decoration: underline; }
+.cl-list { display: grid; gap: 22px; margin: 0; padding: 0; list-style: none; }
+.cl-entry { display: grid; grid-template-columns: 190px 1fr; gap: 28px; padding: 28px; border: 1px solid var(--tsinghua-border); background: var(--white); }
+.cl-entry.is-latest { border-color: var(--tsinghua-purple); box-shadow: 8px 10px 0 rgba(79, 70, 229, .12); }
+.cl-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.cl-version { padding: 4px 12px; background: var(--gradient-brand); color: #fff; font-size: 14px; font-weight: 850; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+.cl-meta time { color: var(--muted); font-size: 13.5px; font-weight: 650; }
+.cl-badge { padding: 2px 10px; border: 1px solid #16a34a; border-radius: 999px; background: #f0fdf4; color: #15803d; font-size: 12px; font-weight: 800; }
+.cl-body h2 { margin: 0 0 12px; font-size: 22px; letter-spacing: -.02em; }
+.cl-body ul { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.cl-body li { position: relative; padding-left: 22px; line-height: 1.55; }
+.cl-body li::before { content: ""; position: absolute; top: .65em; left: 2px; width: 8px; height: 8px; border-radius: 50%; background: var(--tsinghua-purple); }
+.cl-try { color: var(--tsinghua-purple); font-weight: 800; white-space: nowrap; }
+.cl-try:hover { text-decoration: underline; }
+@media (max-width: 760px) { .cl-entry { grid-template-columns: 1fr; gap: 14px; padding: 20px; } .cl-meta { flex-direction: row; flex-wrap: wrap; align-items: center; } }
+@media (prefers-reduced-motion: reduce) { .route-progress i, .route-progress { transition: none !important; } }
+
+/* ---------- UX: thông báo nhỏ, trạng thái rỗng có lối thoát, ngăn kéo bộ lọc, quay lại giữ bộ lọc ---------- */
+.toast-host { position: fixed; right: 0; bottom: 22px; left: 0; z-index: 950; display: flex; justify-content: center; padding: 0 16px; pointer-events: none; }
+.toast {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; max-width: min(560px, 100%); padding: 12px 14px 12px 20px; border-radius: 14px;
+  background: var(--ink); color: #fff; font-size: 14px; box-shadow: 0 14px 40px rgba(11, 10, 31, .35); pointer-events: auto; animation: toast-in .22s ease both;
+}
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
+.toast button, .toast a { padding: 4px 10px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .14); color: #fff; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.toast button:hover, .toast a:hover { background: rgba(255, 255, 255, .26); }
+.toast .toast-x { padding: 4px 8px; background: transparent; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+.empty-msg { margin: 0 0 6px; font-weight: 700; }
+.empty-hint { margin: 14px 0 8px; color: var(--muted); font-size: 13.5px; }
+.empty-suggest { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.empty-suggest button {
+  display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border: 1px solid var(--tsinghua-border); border-radius: 999px;
+  background: var(--white); color: var(--ink); font: inherit; font-size: 13.5px; cursor: pointer;
+}
+.empty-suggest button:hover, .empty-suggest button:focus-visible { border-color: var(--tsinghua-purple); background: var(--tsinghua-lavender); }
+.empty-suggest em { color: var(--tsinghua-purple); font-size: 12px; font-style: normal; font-weight: 800; }
+
+.inv-backdrop { display: none; }
+@media (max-width: 960px) {
+  .inv-backdrop { position: fixed; inset: 0; z-index: 790; display: block; border: 0; background: rgba(11, 10, 31, .5); animation: search-in .2s ease both; cursor: pointer; }
+}
+
+.ph-back-note { margin-left: 2px; font-size: 12px; font-weight: 600; opacity: .75; }
+
+.search-more { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 18px; border-top: 1px solid var(--tsinghua-border); color: var(--muted); font-size: 13px; }
+.search-more a { padding: 4px 12px; border: 1px solid var(--tsinghua-border); border-radius: 999px; color: var(--tsinghua-purple); font-weight: 750; }
+.search-more a:hover, .search-more a:focus-visible { border-color: var(--tsinghua-purple); background: var(--tsinghua-lavender); }
+
+/* ---------- UX nền: bàn phím, màn hình cảm ứng, giảm chuyển động ---------- */
+/* Vòng focus mặc định cho mọi phần tử bấm được. :where() giữ độ ưu tiên bằng 0 nên kiểu riêng của từng thành phần luôn thắng. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible { outline: 3px solid var(--tsinghua-purple); outline-offset: 2px; }
+/* Ô nhập trong hộp tìm kiếm tự bỏ viền, nên báo focus bằng gạch chân của cả hàng. */
+.search-field:focus-within { box-shadow: inset 0 -2px 0 var(--tsinghua-purple); }
+.state-search { margin-left: 4px; }
+.no-data-links { margin-top: 16px; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* Ngón tay to hơn con trỏ chuột: vùng bấm tối thiểu 44px cho các nút nhỏ hay dùng. */
+@media (pointer: coarse) {
+  .chip, .search-scopes button, .ev-view button, .search-recent button, .inv-active button, .empty-suggest button { min-height: 44px; }
+  .inv-opt { min-height: 44px; padding-block: 10px; }
+  .inv-facet summary { min-height: 44px; }
+  .link-reset { display: inline-flex; align-items: center; min-height: 44px; }
+  .evc-nav button, .search-trigger.is-icon { min-width: 44px; min-height: 44px; }
+  .save-btn:not(.is-pill) { min-width: 44px; min-height: 44px; }
+  .subnav a { padding-block: 16px; }
+}
+
+/* ---------- Bộ lọc trên điện thoại: thanh kết quả dính + nút "Xem N kết quả" ---------- */
+.inv-apply { display: none; }
+@media (max-width: 960px) {
+  /* Thanh "N mặt hàng · Bộ lọc (2) · Sắp xếp" luôn nằm dưới header khi cuộn danh sách dài, nên mở lại bộ lọc không phải cuộn lên đầu. */
+  .inv-results > .inventory-result-line, .inv-results > .result-line {
+    position: sticky; top: var(--header-h, 72px); z-index: 30; margin-inline: -4px; padding: 10px 4px;
+    border-bottom: 1px solid var(--tsinghua-border); background: rgba(255, 255, 255, .96); backdrop-filter: blur(10px);
+  }
+  .inv-apply {
+    position: sticky; bottom: 0; display: block; width: 100%; margin-top: 12px; padding: 14px; border: 0; border-radius: 12px;
+    background: var(--tsinghua-purple); color: #fff; font: inherit; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 -10px 20px rgba(255, 255, 255, .9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) { .mainnav > a::after, .nav-dropdown-trigger::after { transition: none; } }
+
+/* ---------- Admin: khối Giám sát ---------- */
+.admin-monitoring { padding: 24px 28px; border: 1px solid var(--tsinghua-border); background: var(--white); }
+.admin-monitoring h2 { margin: 0 0 8px; font-size: 20px; }
+.admin-monitoring p { max-width: 70ch; color: var(--muted); }
+.admin-monitoring-result { min-height: 1.5em; margin: 12px 0 0; font-weight: 700; color: var(--ink) !important; }

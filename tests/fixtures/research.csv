@@ -1,0 +1,8 @@
+section,order,title,content,date,url,image,caption
+focus,1,Điện tử ô tô,"ECU, mạng CAN, BMS và chẩn đoán trên xe.",,,automotive_electronics.png,Hướng chính
+focus,2,Hệ thống nhúng,"Vi điều khiển, RTOS và giao tiếp ngoại vi.",,,Embedded-system.png,Hướng chính
+focus,3,Phương tiện và giao thông thông minh,"ITS, V2X và mô phỏng giao thông.",,,iot.png,Hướng mở rộng
+project,1,Hệ thống giám sát pin xe điện,Đo điện áp từng cell và cảnh báo qua CAN.,{{today-90}},https://example.com/du-an/bms,hethonggiamsatpinxedien.png,Đang thực hiện
+project,2,Bộ ghi dữ liệu CAN giá rẻ,Ghi và phát lại dữ liệu CAN dùng ESP32.,{{today-150}},,,Hoàn thành
+achievement,1,Giải Ba cuộc thi Cơ học toàn quốc 2026,Đội CTIT đạt giải Ba.,{{today-20}},,,
+publication,1,Thiết kế bộ cân bằng cell chủ động,Bài báo hội nghị sinh viên.,{{today-200}},https://example.com/bai-bao/1,,Nhóm BMS

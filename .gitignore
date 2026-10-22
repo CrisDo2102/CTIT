@@ -3,3 +3,15 @@ node_modules
 .env.local
 .DS_Store
 *.tsbuildinfo
+
+# Kiểm thử
+/test-results/
+/playwright-report/
+/.next-fixtures/
+node_modules/
+.next/
+.vercel/
+.env
+.env.*
+!.env.example
+*.log

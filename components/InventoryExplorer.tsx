@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { EmptyResults } from "@/components/EmptyResults";
 import { FacetGroup } from "@/components/FacetGroup";
+import { FilterDrawerBackdrop } from "@/components/FilterDrawerBackdrop";
+import { rememberList } from "@/lib/list-memory";
+import { useScrollMemory } from "@/lib/scroll-memory";
 import { InventoryIcon } from "@/components/icons";
 import { SafeImage } from "@/components/SafeImage";
 import { SaveButton } from "@/components/SaveButton";
 import { countSelected, emptySelected, readSelected, runFacets, toggleValue, uniqueValues, writeSelected, type Getters, type Selected } from "@/lib/facets";
 import { toneOf } from "@/lib/format";
-import { statusClass, statusLabel, type InventoryEntry } from "@/lib/inventory";
+import { statusClass, statusKind, statusLabel, type InventoryEntry } from "@/lib/inventory";
 
 type SortKey = "title" | "category" | "manufacturer" | "model" | "quantity" | "location" | "status";
 type Sort = { key: SortKey; dir: "asc" | "desc" } | null;
@@ -69,6 +73,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
   const [compare, setCompare] = useState<string[]>([]);
   const [comparing, setComparing] = useState(false);
   const [ready, setReady] = useState(false);
+  useScrollMemory("/resources/inventory", ready);
 
   const options = useMemo(
     () => ({ cat: uniqueValues(initialItems, GET.cat), maker: uniqueValues(initialItems, GET.maker), status: uniqueValues(initialItems, GET.status) }),
@@ -103,6 +108,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
     if (sort) params.set("sort", sortValue(sort));
     const qs = params.toString();
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+    rememberList("/resources/inventory", qs ? `?${qs}` : "");
   }, [ready, query, facets, inStock, view, sort]);
 
   const keyword = query.trim().toLowerCase();
@@ -117,8 +123,8 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
   const toggleFacet = (key: FacetKey, value: string) => setFacets((current) => ({ ...current, [key]: toggleValue(current[key], value) }));
 
   const totalQuantity = initialItems.reduce((sum, item) => sum + (Number.isFinite(item.quantity) ? item.quantity : 0), 0);
-  const availableCount = initialItems.filter((item) => /available|có sẵn|sẵn sàng|in stock/i.test(item.status)).length;
-  const lowCount = initialItems.filter((item) => /low|thấp|sắp|limited/i.test(item.status)).length;
+  const availableCount = initialItems.filter((item) => statusKind(item.status) === "ok").length;
+  const lowCount = initialItems.filter((item) => statusKind(item.status) === "low").length;
   const filtering = Boolean(query) || activeCount > 0;
 
   const compared = compare.map((slug) => initialItems.find((item) => item.slug === slug)).filter((item): item is InventoryEntry => Boolean(item));
@@ -161,7 +167,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
   return (
     <>
       <div className="inventory-overview">
-        <div className="inventory-kpi"><span>Danh mục</span><strong>{initialItems.length}</strong><small>mặt hàng</small></div>
+        <div className="inventory-kpi"><span>Tổng mặt hàng</span><strong>{initialItems.length}</strong><small>loại vật tư</small></div>
         <div className="inventory-kpi"><span>Tổng số lượng</span><strong>{totalQuantity}</strong><small>đơn vị</small></div>
         <div className="inventory-kpi"><span>Đang có sẵn</span><strong>{availableCount}</strong><small>mặt hàng</small></div>
         <div className="inventory-kpi inventory-kpi-alert"><span>Sắp hết</span><strong>{lowCount}</strong><small>cần kiểm tra</small></div>
@@ -175,6 +181,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
       </div>
 
       <div className="inv-layout">
+        <FilterDrawerBackdrop open={filtersOpen} onClose={() => setFiltersOpen(false)} />
         <aside id="inv-facets" className={`inv-facets${filtersOpen ? " is-open" : ""}`} aria-label="Bộ lọc vật tư">
           <div className="inv-facets-head">
             <strong>Bộ lọc{activeCount > 0 ? <em>{activeCount}</em> : null}</strong>
@@ -195,11 +202,12 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
             <input type="checkbox" checked={inStock} onChange={(e) => setInStock(e.target.checked)} />
             <span>Chỉ hiện món còn hàng</span>
           </label>
+        <button type="button" className="inv-apply" onClick={() => setFiltersOpen(false)}>Xem {filtered.length} kết quả</button>
         </aside>
 
         <div className="inv-results">
       <div className="inventory-result-line">
-        <span><strong>{filtered.length}</strong> / {initialItems.length} mặt hàng</span>
+        <span role="status" aria-live="polite"><strong>{filtered.length}</strong> / {initialItems.length} mặt hàng</span>
         <div className="inventory-view-tools">
           <button type="button" className="inv-filter-btn" aria-expanded={filtersOpen} aria-controls="inv-facets" onClick={() => setFiltersOpen((open) => !open)}>
             Bộ lọc{activeCount > 0 ? ` (${activeCount})` : ""}
@@ -238,7 +246,20 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
       ) : null}
 
       {filtered.length === 0 ? (
-        <div className="empty-state"><InventoryIcon /> Chưa có mặt hàng phù hợp. Thử xoá bộ lọc hoặc đổi từ khóa tìm kiếm.</div>
+        <EmptyResults
+          icon={<InventoryIcon />}
+          message="Chưa có mặt hàng phù hợp."
+          onReset={reset}
+          suggestions={[
+            ...FACET_KEYS.filter((key) => facets[key].length > 0).map((key) => ({
+              label: `${TITLE[key]}: ${facets[key].map((value) => (key === "status" ? statusLabel(value) : value)).join(", ")}`,
+              count: [...counts[key].values()].reduce((sum, n) => sum + n, 0),
+              run: () => setFacets((current) => ({ ...current, [key]: [] }))
+            })),
+            ...(inStock ? [{ label: "Chỉ món còn hàng", run: () => setInStock(false) }] : []),
+            ...(keyword ? [{ label: `Từ khóa “${query.trim()}”`, run: () => setQuery("") }] : [])
+          ]}
+        />
       ) : view === "table" ? (
         <div className="inventory-table-wrap">
           <table className="inventory-table">

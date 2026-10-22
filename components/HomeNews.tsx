@@ -1,6 +1,11 @@
 import type { FeedItem } from "@/lib/dashboard-types";
 import { FeedList } from "@/components/FeedList";
 
+// Định nghĩa ngoài hàm HomeNews: component khai báo bên trong lúc render sẽ bị React tạo lại mỗi lần vẽ và mất trạng thái.
+const Meta = ({ item }: { item: FeedItem }) => (
+  <p className="ti-meta">{[item.date, item.tag].filter(Boolean).join(" | ") || "Tin tức"}</p>
+);
+
 const open = (url: string) => (url ? { href: url, target: "_blank", rel: "noreferrer" } : null);
 
 // "Latest articles" kiểu ti.com: 1 bài nổi bật lớn bên trái + danh sách bài bên phải, mỗi dòng "ngày | chuyên mục".
@@ -8,10 +13,6 @@ export function HomeNews({ items }: { items: FeedItem[] }) {
   if (items.length === 0) return <FeedList items={[]} env="NEWS_SHEET_CSV_URL" />;
   const [lead, ...rest] = items;
   const leadLink = open(lead.url);
-
-  const Meta = ({ item }: { item: FeedItem }) => (
-    <p className="ti-meta">{[item.date, item.tag].filter(Boolean).join(" | ") || "Tin tức"}</p>
-  );
 
   return (
     <div className="ti-news">
