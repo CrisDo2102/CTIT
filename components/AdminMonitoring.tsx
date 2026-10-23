@@ -21,8 +21,8 @@ export function AdminMonitoring() {
     <div className="container admin-monitoring">
       <h2>Giám sát</h2>
       <p>
-        Xem <a href="/api/health" target="_blank" rel="noopener noreferrer">tình trạng hệ thống <span aria-hidden="true">↗</span></a> (tab Google Sheet nào đang tải được). Dán địa chỉ này vào công cụ
-        giám sát (UptimeRobot, Better Stack...) để được báo khi trang hỏng. Cách cài đặt nằm trong <code>docs/runbooks/monitoring.md</code>.
+        Xem <a href="/admin/health" target="_blank" rel="noopener noreferrer">tình trạng hệ thống <span aria-hidden="true">↗</span></a> (tab Google Sheet nào đang tải được, chỉ admin xem được). Dùng <code>/api/health</code> cho công cụ
+        giám sát công khai (UptimeRobot, Better Stack...) để được báo khi trang hỏng. Cách cài đặt nằm trong <code>docs/runbooks/monitoring.md</code>.
       </p>
       <button type="button" className="btn secondary" onClick={test} disabled={state === "busy"}>
         {state === "busy" ? "Đang gửi..." : "Gửi cảnh báo thử"}

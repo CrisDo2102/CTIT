@@ -18,7 +18,9 @@ const csp = [
   "font-src 'self' data:",
   "connect-src 'self'",
   "frame-src https://my.spline.design https://prod.spline.design",
+  "script-src-attr 'none'",
   "object-src 'none'",
+  "manifest-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'self'",
@@ -52,9 +54,14 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
           { key: "X-DNS-Prefetch-Control", value: "off" },
           ...(isProd ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }] : [])
         ]
+      },
+      {
+        source: "/api/report",
+        headers: [{ key: "Cache-Control", value: "no-store" }, { key: "X-Robots-Tag", value: "noindex" }]
       },
       {
         // Ảnh trong public/images: Next mặc định bắt trình duyệt hỏi lại máy chủ ở MỌI lần tải trang (max-age=0).
