@@ -1,0 +1,18 @@
+# Never upload local development secrets, caches or internal reports.
+.env
+.env.*
+!.env.example
+node_modules
+.next
+.next-fixtures
+.vercel
+.git
+.claude
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+playwright-report
+test-results
+coverage

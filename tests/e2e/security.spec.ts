@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const ADMIN_PASSWORD = "e2e-password-123456"; // khớp với webServer.env trong playwright.config.ts
+const ADMIN_PASSWORD = "e2e-password-1234567"; // khớp với webServer.env trong playwright.config.ts
 const basic = (password: string) => ({ Authorization: `Basic ${Buffer.from(`admin:${password}`).toString("base64")}` });
 
 test.describe("header bảo mật", () => {
@@ -43,6 +43,14 @@ test.describe.serial("trang /admin", () => {
     expect(await ok.json()).toEqual({ configured: false, sent: false }); // E2E không đặt ALERT_WEBHOOK_URL
   });
 
+  test("/admin/health yêu cầu đăng nhập và trả chi tiết chỉ cho admin", async ({ request }) => {
+    expect((await request.get("/admin/health")).status()).toBe(401);
+    const response = await request.get("/admin/health", { headers: basic(ADMIN_PASSWORD) });
+    expect(response.status()).toBe(200);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    expect(Object.keys((await response.json()).sheets)).toContain("events");
+  });
+
   test("sai 5 lần thì bị khóa (429), kể cả khi lần sau nhập đúng", async ({ request }) => {
     for (let i = 1; i <= 5; i++) expect((await request.get("/admin", { headers: basic(`sai-${i}`) })).status()).toBe(401);
     const locked = await request.get("/admin", { headers: basic("sai-6") });
@@ -53,16 +61,17 @@ test.describe.serial("trang /admin", () => {
 });
 
 test.describe("API", () => {
-  test("/api/health báo ok khi chưa cấu hình Sheet nào và không để lộ link", async ({ request }) => {
+  test("/api/health chỉ công khai trạng thái và không để lộ cấu hình", async ({ request }) => {
     const response = await request.get("/api/health");
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.status).toBe("ok");
-    expect(body.alerts).toBe(false);
     expect(body.version).toMatch(/^\d{4}\.\d{2}\.\d{2}/);
-    expect(Object.keys(body.sheets)).toContain("events");
+    expect(body.sheets).toBeUndefined();
+    expect(body.alerts).toBeUndefined();
     expect(JSON.stringify(body)).not.toContain("docs.google.com");
   });
+
 
   test("/api/search trả danh sách có các trang chính", async ({ request }) => {
     const body = await (await request.get("/api/search")).json();

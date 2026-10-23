@@ -1,17 +1,28 @@
-node_modules
-.next
-.env.local
-.DS_Store
-*.tsbuildinfo
-
-# Kiểm thử
-/test-results/
-/playwright-report/
-/.next-fixtures/
-node_modules/
-.next/
-.vercel/
+# Secrets and deployment metadata: NEVER commit credentials.
 .env
 .env.*
 !.env.example
+!.env.sample
+!.env.template
+*.pem
+*.p12
+*.pfx
+*.key
+*.secret
+*.secrets
+*.credentials.json
+service-account*.json
+.vercel/
+
+# Build, dependencies and local tooling.
+node_modules/
+.next/
+.next-fixtures/
+out/
+coverage/
+*.tsbuildinfo
 *.log
+.DS_Store
+Thumbs.db
+/test-results/
+/playwright-report/

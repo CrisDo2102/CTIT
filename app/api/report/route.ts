@@ -1,3 +1,4 @@
+import { BodyTooLargeError, readLimitedText } from "@/lib/limited-body";
 import { NextResponse } from "next/server";
 import { notify } from "@/lib/alert";
 import { logEvent } from "@/lib/log";
@@ -14,25 +15,31 @@ const TYPES = new Set(["error", "unhandledrejection", "boundary"]);
 const text = (value: unknown, max: number): string | undefined => (typeof value === "string" && value.length <= max ? value : undefined);
 
 export async function POST(request: Request) {
-  // Chặn trang khác (kể cả trình duyệt của người lạ) gửi báo lỗi giả vào hệ thống của mình.
+  // A browser's error beacon is a same-origin request. Validate against the actual request URL,
+  // not a potentially spoofable Host header. In production require an Origin as an anti-CSRF layer.
   const origin = request.headers.get("origin");
+  if (!origin && process.env.NODE_ENV === "production") return new NextResponse(null, { status: 403 });
   if (origin) {
     try {
-      if (new URL(origin).host !== request.headers.get("host")) return new NextResponse(null, { status: 403 });
-    } catch {
-      return new NextResponse(null, { status: 403 });
-    }
+      if (new URL(origin).origin !== new URL(request.url).origin) return new NextResponse(null, { status: 403 });
+    } catch { return new NextResponse(null, { status: 403 }); }
   }
   const site = request.headers.get("sec-fetch-site");
-  if (site && !["same-origin", "same-site", "none"].includes(site)) return new NextResponse(null, { status: 403 });
+  if (site && !["same-origin", "none"].includes(site)) return new NextResponse(null, { status: 403 });
+  const contentType = request.headers.get("content-type") ?? "";
+  if (contentType && !/^application\/json(?:\s*;|$)/i.test(contentType)) return new NextResponse(null, { status: 415 });
 
   if (!limiter.allow(clientIp(request.headers))) {
     return new NextResponse(null, { status: 429, headers: { "Retry-After": "600" } });
   }
 
   if (Number(request.headers.get("content-length") ?? 0) > MAX_BYTES) return new NextResponse(null, { status: 413 });
-  const raw = await request.text();
-  if (raw.length > MAX_BYTES) return new NextResponse(null, { status: 413 });
+  let raw: string;
+  try { raw = await readLimitedText(request, MAX_BYTES); }
+  catch (error) {
+    if (error instanceof BodyTooLargeError) return new NextResponse(null, { status: 413 });
+    return new NextResponse(null, { status: 400 });
+  }
 
   let data: unknown;
   try {
@@ -46,7 +53,7 @@ export async function POST(request: Request) {
   const type = text(body.type, 30);
   const message = text(body.message, 300);
   const path = text(body.path, 200);
-  if (!type || !TYPES.has(type) || !message || !path || !path.startsWith("/")) return new NextResponse(null, { status: 400 });
+  if (!type || !TYPES.has(type) || !message || !path || !/^\/(?![\/\\])[^?#\u0000-\u001f]*$/.test(path)) return new NextResponse(null, { status: 400 });
   const stack = text(body.stack, 800);
   const digest = text(body.digest, 64);
 

@@ -1,3 +1,7 @@
+> **Bản vá CVE ngày 14/10/2026:** Next.js 16.4.0 gốc có các lỗ hổng RCE/DoS nghiêm trọng. Bản này pin Next.js **16.4.1**, React/React DOM **19.2.9**. Do môi trường biên tập không truy cập npm registry, hãy chạy `npm install next@16.4.1 react@19.2.9 react-dom@19.2.9 --save-exact` trên máy có mạng trước khi đẩy production để lockfile có lại SHA512 integrity chuẩn. Xem `docs/SECURITY-DEPLOY.md`.
+
+> **Cập nhật bảo mật 22/10/2026:** Bản CTIT secure đã tách chẩn đoán riêng sang `/admin/health`; API uptime `/api/health` chỉ trả trạng thái tổng. `/admin` dùng `ADMIN_USERNAME` (mặc định `admin`) và `ADMIN_PASSWORD` ngẫu nhiên tối thiểu **20 ký tự**. Không bao giờ đẩy `.env.local` lên GitHub; xem [`docs/SECURITY-DEPLOY.md`](docs/SECURITY-DEPLOY.md).
+
 # Embedded Roadmap Starter — Tsinghua Link Library
 
 Folder chuẩn dùng trên máy:
@@ -889,7 +893,7 @@ Không đổi giao diện hay cách hoạt động, chỉ làm gọn code. `tsc 
 
 ### Bảo mật trang /admin (2026-10-06)
 
-- **/admin có mật khẩu.** File `proxy.ts` khoá `/admin` bằng HTTP Basic Auth: trình duyệt hiện hộp nhập, tên đăng nhập nhập gì cũng được, mật khẩu là biến `ADMIN_PASSWORD`. Chạy thật mà chưa đặt biến này thì `/admin` trả 503 (tắt hẳn, không bao giờ mở); chạy `npm run dev` mà chưa đặt thì vẫn vào được để tiện sửa. Trên Vercel: Settings → Environment Variables → thêm `ADMIN_PASSWORD` (tối thiểu 12 ký tự, nên 16 trở lên) → Redeploy.
+- **/admin có mật khẩu.** File `proxy.ts` khoá `/admin` bằng HTTP Basic Auth: trình duyệt hiện hộp nhập, tên đăng nhập là `ADMIN_USERNAME` (mặc định `admin`), mật khẩu là `ADMIN_PASSWORD`. Chạy thật mà chưa đặt biến này thì `/admin` trả 503 (tắt hẳn, không bao giờ mở); chạy `npm run dev` mà chưa đặt thì vẫn vào được để tiện sửa. Trên Vercel: Settings → Environment Variables → thêm `ADMIN_PASSWORD` (tối thiểu 20 ký tự ngẫu nhiên) → Redeploy.
 - **Bỏ nút "Mở Google Sheet"** khỏi trang `/admin` và bỏ biến `SHEET_EDIT_URL`. Link sửa sheet không nên nằm trên web. Muốn mở sheet thì dùng bookmark riêng; nên để sheet ở chế độ chỉ người được mời mới sửa được.
 - **`SUPABASE_*`, `ADMIN_SECRET`** không còn được code nào dùng: xoá khỏi `.env.local` và khỏi Vercel, đồng thời đổi (rotate) key trên Supabase nếu key đó từng là key thật.
 - **Header bảo mật** trong `next.config.ts`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; riêng `/admin` thêm `no-store` và `noindex`. CSP đã được thêm ở đợt 2026-10-09 (xem mục "Bảo mật và sửa lỗi trùng lặp" ở cuối file).
@@ -1023,7 +1027,7 @@ Tham khảo cách Infineon tổ chức thông tin (bảng thông số, trang s�
 ### Việc cần làm trên máy chủ / tài khoản (code không tự làm được)
 
 - **Đổi (rotate) `SUPABASE_SERVICE_ROLE_KEY` trên Supabase** nếu key đó là key thật, rồi xoá `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_SECRET` khỏi `.env.local` và khỏi Vercel. Code không còn dùng các biến này. Không gửi file `.env.local` (hoặc zip có chứa nó) cho ai.
-- `ADMIN_PASSWORD` trên Vercel phải dài ít nhất 12 ký tự, nếu không `/admin` tự tắt (503).
+- `ADMIN_PASSWORD` trên Vercel phải dài ít nhất 20 ký tự, nếu không `/admin` tự tắt (503).
 - Nên bật **Vercel Firewall → Rate Limiting** cho đường dẫn `/admin`. Bộ chống dò mật khẩu trong code nằm trong bộ nhớ từng instance nên trên serverless chỉ chặn được phần nào.
 
 ### Sửa giao diện
@@ -1036,7 +1040,7 @@ Tham khảo cách Infineon tổ chức thông tin (bảng thông số, trang s�
 | Hạng mục | File | Nội dung |
 | --- | --- | --- |
 | Header + CSP | `next.config.ts` | Thêm `Content-Security-Policy` (default/connect `'self'`, ảnh `https:`, `object-src 'none'`, `base-uri`, `form-action`, `frame-ancestors`, `frame-src` chỉ Spline), `Strict-Transport-Security` (chỉ khi chạy thật), `Cross-Origin-Opener-Policy`, `X-DNS-Prefetch-Control`, mở rộng `Permissions-Policy`. Script vẫn cần `'unsafe-inline'` vì Next.js chèn script nội tuyến; muốn bỏ phải dùng nonce (mọi trang thành render động, mất cache). Dev có thêm `'unsafe-eval'`. |
-| Admin | `proxy.ts` | Sai 5 lần liên tiếp từ một IP thì khoá 15 phút (HTTP 429, có `Retry-After`). So mật khẩu qua SHA-256, không dừng sớm. Chạy thật mà `ADMIN_PASSWORD` thiếu hoặc dưới 12 ký tự thì `/admin` trả 503. Lần mở trang đầu (chưa gửi mật khẩu) không tính là sai. |
+| Admin | `proxy.ts` | Sai 5 lần liên tiếp từ một IP thì khoá 15 phút (HTTP 429, có `Retry-After`). So mật khẩu qua SHA-256, không dừng sớm. Chạy thật mà `ADMIN_PASSWORD` thiếu hoặc dưới 20 ký tự thì `/admin` trả 503. Lần mở trang đầu (chưa gửi mật khẩu) không tính là sai. |
 | Lọc link | `lib/safe-url.ts` (mới) | `safeHttpUrl` chỉ nhận `http(s)`, chặn `javascript:`, `data:`, link có `user@`, ký tự điều khiển, link quá dài. `safeHref` cho phép thêm đường dẫn nội bộ `/...` nhưng chặn `//evil.com`. |
 | Link từ Sheet | `lib/sheet-data.ts` | Mọi cột url (Resources, datasheet, nơi mua, News, Events, Campus, Research, Admissions) đi qua `safeHttpUrl`. Dòng Resources có url không hợp lệ bị bỏ qua (dev có log). |
 | Ảnh | `lib/photo-url.ts` | `resolvePhotoUrl` chặn scheme lạ, `//host`, `\`, `..`; tên file được mã hoá từng đoạn nên ký tự `#` `?` `%` trong tên không làm hỏng đường dẫn. |
@@ -1274,7 +1278,7 @@ Mỗi nhóm được kiểm tra bằng cách **phá code cố ý** (bỏ bản d
 ### Chịu lỗi cho dữ liệu và `/api/health`
 
 - `lib/sheet-source.ts` (tách khỏi `sheet-data.ts`): mỗi lần tải Sheet có kết quả `ok`, `stale`, `failed`, `rejected` hoặc `missing`. Khi lần tải mới **lỗi (HTTP lỗi, quá thời gian, quá lớn) mà trước đó đã tải được**, trang dùng bản tốt gần nhất (`stale`) thay vì trống. Bản này nằm trong bộ nhớ của tiến trình, nên trên Vercel chỉ giữ khi instance còn sống: đây là lớp đỡ thêm, không thay cho bộ đệm 60 giây của Next.js. Lỗi tải giờ cũng được ghi log ở production (trước đây im lặng).
-- `GET /api/health`: tải thử từng Sheet đã cấu hình (kết quả đệm 60 giây nên gọi dồn dập cũng chỉ tải tối đa mỗi phút một lần). `200 ok` mọi Sheet tải được hoặc chưa cấu hình; `200 degraded` có Sheet đang dùng bản cũ; `503 down` có Sheet lỗi hẳn. Không trả về link hay nội dung, chỉ tên tab, trạng thái, số dòng, thời gian tải. Trỏ UptimeRobot / Better Stack vào đó để được báo khi Sheet hỏng.
+- `GET /api/health`: tải thử từng Sheet đã cấu hình (kết quả đệm 60 giây nên gọi dồn dập cũng chỉ tải tối đa mỗi phút một lần). `200 ok` mọi Sheet tải được hoặc chưa cấu hình; `200 degraded` có Sheet đang dùng bản cũ; `503 down` có Sheet lỗi hẳn. Không trả về link hay nội dung, chỉ trạng thái tổng và phiên bản. Xem chi tiết từng tab tại `/admin/health` (cần mật khẩu). Trỏ UptimeRobot / Better Stack vào `/api/health` để được báo khi Sheet hỏng.
 
 ### CI
 
@@ -1317,7 +1321,7 @@ Còn 5 cảnh báo mức high **chỉ nằm trong công cụ dev** (chuỗi `esl
 
 ### Vệ sinh bảo mật
 
-- **Mật khẩu admin mẫu:** `proxy.ts` giờ tắt `/admin` (503) trên bản chạy thật nếu `ADMIN_PASSWORD` bắt đầu bằng giá trị mẫu hoặc dễ đoán (`change…`, `password…`, `admin…`, `your…`, `test…`, `example…`, `12345…`, `qwerty…`), cùng với quy tắc đã có (trống hoặc dưới 12 ký tự).
+- **Mật khẩu admin mẫu:** `proxy.ts` giờ tắt `/admin` (503) trên bản chạy thật nếu `ADMIN_PASSWORD` bắt đầu bằng giá trị mẫu hoặc dễ đoán (`change…`, `password…`, `admin…`, `your…`, `test…`, `example…`, `12345…`, `qwerty…`), cùng với quy tắc đã có (trống hoặc dưới 20 ký tự).
 - **Quét khóa bí mật** (`scripts/secret-scan.mjs`, `npm run check:secrets`, chạy trong CI): bắt khóa riêng, khóa AWS/GitHub/Stripe/Slack/Google, webhook Discord/Slack, khóa `service_role` của Supabase (cả dạng JWT lẫn dạng `sb_secret_`), link xuất bản thật của Google Sheet, biến tên "bí mật" gán giá trị dài thật, và file `.env` thật bị theo dõi trong git. Không bao giờ in giá trị ra màn hình. Bỏ qua giá trị mẫu (`YOUR_…`, `change-this…`) và khóa `anon` công khai.
 - **Dependabot** (`.github/dependabot.yml`): PR cập nhật thư viện hằng tuần (gom bản vá và bản nhỏ), cập nhật GitHub Actions hằng tháng. Mỗi PR chạy CI.
 - **CI** (`.github/workflows/ci.yml`): quyền tối thiểu `contents: read`; thêm bước quét khóa bí mật và job `audit` riêng (`npm audit --omit=dev --audit-level=high`).
@@ -1351,7 +1355,7 @@ npm run fixtures          # tạo lại các file CSV mẫu (tests/fixtures/*.cs
 - Dữ liệu mẫu (tiếng Việt, ảnh dùng file có sẵn trong `public/images`): 24 tài liệu, 26 món Inventory, 3 khóa học (nhiều bài, có nhánh), 11 sự kiện, 13 tin tức, ảnh khuôn viên, học viên, hướng nghiên cứu, tuyển sinh. Ngày trong dữ liệu mẫu viết dạng `{{today+3}}` và đổi thành ngày thật lúc đọc, nên "sắp diễn ra / đã diễn ra" luôn đúng dù chạy vào hôm nào.
 - Có chủ ý cài vài dòng "xấu" để kiểm tra bị loại đúng: dòng trùng, link `javascript:` và `data:`, dòng thiếu link, món thiếu id.
 - Cách hoạt động (`lib/sheet-source.ts`): đặt `SHEET_FIXTURES_DIR` và link Sheet dạng `https://docs.google.com/spreadsheets/d/e/FIXTURE-events/pub?output=csv` thì tab đó đọc từ `events.csv` trong thư mục đó thay vì gọi Google. Tên file chỉ nhận chữ, số, gạch nối (không đọc được file ngoài thư mục).
-- **An toàn:** tự tắt khi chạy trên Vercel (`VERCEL` được đặt), in cảnh báo lớn lúc khởi động, và `/api/health` trả `fixtures: true` khi đang bật để không ai nhầm với dữ liệu thật. Không đặt `SHEET_FIXTURES_DIR` trên máy chủ thật.
+- **An toàn:** tự tắt khi chạy trên Vercel (`VERCEL` được đặt), in cảnh báo lớn lúc khởi động, và `/admin/health` trả `fixtures: true` khi đang bật để không ai nhầm với dữ liệu thật. Không đặt `SHEET_FIXTURES_DIR` trên máy chủ thật.
 
 ### Kiểm thử
 

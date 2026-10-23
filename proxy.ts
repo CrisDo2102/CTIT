@@ -1,16 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 // Khoá trang /admin bằng HTTP Basic Auth (trình duyệt tự hiện hộp nhập mật khẩu).
-// - Mật khẩu lấy từ ADMIN_PASSWORD (tên đăng nhập nhập gì cũng được).
-// - Production mà thiếu hoặc quá ngắn (< 12 ký tự): chặn hẳn, không bao giờ để mở / để mật khẩu yếu.
-// - Dev (npm run dev) chưa đặt: cho vào để tiện sửa.
+// - Tên đăng nhập từ ADMIN_USERNAME (mặc định "admin"), mật khẩu lấy từ ADMIN_PASSWORD.
+// - Production mà thiếu hoặc mật khẩu quá ngắn (< 20 ký tự): khoá admin (fail closed).
+// - Dev chưa đặt: chỉ cho vào trên localhost (không mở qua LAN).
 // - Chống dò mật khẩu: sai 5 lần liên tiếp từ cùng một IP thì khoá 15 phút (HTTP 429).
 //   Bộ đếm nằm trong bộ nhớ từng instance nên là lớp chặn "best effort" trên serverless;
 //   mật khẩu dài là lớp chính. Cần chặn tuyệt đối thì bật Vercel Firewall rate limit cho /admin.
 
-const MIN_PASSWORD_LENGTH = 12;
+const MIN_PASSWORD_LENGTH = 20;
 // Mật khẩu mẫu / dễ đoán (vd "change-this-to-a-long-password" trong .env.example): ở production thì tắt /admin thay vì để mở với mật khẩu ai cũng đoán được.
 const PLACEHOLDER_PASSWORD = /^(?:change|your[-_ ]?|password|passw0rd|admin|test|example|12345|qwerty)/i;
+const OBVIOUS_PASSWORD = /^(?:[0-9]+|([a-zA-Z0-9])\1+)$/;
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60 * 1000;
 const fails = new Map<string, { count: number; until: number; last: number }>();
@@ -28,20 +29,23 @@ async function safeEqual(a: string, b: string): Promise<boolean> {
   return diff === 0;
 }
 
-function readPassword(header: string | null): string | null {
-  if (!header || !header.startsWith("Basic ")) return null;
+function readCredentials(header: string | null): { username: string; password: string } | null {
+  // Reject oversized/malformed Basic credentials before decoding, and never log them.
+  if (!header || header.length > 4096 || !/^Basic [A-Za-z0-9+/]+={0,2}$/.test(header)) return null;
   try {
-    const bytes = Uint8Array.from(atob(header.slice(6).trim()), (c) => c.charCodeAt(0));
-    const decoded = new TextDecoder().decode(bytes);
+    const bytes = Uint8Array.from(atob(header.slice(6)), (c) => c.charCodeAt(0));
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
     const colon = decoded.indexOf(":");
-    return colon === -1 ? null : decoded.slice(colon + 1);
+    if (colon <= 0 || /[\u0000-\u001f\u007f]/.test(decoded)) return null;
+    return { username: decoded.slice(0, colon), password: decoded.slice(colon + 1) };
   } catch {
     return null;
   }
 }
 
 function clientIp(request: NextRequest): string {
-  const forwarded = request.headers.get("x-forwarded-for");
+  // Vercel controls x-vercel-forwarded-for; do not trust arbitrary client supplied forwarding chains there.
+  const forwarded = process.env.VERCEL ? request.headers.get("x-vercel-forwarded-for") : request.headers.get("x-forwarded-for");
   return (forwarded?.split(",")[0] || request.headers.get("x-real-ip") || "unknown").trim();
 }
 
@@ -63,15 +67,14 @@ export async function proxy(request: NextRequest) {
   const production = process.env.NODE_ENV === "production";
 
   if (!expected) {
-    if (!production) return NextResponse.next();
+    if (!production && ["localhost", "127.0.0.1", "[::1]"].includes(request.nextUrl.hostname)) return NextResponse.next();
     return new NextResponse("Trang admin đang tắt: chưa đặt ADMIN_PASSWORD trên máy chủ.", { status: 503, headers: baseHeaders });
+  }
+  if (production && (PLACEHOLDER_PASSWORD.test(expected) || OBVIOUS_PASSWORD.test(expected))) {
+    return new NextResponse("Trang admin đang tắt: ADMIN_PASSWORD vẫn là giá trị mẫu. Hãy đặt một chuỗi ngẫu nhiên dài.", { status: 503, headers: baseHeaders });
   }
   if (production && expected.length < MIN_PASSWORD_LENGTH) {
     return new NextResponse(`Trang admin đang tắt: ADMIN_PASSWORD phải dài ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`, { status: 503, headers: baseHeaders });
-  }
-
-  if (production && PLACEHOLDER_PASSWORD.test(expected)) {
-    return new NextResponse("Trang admin đang tắt: ADMIN_PASSWORD vẫn là giá trị mẫu. Hãy đặt một chuỗi ngẫu nhiên dài.", { status: 503, headers: baseHeaders });
   }
 
   const ip = clientIp(request);
@@ -85,8 +88,9 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  const given = readPassword(request.headers.get("authorization"));
-  if (given !== null && (await safeEqual(given, expected))) {
+  const given = readCredentials(request.headers.get("authorization"));
+  const expectedUser = process.env.ADMIN_USERNAME || "admin";
+  if (given !== null && (await Promise.all([safeEqual(given.username, expectedUser), safeEqual(given.password, expected)])).every(Boolean)) {
     fails.delete(ip);
     return NextResponse.next();
   }

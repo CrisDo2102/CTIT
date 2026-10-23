@@ -5,8 +5,19 @@ export type LogLevel = "info" | "warn" | "error";
 const MAX_VALUE = 500;
 
 function clean(value: unknown): unknown {
-  if (typeof value === "string") return value.length > MAX_VALUE ? `${value.slice(0, MAX_VALUE)}…` : value;
-  return value;
+  if (typeof value !== "string") return value;
+  // Error messages come from the browser and must be treated as untrusted. Avoid accidentally
+  // recording access tokens, cookie values or URL query strings in third-party log drains.
+  const redacted = value
+    .replace(/\b(Authorization|Cookie|Set-Cookie|token|api[_-]?key|password|secret)\s*[:=]\s*[^\s,;&]+/gi, "$1=[REDACTED]")
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]{8,}/gi, "Bearer [REDACTED]")
+    .replace(/https?:\/\/[^\s<>\"']+/gi, (candidate) => {
+      try {
+        const url = new URL(candidate);
+        return `${url.origin}${url.pathname}`; // never log query string, fragment or user:password
+      } catch { return "[URL]"; }
+    });
+  return redacted.length > MAX_VALUE ? `${redacted.slice(0, MAX_VALUE)}…` : redacted;
 }
 
 export function logEvent(level: LogLevel, event: string, data: Record<string, unknown> = {}): void {
