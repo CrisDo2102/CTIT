@@ -27,5 +27,7 @@ export function createRateLimiter(limit: number, windowMs: number) {
 }
 
 export function clientIp(headers: Headers): string {
-  return (headers.get("x-forwarded-for")?.split(",")[0] || headers.get("x-real-ip") || "unknown").trim();
+  const trusted = process.env.VERCEL ? headers.get("x-vercel-forwarded-for") : headers.get("x-forwarded-for");
+  const raw = trusted?.split(",")[0] || (!process.env.VERCEL ? headers.get("x-real-ip") : null) || "unknown";
+  return /^[a-fA-F0-9:.]{3,45}$/.test(raw.trim()) ? raw.trim() : "unknown";
 }

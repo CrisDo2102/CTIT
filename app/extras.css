@@ -81,7 +81,7 @@
 
 /* ---------- Inventory: bộ lọc nhiều lựa chọn ---------- */
 .inv-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
-.inv-facets { position: sticky; top: 92px; display: grid; gap: 4px; max-height: calc(100vh - 110px); overflow-y: auto; padding: 4px 4px 4px 0; scrollbar-width: thin; }
+.inv-facets { position: sticky; top: calc(var(--sticky-top) + 20px); display: grid; gap: 4px; max-height: calc(100dvh - var(--sticky-top) - 38px); overflow-y: auto; padding: 4px 4px 4px 0; scrollbar-width: thin; }
 .inv-facets-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 8px; border-bottom: 2px solid var(--ink); }
 .inv-facets-head strong, .inv-facet summary { font-size: 13px; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
 .inv-facets-head em, .inv-facet summary em {
@@ -129,7 +129,7 @@
 @media (prefers-reduced-motion: reduce) { .inv-facets, .search-overlay { transition: none; animation: none; } }
 
 /* ---------- Thanh điều hướng trong trang ---------- */
-.subnav { position: sticky; top: var(--header-h, 72px); z-index: 15; border-bottom: 1px solid var(--tsinghua-border); background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); }
+.subnav { position: sticky; top: calc(var(--header-h, 72px) + var(--sticky-stack-before, 0px)); z-index: var(--z-sticky, 15); border-bottom: 1px solid var(--tsinghua-border); background: rgba(255, 255, 255, .94); backdrop-filter: blur(14px); }
 .subnav-inner { display: flex; align-items: center; gap: 24px; }
 .subnav-label { flex: none; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .subnav ul { display: flex; gap: 4px; margin: 0; padding: 0; overflow-x: auto; list-style: none; scrollbar-width: none; }
@@ -139,7 +139,7 @@
 .subnav a:hover, .subnav a.is-active { color: var(--ink); }
 .subnav a.is-active::after { transform: scaleX(1); }
 /* Chừa chỗ cho thanh dính khi trình duyệt cuộn tới phần tử đang focus hoặc #mục (WCAG 2.2, 2.4.11). Chiều cao đo thật bằng StickyOffsets / PageSubNav. */
-html { scroll-padding-top: calc(var(--header-h, 72px) + var(--subnav-h, 0px) + 16px); scroll-padding-bottom: 96px; }
+html { scroll-padding-top: calc(var(--sticky-top) + 16px); scroll-padding-bottom: 96px; }
 @media (max-width: 700px) { .subnav-label { display: none; } }
 @media (prefers-reduced-motion: reduce) { .subnav a, .subnav a::after { transition: none; } }
 
@@ -412,7 +412,7 @@ html { scroll-padding-top: calc(var(--header-h, 72px) + var(--subnav-h, 0px) + 1
 @media (max-width: 960px) {
   /* Thanh "N mặt hàng · Bộ lọc (2) · Sắp xếp" luôn nằm dưới header khi cuộn danh sách dài, nên mở lại bộ lọc không phải cuộn lên đầu. */
   .inv-results > .inventory-result-line, .inv-results > .result-line {
-    position: sticky; top: var(--header-h, 72px); z-index: 30; margin-inline: -4px; padding: 10px 4px;
+    position: sticky; top: var(--sticky-top); z-index: var(--z-sticky, 15); margin-inline: -4px; padding: 10px 4px;
     border-bottom: 1px solid var(--tsinghua-border); background: rgba(255, 255, 255, .96); backdrop-filter: blur(10px);
   }
   .inv-apply {
@@ -428,3 +428,9 @@ html { scroll-padding-top: calc(var(--header-h, 72px) + var(--subnav-h, 0px) + 1
 .admin-monitoring h2 { margin: 0 0 8px; font-size: 20px; }
 .admin-monitoring p { max-width: 70ch; color: var(--muted); }
 .admin-monitoring-result { min-height: 1.5em; margin: 12px 0 0; font-weight: 700; color: var(--ink) !important; }
+
+
+/* Chuyển động thanh học tập chỉ khi có thay đổi dữ liệu thật. */
+@media (prefers-reduced-motion: reduce) {
+  .cp-bar i, .course-progress-bar i { transition: none !important; }
+}

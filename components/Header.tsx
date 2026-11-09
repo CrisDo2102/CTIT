@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MainNav } from "@/components/MainNav";
 import { MobileNav } from "@/components/MobileNav";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { HeaderScroll } from "@/components/HeaderScroll";
 import { SearchDialog } from "@/components/SearchDialog";
 import { SearchTrigger } from "@/components/SearchTrigger";
@@ -14,7 +15,8 @@ const navItems = nav.map(({ href, label }) => ({ href, label }));
 const resourceLinks = [
   { href: "/resources/documents", label: "Tài liệu" },
   { href: "/resources/inventory", label: "Inventory" },
-  { href: "/resources/courses", label: "Khóa học" }
+  { href: "/resources/courses", label: "Khóa học" },
+  { href: "/imagery", label: "Imagery · Hình ảnh" }
 ];
 
 // overlay: header "nổi" trong suốt trên ảnh hero (chỉ trang chủ dùng), cuộn xuống thì thành nền kính mờ. Mặc định: header trắng dính như các trang khác.
@@ -54,6 +56,7 @@ export async function Header({ overlay = false }: { overlay?: boolean } = {}) {
       </header>
       {overlay ? <HeaderScroll /> : null}
       <SearchDialog />
+      <MobileBottomNav />
     </>
   );
 }

@@ -46,12 +46,22 @@ export function MainNav({ items }: { items: Item[] }) {
                   </span>
                   <b aria-hidden="true">→</b>
                 </Link>
+
                 <Link href="/resources/courses" role="menuitem" className={cls("nav-dropdown-item", "/resources/courses")} aria-current={current("/resources/courses")}>
                   <span className="nav-dropdown-icon nav-course-icon" aria-hidden="true">▥</span>
                   <span>
                     <small>03 / COURSES</small>
                     <strong>Khóa học</strong>
                     <em>Lộ trình học theo môn: vi điều khiển, AVR, ARM.</em>
+                  </span>
+                  <b aria-hidden="true">→</b>
+                </Link>
+                <Link href="/imagery" role="menuitem" className={cls("nav-dropdown-item", "/imagery")} aria-current={current("/imagery")}>
+                  <span className="nav-dropdown-icon nav-doc-icon" aria-hidden="true">▧</span>
+                  <span>
+                    <small>04 / IMAGERY</small>
+                    <strong>Thư viện hình ảnh</strong>
+                    <em>Hình ảnh phân loại theo folder, không cần Google Sheets.</em>
                   </span>
                   <b aria-hidden="true">→</b>
                 </Link>

@@ -15,7 +15,7 @@ export default function ChangelogPage() {
     <>
       <Header />
       <main id="main">
-        <PageHero eyebrow="What's new" title="Có gì mới" intro={`Phiên bản hiện tại: ${appVersion}. Các cập nhật gần đây của cổng thông tin CTIT, mới nhất ở trên.`} />
+        <PageHero variant="reading" eyebrow="What's new" title="Có gì mới" intro={`Phiên bản hiện tại: ${appVersion}. Các cập nhật gần đây của cổng thông tin CTIT, mới nhất ở trên.`} />
         <section className="section no-top">
           <div className="container">
             <ol className="cl-list">

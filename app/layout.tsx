@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "./extras.css";
+import "./embedded.css";
+import "./design-system.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Suspense } from "react";
 import { RouteProgress } from "@/components/RouteProgress";

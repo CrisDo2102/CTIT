@@ -44,6 +44,28 @@ describe("loadSheet", () => {
     expect(result.rows).toEqual([["a", "b"], ["1", "2"]]);
   });
 
+  it("từ chối redirect rời khỏi miền Google (ngăn SSRF)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 302, headers: { location: "http://169.254.169.254/latest/meta-data" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await loadSheet(URL_OK, "T")).state).toBe("failed");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].redirect).toBe("manual");
+  });
+
+  it("cho phép redirect trong hệ Google và chặn quá 4 lần", async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "https://doc-1.googleusercontent.com/export.csv" } }))
+      .mockResolvedValueOnce(csv("title\nvalue"));
+    vi.stubGlobal("fetch", fetchMock);
+    expect((await loadSheet(URL_OK, "T")).rows).toEqual([["title"], ["value"]]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("bỏ dữ liệu quá lớn dù HTTP không báo content-length", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(csv("a".repeat(5 * 1024 * 1024 + 1))));
+    expect((await loadSheet(URL_OK, "T")).state).toBe("failed");
+  });
+
   it("lỗi mà chưa có bản nào: failed, trả rỗng", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("", { status: 500 })));
     const result = await loadSheet(URL_OK, "T");

@@ -32,6 +32,8 @@ export function LearningSummary({ courses }: { courses: { slug: string; title: s
 
   const finished = rows.filter((row) => row.ids.length > 0 && row.count === row.ids.length).length;
   const resume = rows.find((row) => row.count > 0 && row.count < row.ids.length);
+  const nextId = resume?.ids.find(id => !done.has(id));
+  const [, nextTrack, nextLesson] = nextId?.split(":") ?? [];
   const percent = Math.round((learned / total) * 100);
 
   return (
@@ -42,7 +44,7 @@ export function LearningSummary({ courses }: { courses: { slug: string; title: s
         <span>{learned}/{total} bài ({percent}%){finished > 0 ? ` · xong ${finished} khóa` : ""}</span>
       </div>
       {resume ? (
-        <Link href={`/resources/courses/${resume.slug}`} className="btn secondary">Học tiếp: {short(resume.title, 32)}</Link>
+        <Link href={`/resources/courses/${resume.slug}?track=${encodeURIComponent(nextTrack)}&lesson=${encodeURIComponent(nextLesson)}`} className="btn secondary">Học tiếp: {short(resume.title, 32)}</Link>
       ) : null}
     </div>
   );

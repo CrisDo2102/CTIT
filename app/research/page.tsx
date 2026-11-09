@@ -12,7 +12,7 @@ export default async function ResearchPage() {
   return (
     <>
       <Header />
-      <main id="main">
+      <main id="main" data-ctit-accent="research">
         <ResearchHero />
         <ResearchExplorer data={data} />
       </main>

@@ -1,3 +1,4 @@
+import { readInfo, parseQuiz } from "@/lib/learning-model";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import type {
@@ -1169,7 +1170,7 @@ function isHttpUrl(value: string): boolean {
 }
 
 type DraftTrack = { slug: string; name: string; description: string; lessons: CourseLesson[] };
-type DraftCourse = { slug: string; title: string; description: string; image: string; tracks: Map<string, DraftTrack> };
+type DraftCourse = { info?: Course["info"]; slug: string; title: string; description: string; image: string; tracks: Map<string, DraftTrack> };
 
 export async function getCourses(): Promise<Course[]> {
   const rows = await fetchSheetRows(process.env.COURSES_SHEET_CSV_URL || resourcesSheetUrl, "Courses");
@@ -1223,6 +1224,8 @@ export async function getCourses(): Promise<Course[]> {
     return [];
   }
 
+  // Optional metadata is read only inside the Course block, on its overview row.
+  const infoColumns = new Map(header.slice(start,end).map((name,i)=>[name.trim().toLowerCase(),start+i]));
   const courses = new Map<string, DraftCourse>();
   const usedCourseSlugs = new Set<string>();
   const imageRefs: string[] = [];
@@ -1269,6 +1272,9 @@ export async function getCourses(): Promise<Course[]> {
     }
 
     const course = getCourse(courseName);
+    if (!title && !url && !trackName && !course.info) {
+      course.info = readInfo(key => cellAt(row, infoColumns.get(key) ?? -1));
+    }
     if (image && !course.image) {
       course.image = image;
       imageRefs.push(image);
@@ -1296,7 +1302,11 @@ export async function getCourses(): Promise<Course[]> {
       return;
     }
 
+    const quiz = parseQuiz(cellAt(row, infoColumns.get("quiz_json") ?? -1));
+    const minutes = Number(cellAt(row, infoColumns.get("lesson_duration_min") ?? -1));
     getTrack(course, trackName).lessons.push({
+      ...(quiz ? {quiz} : {}),
+      ...(minutes > 0 && Number.isFinite(minutes) ? { minutes } : {}),
       title,
       url,
       type: !url ? "" : rawType ? normalizeResourceType(rawType) : detectTypeFromUrl(url),
@@ -1327,6 +1337,7 @@ export async function getCourses(): Promise<Course[]> {
 
     result.push({
       slug: course.slug,
+      ...(course.info ? { info: course.info } : {}),
       title: course.title,
       description: course.description,
       image: course.image ? resolvePhotoUrl(course.image, "courses") : "",

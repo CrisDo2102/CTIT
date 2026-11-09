@@ -123,6 +123,8 @@ export type ResearchData = {
 
 // ---- Khoa hoc (tab Courses): mon -> nhanh (vd AVR, ARM) -> bai (moi bai la 1 link) ----
 export type CourseLesson = {
+  quiz?: import("./learning-model").QuizQuestion[];
+  minutes?: number;
   title: string;
   url: string; // http(s); "" = bai da len ke hoach nhung chua co link (hien "Sap co")
   type: string; // Video / PDF / Code / Datasheet / Website... ("" neu bai chua co link)
@@ -138,6 +140,7 @@ export type CourseTrack = {
 };
 
 export type Course = {
+  info?: import("./learning-model").CourseInfo;
   slug: string;
   title: string;
   description: string;

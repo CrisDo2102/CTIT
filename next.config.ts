@@ -9,7 +9,7 @@ const forceHttps = Boolean(process.env.VERCEL);
 // - script 'unsafe-inline': Next.js chèn script nội tuyến; muốn bỏ phải dùng nonce (khi đó mọi trang
 //   thành render động, mất cache). Đổi lại: object-src/base-uri/form-action/frame-ancestors khoá chặt.
 // - img-src https: vì ảnh lấy cả từ Google Drive, imgur... theo link trong Sheet.
-// - frame-src: chỉ Spline (hero trang Nghiên cứu).
+// - frame-src: Spline (Nghiên cứu) và YouTube privacy-enhanced (bài học).
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
@@ -17,8 +17,10 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "connect-src 'self'",
-  "frame-src https://my.spline.design https://prod.spline.design",
+  "frame-src https://my.spline.design https://prod.spline.design https://www.youtube-nocookie.com",
+  "script-src-attr 'none'",
   "object-src 'none'",
+  "manifest-src 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'self'",
@@ -52,9 +54,20 @@ const nextConfig: NextConfig = {
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
           { key: "X-DNS-Prefetch-Control", value: "off" },
           ...(isProd ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }] : [])
         ]
+      },
+      {
+        source: "/resources/courses/:slug",
+        headers: [{ key: "Content-Security-Policy", value: csp
+          .replace("script-src 'self'", "script-src 'self' https://www.youtube.com/iframe_api https://www.youtube.com/s/player/ https://s.ytimg.com/yts/")
+          .replace("frame-src ", "frame-src https://wokwi.com ") }]
+      },
+      {
+        source: "/api/report",
+        headers: [{ key: "Cache-Control", value: "no-store" }, { key: "X-Robots-Tag", value: "noindex" }]
       },
       {
         // Ảnh trong public/images: Next mặc định bắt trình duyệt hỏi lại máy chủ ở MỌI lần tải trang (max-age=0).

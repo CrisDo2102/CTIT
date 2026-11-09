@@ -1,3 +1,4 @@
+import { readLimitedText, BodyTooLargeError } from "@/lib/limited-body";
 // Tầng đọc Google Sheet (publish-to-web CSV): tải, chuẩn hóa lỗi, giữ bản dữ liệu tốt gần nhất, báo tình trạng.
 // Tách khỏi sheet-data.ts (phần "hiểu" từng tab) để kiểm thử riêng và để /api/health dùng chung.
 
@@ -152,16 +153,34 @@ export async function loadSheet(url: string, label = "Sheet"): Promise<SheetResu
   try {
     // npm run dev: luon lay du lieu moi nhat tu sheet (khong cache), sua sheet
     // xong F5 la thay. Chay that (build/start): cache 60 giay.
-    const res = await fetch(url, {
-      ...(isDev ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
-      signal: AbortSignal.timeout(SHEET_TIMEOUT_MS)
-    });
-    if (!res.ok) return fail(url, label, started, `Không tải được sheet (HTTP ${res.status}). Kiểm tra link CSV.`);
+    let target = url;
+    let res: Response | undefined;
+    // Google may redirect exports, but an off-domain redirect must NEVER be followed (SSRF defense).
+    // All hops share one request budget and only Google-owned HTTPS hosts are allowed.
+    const signal = AbortSignal.timeout(SHEET_TIMEOUT_MS);
+    for (let redirectCount = 0; redirectCount <= 4; redirectCount++) {
+      res = await fetch(target, {
+        ...(isDev ? { cache: "no-store" as const } : { next: { revalidate: 60 } }),
+        redirect: "manual",
+        signal
+      });
+      if (![301, 302, 303, 307, 308].includes(res.status)) break;
+      const location = res.headers.get("location");
+      if (!location || redirectCount === 4) return fail(url, label, started, "Sheet chuyển hướng quá nhiều hoặc không có địa chỉ.");
+      const nextTarget = new URL(location, target).toString();
+      if (!isAllowedSheetUrl(nextTarget)) return fail(url, label, started, "Sheet chuyển hướng đến địa chỉ không an toàn.");
+      target = nextTarget;
+    }
+    if (!res?.ok) return fail(url, label, started, `Không tải được sheet (HTTP ${res?.status}). Kiểm tra link CSV.`);
     const declared = Number(res.headers.get("content-length") ?? 0);
     if (declared > SHEET_MAX_BYTES) return fail(url, label, started, `Sheet quá lớn (${declared} byte), bỏ qua.`);
-    const text = await res.text();
-    if (text.length > SHEET_MAX_BYTES) return fail(url, label, started, "Sheet quá lớn, bỏ qua.");
-    const rows = parseCsv(text);
+    let body: string;
+    try { body = await readLimitedText(res, SHEET_MAX_BYTES); }
+    catch (error) {
+      if (error instanceof BodyTooLargeError) return fail(url, label, started, "Sheet quá lớn, bỏ qua.");
+      throw error;
+    }
+    const rows = parseCsv(body);
     lastGood.set(url, rows);
     return { rows, state: "ok", ms: Date.now() - started };
   } catch (error) {

@@ -1,0 +1,19 @@
+CTIT 2.3 — Unified Design System
+
+DESIGN:
+- Introduce backward-compatible PageHero variants: standard, compact, reading.
+- Introduce scoped color accents for Resources, Research, Events, Schools, News.
+- Add PageShell density + SectionHeader component.
+- Add semantic design tokens, responsive hero spacing, accessibility focus styles and reduced-motion handling.
+
+ROUTES:
+- Compact: Resources, Documents, Inventory, Courses, Saved, Events, Schools, Campus.
+- Reading: course detail, inventory detail, changelog.
+- No layout changes to cinematic home hero, or custom Research/News hero.
+- Zero-value stats now visible and honest.
+
+TESTS:
+- TypeScript PASS; ESLint changed files PASS; CSS parse PASS; SSR smoke PASS.
+- npm production build / full Vitest not verifiable on Linux due Windows-native binaries and blocked npm registry.
+
+INSTALL: unzip into existing CTIT folder replacing same-name files. No backups or secrets included.

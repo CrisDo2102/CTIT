@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
+import { localStudyDay, studyStreak } from "./study-days";
 import { safeHref } from "@/lib/safe-url";
 
 // Mục đã lưu (★) và bài đã học, lưu trong trình duyệt của từng người (localStorage), không cần đăng nhập.
@@ -129,6 +130,11 @@ export function useDone() {
   // Đánh dấu / bỏ đánh dấu một hoặc nhiều bài (vd "đã học cả nhánh", "học lại từ đầu").
   const setMany = useCallback((targets: string[], value: boolean) => {
     const next = new Set(doneSnapshot(read(DONE_KEY)));
+    if(value && targets.some(id=>!next.has(id))){
+      const days = new Set(parseStrings(read("ctit-study-days")));
+      days.add(localStudyDay());
+      write("ctit-study-days", JSON.stringify([...days].sort().slice(-730)));
+    }
     for (const id of targets) {
       if (value) next.add(id);
       else next.delete(id);
@@ -138,4 +144,9 @@ export function useDone() {
   const toggle = useCallback((id: string) => setMany([id], !doneSnapshot(read(DONE_KEY)).has(id)), [setMany]);
 
   return { done, toggle, setMany };
+}
+
+export function useStudyStreak(){
+  const raw=useSyncExternalStore(subscribe,()=>read("ctit-study-days"),()=>"");
+  return studyStreak(parseStrings(raw),localStudyDay());
 }

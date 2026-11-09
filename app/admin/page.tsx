@@ -1,3 +1,4 @@
+import { AdminLearningCheck } from "@/components/AdminLearningCheck";
 import type { Metadata } from "next";
 import { AdminGuide } from "@/components/AdminGuide";
 import { AdminMonitoring } from "@/components/AdminMonitoring";
@@ -32,6 +33,7 @@ export default function AdminPage() {
         </section>
         <section className="section no-top">
           <AdminMonitoring />
+          <AdminLearningCheck />
         </section>
       </main>
       <Footer />

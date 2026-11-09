@@ -1,0 +1,208 @@
+/* CTIT 2.3 — Design System: scoped layer over the existing brand.
+   Keep home/cinematic and legacy --tsinghua-* selectors untouched. */
+:root {
+  --ctit-surface: var(--color-surface, var(--white, #fff));
+  --ctit-text: var(--color-text, var(--ink, #151527));
+  --ctit-muted: var(--color-text-muted, var(--muted, #60616d));
+  --ctit-line: var(--color-border, var(--tsinghua-border, #dee0f4));
+  --ctit-brand: var(--color-primary, var(--tsinghua-purple, #4f46e5));
+  --ctit-accent: #6f81db;
+  --ctit-font-mono: var(--font-tech, ui-monospace, Consolas, monospace);
+  --ctit-motion-fast: var(--motion-fast, 160ms);
+  --ctit-motion-normal: var(--motion-base, 240ms);
+  --ctit-motion-slow: var(--motion-reveal, 340ms);
+  --ctit-motion-ease: var(--motion-ease, cubic-bezier(.22, 1, .36, 1));
+  --ctit-shadow-hard: var(--shadow-offset, 8px 8px 0 rgba(79,70,229,.12));
+  --ctit-content-width: 1120px;
+}
+
+[data-ctit-accent="resources"] { --ctit-accent: #22bdd9; }
+[data-ctit-accent="research"] { --ctit-accent: #a58bf8; }
+[data-ctit-accent="events"] { --ctit-accent: #e5a375; }
+[data-ctit-accent="schools"] { --ctit-accent: #93a5fe; }
+[data-ctit-accent="news"] { --ctit-accent: #a5a3f7; }
+
+/* Listing pages have a compact editorial banner. The landing hero remains untouched. */
+.page-hero.ph[data-ctit-hero="compact"] {
+  background:
+    radial-gradient(55% 125% at 100% -10%, color-mix(in srgb, var(--ctit-accent) 38%, transparent), transparent 78%),
+    radial-gradient(50% 90% at 0% 110%, rgba(30, 125, 176, .18), transparent 78%),
+    #0b0b22;
+  border-block-end: 1px solid rgba(255,255,255,.09);
+}
+.page-hero.ph[data-ctit-hero="compact"] .ph-inner {
+  width: min(var(--ctit-content-width), calc(100% - 40px));
+  padding: 28px 0 26px;
+  gap: 24px;
+}
+.page-hero.ph[data-ctit-hero="compact"] .ph-inner.has-aside {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 136px);
+}
+.page-hero.ph[data-ctit-hero="compact"] h1 {
+  max-width: none;
+  margin-top: 9px;
+  font-size: clamp(32px, 4.3vw, 50px);
+  line-height: 1.12;
+  letter-spacing: -.045em;
+}
+.page-hero.ph[data-ctit-hero="compact"] .eyebrow,
+.page-hero.ph[data-ctit-hero="reading"] .eyebrow {
+  font-family: var(--ctit-font-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  border-radius: 0;
+  border-color: color-mix(in srgb, var(--ctit-accent) 50%, transparent);
+  padding: 5px 9px;
+  background: color-mix(in srgb, var(--ctit-accent) 12%, transparent);
+}
+.page-hero.ph[data-ctit-hero="compact"] .lead {
+  max-width: 70ch;
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.page-hero.ph[data-ctit-hero="compact"] .ph-back { margin-bottom: 10px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-stats { margin-top: 14px; gap: 7px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-stats li {
+  padding: 6px 11px;
+  gap: 7px;
+  border-radius: 0;
+  background: rgba(255,255,255,.055);
+  backdrop-filter: none;
+}
+.page-hero.ph[data-ctit-hero="compact"] .ph-stats b { font-family: var(--ctit-font-mono); font-size: 15px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-stats span { font-size: 12px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-mark {
+  width: 116px;
+  height: 116px;
+  padding: 13px;
+  border-radius: 0;
+  box-shadow: 8px 8px 0 rgba(56,189,248,.14);
+}
+.page-hero.ph[data-ctit-hero="compact"] .ph-mark span { font-size: 10px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-mark b { font-size: 40px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-actions { margin-top: 16px; }
+.page-hero.ph[data-ctit-hero="compact"] .ph-copy > *,
+.page-hero.ph[data-ctit-hero="compact"] .ph-aside {
+  animation-duration: var(--ctit-motion-slow);
+  animation-delay: 0ms;
+}
+.page-hero.ph[data-ctit-hero="compact"] + .section.no-top { padding-top: 22px; }
+
+/* Reading/detail pages: calmer color, shorter heading, no entrance animation. */
+.page-hero.ph[data-ctit-hero="reading"] {
+  background:
+    radial-gradient(48% 110% at 100% 0%, color-mix(in srgb, var(--ctit-accent) 14%, transparent), transparent 80%),
+    #121329;
+}
+.page-hero.ph[data-ctit-hero="reading"] .ph-inner {
+  width: min(var(--ctit-content-width), calc(100% - 40px));
+  padding: 32px 0;
+  gap: 28px;
+}
+.page-hero.ph[data-ctit-hero="reading"] .ph-inner.has-aside {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 190px);
+}
+.page-hero.ph[data-ctit-hero="reading"] h1 {
+  max-width: 27ch;
+  margin-top: 10px;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.14;
+}
+.page-hero.ph[data-ctit-hero="reading"] .lead {
+  max-width: 68ch;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.page-hero.ph[data-ctit-hero="reading"] .ph-back { margin-bottom: 14px; }
+.page-hero.ph[data-ctit-hero="reading"] .ph-actions { margin-top: 16px; }
+.page-hero.ph[data-ctit-hero="reading"] :is(.ph-copy > *, .ph-aside) { animation: none; }
+.page-hero.ph[data-ctit-hero="reading"] .ph-cover { border-radius: 0; box-shadow: 8px 8px 0 rgba(129,140,248,.12); }
+.page-hero.ph[data-ctit-hero="reading"] + .section.no-top { padding-top: 24px; }
+
+/* Reusable section heading, in a style consistent with the existing square cards. */
+.ctit-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px 24px;
+  margin-bottom: 22px;
+}
+.ctit-section-header-copy { min-width: 0; }
+.ctit-section-eyebrow {
+  margin: 0 0 7px;
+  font: 750 11px/1.4 var(--ctit-font-mono);
+  letter-spacing: .1em;
+  color: var(--ctit-brand);
+}
+.ctit-section-header h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.7vw, 38px);
+  line-height: 1.13;
+  letter-spacing: -.045em;
+  color: var(--ctit-text);
+}
+.ctit-section-description { margin: 8px 0 0; max-width: 64ch; color: var(--ctit-muted); line-height: 1.6; }
+.ctit-section-more {
+  flex: none;
+  color: var(--ctit-brand);
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.ctit-section-more:hover { text-underline-offset: 6px; }
+
+/* Align keyboard feedback with mouse feedback; avoid extra motion on touch. */
+:where(.resource-hub-card, .course-card, .resource-card, .topics-card):focus-visible {
+  outline: 3px solid var(--ctit-brand);
+  outline-offset: 4px;
+}
+:where(.ph-back, .ctit-section-more):focus-visible {
+  outline: 2px solid var(--ctit-accent);
+  outline-offset: 4px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ctit-section-more { transition: text-underline-offset var(--ctit-motion-fast) ease; }
+}
+@media (max-width: 860px) {
+  .page-hero.ph[data-ctit-hero="compact"] .ph-inner.has-aside,
+  .page-hero.ph[data-ctit-hero="reading"] .ph-inner.has-aside { grid-template-columns: minmax(0, 1fr); }
+  /* Decorative inventory stamp should not push results below the fold. */
+  .page-hero.ph[data-ctit-hero="compact"] .ph-aside { display: none; }
+  .page-hero.ph[data-ctit-hero="reading"] .ph-aside { max-width: 180px; }
+}
+@media (max-width: 560px) {
+  .page-hero.ph[data-ctit-hero="compact"] .ph-inner {
+    width: calc(100% - 28px);
+    padding: 22px 0 20px;
+  }
+  .page-hero.ph[data-ctit-hero="compact"] h1 { font-size: clamp(29px, 8.2vw, 39px); }
+  .page-hero.ph[data-ctit-hero="compact"] .lead { font-size: 14px; }
+  .page-hero.ph[data-ctit-hero="compact"] .ph-stats li { padding: 5px 9px; }
+  .page-hero.ph[data-ctit-hero="reading"] .ph-inner { width: calc(100% - 28px); padding: 24px 0; }
+  .ctit-section-header { align-items: start; flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-hero.ph[data-ctit-hero="compact"] :is(.ph-copy > *, .ph-aside),
+  .page-hero.ph[data-ctit-hero="reading"] :is(.ph-copy > *, .ph-aside) {
+    animation: none !important;
+    transition: none !important;
+  }
+  .ctit-section-more { transition: none !important; }
+}
+
+/* 4 Resource families: preserve two-column rhythm while keeping all cards equal in the expanded directory. */
+.resources-directory > .resource-hub-card.is-courses { grid-column: auto; min-height: 280px; }
+@media (max-width: 780px) {
+  .resources-directory > .resource-hub-card.is-courses { grid-column: 1 / -1; min-height: 0; }
+}
+
+/* CTIT sticky offset system: the header and page navs have measured heights. */
+:root {
+  --sticky-gap: 12px;
+  --sticky-top: calc(var(--header-h, 72px) + var(--subnav-h, 0px));
+  --z-sticky: 15;
+  --z-header: 20;
+  --z-drawer: 800;
+  --z-toast: 950;
+}

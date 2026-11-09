@@ -6,6 +6,7 @@ import type { AdmissionsData, AdmissionsTrack } from "@/lib/dashboard-types";
 import { contact, socials } from "@/lib/site-config";
 import "./admissions.css";
 import { Reveal } from "@/components/motion";
+import { useStickyNavOffset } from "@/components/useStickyNavOffset";
 import { PeekImage } from "@/components/PeekImage";
 import { ArrowIcon } from "@/components/icons";
 import { padIndex } from "@/lib/format";
@@ -55,6 +56,7 @@ function TrackCard({ track, i }: { track: AdmissionsTrack; i: number }) {
 /* ---------- trang ---------- */
 
 export function AdmissionsView({ data }: { data: AdmissionsData }) {
+  const stickyNavRef = useStickyNavOffset<HTMLDivElement>(12);
   const { status, steps, requirements, tracks, timeline, faqs } = data;
   const isEmpty = !status && !steps.length && !requirements.length && !tracks.length && !timeline.length && !faqs.length;
 
@@ -85,6 +87,8 @@ export function AdmissionsView({ data }: { data: AdmissionsData }) {
   const hasFacebook = facebook && facebook !== "#";
   const firstAnchor = sections[0] ? `#${sections[0].id}` : undefined;
 
+  const heroImage = tracks.find((track) => track.image)?.image || "/images/Campus/mot_vai_thanh_vien_cua_ctit.jpg";
+
   const facts = [
     { v: tracks.length, l: "hướng hoạt động" },
     { v: steps.length, l: "bước tham gia" },
@@ -94,55 +98,33 @@ export function AdmissionsView({ data }: { data: AdmissionsData }) {
 
   return (
     <>
-      {/* ===== HERO: duy nhất 1 tiêu đề cho cả trang ===== */}
       <section className="adm-hero">
+        <img className="adm-hero-image" src={heroImage} alt="" fetchPriority="high" decoding="async" />
         <div className="adm-wrap adm-hero-grid">
-          <div>
-            <span className="adm-eyebrow"><i />CTIT · Admissions</span>
-            <h1>
-              <span className="adm-line"><span>Tuyển</span></span>{" "}
-              <span className="adm-line"><span>sinh</span></span>
-            </h1>
-            <p className="adm-lead">
-              Khám phá các hướng hoạt động, quy trình tham gia và cơ hội phát triển năng lực cùng CTIT.
-            </p>
+          <div className="adm-hero-copy">
+            <span className="adm-eyebrow">CTIT / TUYỂN SINH</span>
+            <h1>Cùng học hỏi.<br />Cùng tạo nên<br /><em>điều tiếp theo.</em></h1>
+            <p className="adm-lead">Khám phá các hướng hoạt động, quy trình tham gia và cơ hội phát triển năng lực cùng CTIT.</p>
             <div className="adm-cta">
-              {status?.url ? (
-                <a className="adm-btn primary" href={status.url} target="_blank" rel="noreferrer">Đăng ký ngay <ArrowIcon /></a>
-              ) : (
-                <a className="adm-btn primary" href={`mailto:${contact.email}`}>Liên hệ CTIT <ArrowIcon /></a>
-              )}
-              {firstAnchor ? <a className="adm-btn ghost" href={firstAnchor}>Tìm hiểu thêm</a> : null}
-            </div>
-          </div>
-
-          <div className="adm-ticket" aria-label="Trạng thái tuyển sinh">
-            <div className="adm-ticket-top">
-              <span className="adm-live"><i />{status ? "Application status" : "CTIT"}</span>
-              <span className="adm-ticket-code">{new Date().getFullYear()}</span>
-            </div>
-            <strong>{status ? status.title || "Đang tuyển" : "Cùng xây dựng, cùng chế tạo"}</strong>
-            <p>{status?.content || "Đăng ký để trở thành một phần của cộng đồng CTIT."}</p>
-            <div className="adm-ticket-cut" aria-hidden="true" />
-            <div className="adm-ticket-foot">
-              <span>Closed Thinking Institute of Technology</span>
-              <b>→</b>
+              {status?.url ? <a className="adm-btn primary" href={status.url} target="_blank" rel="noreferrer">Đăng ký tham gia <ArrowIcon /></a> : <a className="adm-btn primary" href={`mailto:${contact.email}`}>Liên hệ tuyển sinh <ArrowIcon /></a>}
+              {firstAnchor ? <a className="adm-btn ghost" href={firstAnchor}>Khám phá các hướng <ArrowIcon /></a> : null}
             </div>
           </div>
         </div>
+        <div className="adm-hero-label" aria-hidden="true">CLOSED THINKING<br />INSTITUTE OF TECHNOLOGY</div>
+      </section>
 
-        {facts.length > 0 ? (
-          <div className="adm-wrap adm-facts">
-            {facts.map((f) => (
-              <div key={f.l}><strong>{f.v}</strong><span>{f.l}</span></div>
-            ))}
-          </div>
-        ) : null}
+      <section className="adm-status-band" aria-label="Thông tin tuyển sinh">
+        <div className="adm-wrap adm-status-inner">
+          <span className="adm-status-kicker">THÔNG TIN TUYỂN SINH</span>
+          <div><h2>{status?.title || "Tìm hướng đi phù hợp với bạn"}</h2><p>{status?.content || "Liên hệ CTIT để tìm hiểu thông tin và thời gian tuyển sinh."}</p></div>
+          <a href={status?.url || `mailto:${contact.email}`} {...(status?.url ? { target: "_blank", rel: "noreferrer" } : {})}> {status?.url ? "Xem thông tin" : "Liên hệ CTIT"} <ArrowIcon /></a>
+        </div>
       </section>
 
       {/* ===== thanh điều hướng nội trang (dính khi cuộn) ===== */}
       {sections.length > 1 ? (
-        <div className="adm-nav-wrap">
+        <div className="adm-nav-wrap" ref={stickyNavRef}>
           <nav className="adm-nav" aria-label="Các phần trong trang tuyển sinh">
             {sections.map((s) => (
               <a key={s.id} href={`#${s.id}`} className={active === s.id ? "is-active" : ""}>{s.label}</a>
@@ -261,13 +243,25 @@ export function AdmissionsView({ data }: { data: AdmissionsData }) {
         </section>
       ) : null}
 
+      {!isEmpty ? <section className="adm-resources">
+        <div className="adm-wrap">
+          <div className="adm-resource-heading"><p className="adm-kicker">CHUẨN BỊ CHO HÀNH TRÌNH MỚI</p><h2>Bắt đầu từ sự tò mò.</h2><p>Tìm hiểu CTIT và khám phá những nguồn học tập trước khi tham gia.</p></div>
+          <div className="adm-resource-grid">
+            <a href="/about"><span>01 / TÌM HIỂU</span><h3>Về CTIT</h3><p>Khám phá cộng đồng và các hoạt động của CTIT.</p><b>Tìm hiểu thêm <ArrowIcon /></b></a>
+            <a href="/resources/courses"><span>02 / HỌC TẬP</span><h3>Khám phá khóa học</h3><p>Tìm môn học và lộ trình phù hợp với mối quan tâm của bạn.</p><b>Xem khóa học <ArrowIcon /></b></a>
+            <a href="/research"><span>03 / KHÁM PHÁ</span><h3>Nghiên cứu & dự án</h3><p>Tìm hiểu những hướng nghiên cứu và dự án tại CTIT.</p><b>Xem nghiên cứu <ArrowIcon /></b></a>
+          </div>
+        </div>
+      </section> : null}
+      {facts.length > 0 ? <section className="adm-summary" aria-label="Tổng quan tuyển sinh"><div className="adm-wrap"><h2>Hành trình tham gia CTIT</h2><div className="adm-facts">{facts.map(f => <div key={f.l}><strong>{f.v}</strong><span>{f.l}</span></div>)}</div></div></section> : null}
+
       {/* ===== CTA cuối trang ===== */}
       {!isEmpty ? (
         <section className="adm-wrap adm-final-wrap">
           <Reveal>
             <div className="adm-final">
               <h2>Sẵn sàng tham gia CTIT?</h2>
-              <p>Đăng ký hoặc nhắn cho CTIT — mọi câu hỏi đều được trả lời.</p>
+              <p>Tìm hiểu thông tin tuyển sinh hoặc liên hệ CTIT để trao đổi thêm.</p>
               <div className="adm-cta">
                 {status?.url ? <a className="adm-btn light" href={status.url} target="_blank" rel="noreferrer">Đăng ký ngay <ArrowIcon /></a> : null}
                 <a className="adm-btn outline" href={`mailto:${contact.email}`}>Gửi email</a>
