@@ -42,6 +42,20 @@ describe("proxy /admin: cấu hình mật khẩu ở production", () => {
     vi.stubEnv("ADMIN_PASSWORD", "");
     expect((await call()).status).toBe(200);
   });
+  it("không chấp nhận username sai (mặc định admin)", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ADMIN_PASSWORD", "k7Qm2xVp9LrT4wZb8NcY");
+    vi.stubEnv("ADMIN_USERNAME", "owner-ctit");
+    expect((await call(basic("k7Qm2xVp9LrT4wZb8NcY"))).status).toBe(401);
+    const auth = `Basic ${Buffer.from("owner-ctit:k7Qm2xVp9LrT4wZb8NcY").toString("base64")}`;
+    expect((await call({ authorization: auth })).status).toBe(200);
+    expect((await call({ authorization: "Basic " + "A".repeat(5000) })).status).toBe(401);
+  });
+  it("dev không mật khẩu chỉ mở tại máy chủ local", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("ADMIN_PASSWORD", "");
+    expect((await proxy(new NextRequest("http://ctit.example/admin"))).status).toBe(503);
+  });
   it("sai 5 lần liên tiếp thì khóa IP đó (429), IP khác không bị ảnh hưởng", async () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("ADMIN_PASSWORD", "k7Qm2xVp9LrT4wZb8NcY");

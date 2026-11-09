@@ -1,7 +1,9 @@
 import { navMetadata } from "@/lib/page-meta";
 import { AboutIntro } from "@/components/AboutIntro";
 import { CtitOverview } from "@/components/CtitOverview";
-import { PageShell } from "@/components/PageShell";
+import AboutExperience from "@/components/ctit-about/AboutPage";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { getAboutInfo, getOverviewStats } from "@/lib/sheet-data";
 
 export const metadata = navMetadata("/about");
@@ -9,11 +11,17 @@ export const metadata = navMetadata("/about");
 export default async function AboutPage() {
   const [about, stats] = await Promise.all([getAboutInfo(), getOverviewStats()]);
   return (
-    <PageShell slug="about" heroClass="about-hero" bare title={about?.pageTitle} intro={about?.pageIntro}>
-      <section className="section no-top">
-        <div className="container"><AboutIntro about={about} /></div>
-      </section>
-      <CtitOverview stats={stats} />
-    </PageShell>
+    <>
+      <Header />
+      <main id="main" className="ctit-page-shell">
+        <AboutExperience
+          title={about?.pageTitle}
+          intro={about?.pageIntro}
+          profile={about ? <AboutIntro about={about} /> : undefined}
+          overview={stats.length > 0 ? <CtitOverview stats={stats} /> : undefined}
+        />
+      </main>
+      <Footer />
+    </>
   );
 }

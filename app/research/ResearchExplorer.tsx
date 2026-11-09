@@ -6,6 +6,8 @@ import { safeHttpUrl } from "@/lib/safe-url";
 import { PeekImage } from "@/components/PeekImage";
 import "./research.css";
 import { Reveal, useCountUp } from "@/components/motion";
+import { useStickyNavOffset } from "@/components/useStickyNavOffset";
+import { PCBSignal, CanWaveform } from "@/components/motion/SignalVisuals";
 
 type FilterKey = "all" | keyof ResearchData;
 
@@ -26,9 +28,11 @@ const STATS: { key: keyof ResearchData; label: string }[] = [
 
 // Nút "nam châm": nút nhích theo con trỏ (kiểu các site Awwwards / Godly)
 const magnet = (e: PointerEvent<HTMLElement>) => {
+  if (e.pointerType !== "mouse" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const r = e.currentTarget.getBoundingClientRect();
-  const x = (e.clientX - r.left - r.width / 2) * 0.25;
-  const y = (e.clientY - r.top - r.height / 2) * 0.35;
+  // Phản hồi rất nhẹ, không để nút "chạy trốn" con trỏ.
+  const x = (e.clientX - r.left - r.width / 2) * 0.07;
+  const y = (e.clientY - r.top - r.height / 2) * 0.07;
   e.currentTarget.style.transform = `translate(${x}px, ${y}px)`;
 };
 const unmagnet = (e: PointerEvent<HTMLElement>) => { e.currentTarget.style.transform = ""; };
@@ -72,6 +76,7 @@ export function ResearchHero() {
             <iframe src={spline} title="CTIT 3D" loading="lazy" sandbox="allow-scripts allow-same-origin" referrerPolicy="no-referrer" />
           ) : (
             <>
+              <PCBSignal />
               <div className="rx-chip">
                 <div className="rx-layer" /><div className="rx-layer" /><div className="rx-layer">CTIT</div>
               </div>
@@ -89,9 +94,22 @@ export function ResearchHero() {
 /* ---------- Tiện ích chuyển động ---------- */
 // Con trỏ phát sáng trong thẻ (kiểu Spline/Manus)
 const glow = (e: PointerEvent<HTMLElement>) => {
+  if (e.pointerType !== "mouse" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const r = e.currentTarget.getBoundingClientRect();
   e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
   e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+  // Chỉ tilt thẻ dự án nổi bật và tối đa 2 độ.
+  if (e.currentTarget.classList.contains("ctit-tilt")) {
+    const x = (e.clientX - r.left) / r.width - 0.5;
+    const y = (e.clientY - r.top) / r.height - 0.5;
+    e.currentTarget.style.setProperty("--ctit-tilt-x", `${(-y * 4).toFixed(2)}deg`);
+    e.currentTarget.style.setProperty("--ctit-tilt-y", `${(x * 4).toFixed(2)}deg`);
+  }
+};
+
+const resetTilt = (e: PointerEvent<HTMLElement>) => {
+  e.currentTarget.style.removeProperty("--ctit-tilt-x");
+  e.currentTarget.style.removeProperty("--ctit-tilt-y");
 };
 
 // "Sequencer" kiểu Theatre.js: tiến độ cuộn 0→1 điều khiển --p
@@ -210,9 +228,18 @@ function FocusShowcase({ items, projects }: { items: ResearchItem[]; projects: R
 /* ---------- Dự án (bento) ---------- */
 
 function ProjectCard({ item, spot }: { item: ResearchItem; spot: boolean }) {
+  // Chỉ minh họa tín hiệu khi nội dung dự án thật có liên quan và không có ảnh cover.
+  const hasSignalTopic = /\b(bms|can[\s-]?bus|battery|automotive|vehicle)\b|pin lithium|hệ thống pin|ô tô/i
+    .test([item.title, item.tag, item.category, item.content].filter(Boolean).join(" "));
+
   return (
-    <article className={`rx-glass rx-project${spot ? " is-spot" : ""}`} onPointerMove={glow}>
+    <article
+      className={`rx-glass rx-project${spot ? " is-spot ctit-tilt" : ""}`}
+      onPointerMove={glow}
+      onPointerLeave={resetTilt}
+    >
       {item.image ? <PeekImage src={item.image} alt={item.title} wrapperClass="rx-media" bgClass="rx-media-bg" imgClass="rx-media-img" /> : null}
+      {!item.image && hasSignalTopic ? <CanWaveform /> : null}
       <div className="rx-project-body">
         {item.date ? <span className="rx-date">{item.date}</span> : null}
         <h3>{item.title}</h3>
@@ -262,6 +289,7 @@ function groupByYear(items: ResearchItem[]) {
 }
 
 export function ResearchExplorer({ data }: { data: ResearchData }) {
+  const stickyNavRef = useStickyNavOffset<HTMLDivElement>(12);
   const [filter, setFilter] = useState<FilterKey>("all");
   const show = (k: keyof ResearchData) => (filter === "all" || filter === k ? data[k] : []);
   const focus = show("focus"), project = show("project"), achievement = show("achievement"), publication = show("publication");
@@ -274,7 +302,7 @@ export function ResearchExplorer({ data }: { data: ResearchData }) {
       <Marquee />
       <StatStrip data={data} />
 
-      <div className="rx-tabs-wrap">
+      <div className="rx-tabs-wrap" ref={stickyNavRef}>
         <div className="rx-tabs" role="tablist" aria-label="Lọc nội dung nghiên cứu">
           {FILTERS.map((f) => (
             <button key={f.key} type="button" role="tab" aria-selected={filter === f.key}

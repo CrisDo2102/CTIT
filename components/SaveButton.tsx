@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSaved, type SavedItem } from "@/lib/saved";
 import { showToast } from "@/lib/toast";
+import { emitSaveBurst } from "@/components/motion/burst";
 
 type Props = {
   item: Omit<SavedItem, "at">;
@@ -30,6 +31,7 @@ export function SaveButton({ item, variant = "icon", className = "" }: Props) {
         event.stopPropagation();
         const wasSaved = saved;
         toggle(item);
+        if (!wasSaved) emitSaveBurst(event.currentTarget);
         const name = item.title.length > 42 ? `${item.title.slice(0, 41).trimEnd()}…` : item.title;
         showToast({
           message: wasSaved ? `Đã bỏ lưu “${name}”` : `Đã lưu “${name}”`,

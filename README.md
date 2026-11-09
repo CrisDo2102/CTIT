@@ -1,3 +1,121 @@
+# CTIT — Closed Thinking Institute of Technology
+
+> **Một tài liệu README duy nhất của dự án.** Bản CTIT full này được dựng dựa trên `CTIT(1).zip` ngày 28/10/2026. Các README theo phiên bản và README.txt trong thư mục ảnh đã được hợp nhất vào đây.
+
+## Bắt đầu nhanh (Windows / VS Code)
+
+Folder dự án trên máy:
+
+```powershell
+cd "C:\Users\HOME\Desktop\CTIT"
+npm ci
+npm run ci
+npm run dev
+```
+
+Mở `http://localhost:3000` (nếu đang có Next.js chạy cổng 3000 thì dừng tiến trình đó trước). File `.env.local` **không được đóng trong ZIP**. Nếu cần cấu hình Google Sheets/Admin, tạo `.env.local` từ `.env.example` rồi tự điền giá trị riêng trên máy hoặc môi trường Vercel. **Không đưa `.env.local` lên GitHub.**
+
+### Cấu trúc dự án
+
+```text
+CTIT/
+├── app/                        # Next.js App Router, các trang và CSS
+│   ├── imagery/                # Thư viện hình ảnh tự động từ folder
+│   ├── research/               # Nghiên cứu
+│   └── resources/              # Tài liệu, khóa học, inventory
+├── components/                 # UI dùng chung, bao gồm ImageryGallery
+├── lib/                        # Bộ đọc Sheet, thư viện và tiện ích
+│   └── imagery.ts              # Quét danh mục Imagery từ filesystem
+├── public/images/             # Hình ảnh tĩnh trong source
+│   └── Imagery/                # Các folder Physics, Math... tự động lên web
+├── tests/                      # Unit/E2E tests
+├── .env.example                # Chỉ cấu hình mẫu, không chứa mật khẩu thật
+├── package.json
+└── README.md                   # Hướng dẫn duy nhất
+```
+
+## Imagery — Thư viện ảnh không cần Google Sheets
+
+Tạo một hoặc nhiều thư mục con bên dưới `public/images/Imagery`. **Tên thư mục con chính là tên danh mục trên trang web**, tên file là tên ảnh. Không phải khai báo, cập nhật Sheet hay sửa mã nguồn.
+
+```text
+public/images/Imagery/
+├── Physics/
+│   ├── Newton.png
+│   └── Electromagnetism.jpg
+├── Math/
+│   └── Calculus.webp
+└── Electronics/
+    └── PCB.png
+```
+
+Những tên ảnh ở ví dụ trên chỉ minh họa cách đặt file; bản giao không tự thêm ảnh mẫu giả. Sau khi đưa ảnh thật vào:
+
+- Vào `/imagery` để xem **các danh mục** `Physics`, `Math`, `Electronics` cùng ảnh cover đầu tiên và số ảnh.
+- Bấm một danh mục để mở trang `/imagery/Physics`, `/imagery/Math`...; tìm tên ảnh, nhấn ảnh để xem lớn, chuyển ảnh bằng ←/→, đóng bằng Esc, tải bản gốc.
+- Tên thư mục và tên file có thể có dấu tiếng Việt và dấu cách; hệ thống tự mã hóa đường dẫn URL đúng chuẩn. Tên phải khớp hoa/thường khi deploy lên Linux/Vercel.
+- Định dạng hỗ trợ: `.jpg`, `.jpeg`, `.png`, `.webp`, `.avif`, `.gif` (không nhận SVG do rủi ro script từ nội dung SVG, không nhận PDF).
+- Mỗi danh mục là **một thư mục con cấp 1**. Chỉ các file ảnh nằm trực tiếp bên trong được hiển thị, thư mục lồng sâu không quét.
+- Thư mục trống vẫn hiển thị (số lượng 0). File có dấu chấm đầu tên, symlink, file không phải ảnh bị bỏ qua.
+- Imagery **hoàn toàn không sử dụng Google Sheets**. Các mục khác của CTIT (Resources, Courses, Inventory, Research...) vẫn dùng Sheet như trước.
+
+**Tự cập nhật:** Trong local `npm run dev`, tải lại trang sau khi thêm ảnh. Nếu trang chưa cập nhật, dừng/chạy lại dev server. Khi chạy `npm run build` hoặc deploy Vercel, website tạo danh mục từ ảnh có trong source ở **thời điểm build**. Muốn ảnh mới xuất hiện trên Vercel, đưa ảnh vào Git/repository và deploy lại. Chỉ đặt file vào máy Windows **không thể** cập nhật site Vercel tự động.
+
+**Lưu ý bản quyền & dữ liệu:** Chỉ đăng ảnh có quyền công khai. Ảnh trong `public` truy cập được công khai, không dùng để lưu ảnh cá nhân/riêng tư. Nên nén ảnh trước khi thêm vào repository; khuyến nghị WebP/AVIF để tiết kiệm băng thông.
+
+**Các lối vào Imagery**: `/resources` (ô Imagery), menu Resources trên desktop, menu Resources trên điện thoại, footer Resources và tìm kiếm toàn trang (từ khóa "Imagery"). Trang chủ giữ bố cục Bento cũ.
+
+## Vận hành và kiểm thử
+
+```powershell
+npm run typecheck
+npm run lint
+npm test
+npm run check:secrets
+npm run check:dependencies
+npm run build
+```
+
+`npm run ci` chạy gộp các bước trên. `npm run test:e2e` cần cài Playwright browsers; kiểm tra trên màn hình desktop và mobile, bao gồm điều khiển bàn phím và Reduced Motion. Khi xem báo cáo build, chỉ kết luận PASS cho các lệnh đã chạy thực tế.
+
+**Triển khai Vercel:** đặt project root đúng `CTIT`, cài dependencies bằng `npm ci`, dùng `npm run build`. Thiết lập secret/CSV trong Project Settings → Environment Variables; không đưa token, mật khẩu vào source ZIP. Bản bàn giao đã loại `node_modules`, `.next`, `.git`, `.env.local` và file build. Sau khi giải nén, chạy `npm ci` để tái tạo dependencies trên Windows.
+
+## Các phần chính của CTIT
+
+- **Trang chủ:** hero điện ảnh, Bento và số liệu tổng hợp có thật; không sao chép layout của trang chủ sang các trang danh sách.
+- **Resources:** Tài liệu/Inventory/Courses từ Sheet; Imagery từ folder, vận hành độc lập.
+- **Research:** dự án, hướng nghiên cứu, hiệu ứng PCB/CAN chỉ mang tính minh họa (không phải tín hiệu thật).
+- **Courses & Saved:** tiến độ, mục đã lưu nằm trong trình duyệt của từng người dùng.
+- **UI:** Design System CTIT với gradient cyan–indigo–violet, góc vuông và bóng đổ lệch; `PageHero` có chế độ standard/compact/reading, hỗ trợ Reduce Motion.
+- **Admin:** sử dụng mật khẩu qua environment variables; không lưu password trong README.
+
+## Quy tắc ảnh cho các phần khác (dùng Google Sheets)
+
+Khác Imagery, các folder ảnh `About`, `Admissions`, `Campus`, `Courses`, `Events`, `Research`, `Students` và `Resources/Documents`, `Resources/Inventory`, `Resources/Courses` vẫn khớp tên file qua cột `photo`, `image`, `id` trong Google Sheets. Ví dụ `public/images/About/about-photo.jpg` → dòng `photo` của tab About là `about-photo.jpg`. Tên file phải khớp đúng chữ hoa/chữ thường và phần mở rộng. Các tab có thể nhận ảnh Google Drive hoặc URL nếu parser đang hỗ trợ. Hướng dẫn cột chi tiết nằm ở phần tài liệu dự án kế thừa phía dưới.
+
+---
+
+## Thay đổi CTIT 2.1–2.3 đã gộp
+
+- **2.1 Subtle Motion:** Reveal nhẹ 10px; PCB SVG ở Research Hero; dạng sóng CAN/BMS có nhãn mô phỏng; tilt nhẹ trên desktop; particle nhỏ khi lưu; dừng motion khi tab ẩn, hỗ trợ Reduced Motion.
+- **2.2 Embedded UX:** token kỹ thuật trong `app/embedded.css`, font mono hệ thống, lưới blueprint mờ, nhãn silkscreen một số Bento, nút hero mở Ctrl+K; bottom tab mobile 5 mục; tìm kiếm không dấu và chỉ mục Research.
+- **2.3 Unified Design:** `PageHero` standard/compact/reading, `PageShell`, `SectionHeader`, token trong `app/design-system.css`, compact cho listing và reading cho detail, thiết kế riêng cho trang chủ và Research/News được giữ nguyên.
+- **Imagery (bản này):** thêm thư viện phân loại theo thư mục, trang danh mục ảnh, viewer có phím và download, link điều hướng và sitemap, không dùng Sheet.
+
+### Lưu ý các phiên bản trước
+
+Các bản 2.1–2.3 trước đây là ZIP patch (chỉ chứa file thay đổi). **Bản bàn giao hiện tại là toàn bộ source**, vì vậy không cần giải nén các bản patch cũ lên trên. Không có dữ liệu test giả nào được thêm vào Imagery. Những kết quả kiểm thử ghi ở tài liệu cũ chỉ áp dụng cho mã nguồn tại thời điểm đó, không thay thế việc chạy `npm run ci` cho bản full hiện tại.
+
+---
+
+## Tài liệu chi tiết hiện có của dự án (đã hợp nhất)
+
+Phần tiếp theo giữ các hướng dẫn schema và lịch sử triển khai ban đầu để tránh mất thông tin về các cột Google Sheets, cấu trúc trang và bảo mật. Một số tên folder/đường dẫn/phiên bản trong lịch sử đã cũ; hãy ưu tiên mục **Bắt đầu nhanh** và **Imagery** phía trên khi thiết lập bản hiện tại.
+
+> **Bản vá CVE ngày 14/10/2026:** Next.js 16.4.0 gốc có các lỗ hổng RCE/DoS nghiêm trọng. Bản này pin Next.js **16.4.1**, React/React DOM **19.2.9**. Do môi trường biên tập không truy cập npm registry, hãy chạy `npm install next@16.4.1 react@19.2.9 react-dom@19.2.9 --save-exact` trên máy có mạng trước khi đẩy production để lockfile có lại SHA512 integrity chuẩn. Xem `docs/SECURITY-DEPLOY.md`.
+
+> **Cập nhật bảo mật 22/10/2026:** Bản CTIT secure đã tách chẩn đoán riêng sang `/admin/health`; API uptime `/api/health` chỉ trả trạng thái tổng. `/admin` dùng `ADMIN_USERNAME` (mặc định `admin`) và `ADMIN_PASSWORD` ngẫu nhiên tối thiểu **20 ký tự**. Không bao giờ đẩy `.env.local` lên GitHub; xem [`docs/SECURITY-DEPLOY.md`](docs/SECURITY-DEPLOY.md).
+
 # Embedded Roadmap Starter — Tsinghua Link Library
 
 Folder chuẩn dùng trên máy:
@@ -889,7 +1007,7 @@ Không đổi giao diện hay cách hoạt động, chỉ làm gọn code. `tsc 
 
 ### Bảo mật trang /admin (2026-10-06)
 
-- **/admin có mật khẩu.** File `proxy.ts` khoá `/admin` bằng HTTP Basic Auth: trình duyệt hiện hộp nhập, tên đăng nhập nhập gì cũng được, mật khẩu là biến `ADMIN_PASSWORD`. Chạy thật mà chưa đặt biến này thì `/admin` trả 503 (tắt hẳn, không bao giờ mở); chạy `npm run dev` mà chưa đặt thì vẫn vào được để tiện sửa. Trên Vercel: Settings → Environment Variables → thêm `ADMIN_PASSWORD` (tối thiểu 12 ký tự, nên 16 trở lên) → Redeploy.
+- **/admin có mật khẩu.** File `proxy.ts` khoá `/admin` bằng HTTP Basic Auth: trình duyệt hiện hộp nhập, tên đăng nhập là `ADMIN_USERNAME` (mặc định `admin`), mật khẩu là `ADMIN_PASSWORD`. Chạy thật mà chưa đặt biến này thì `/admin` trả 503 (tắt hẳn, không bao giờ mở); chạy `npm run dev` mà chưa đặt thì vẫn vào được để tiện sửa. Trên Vercel: Settings → Environment Variables → thêm `ADMIN_PASSWORD` (tối thiểu 20 ký tự ngẫu nhiên) → Redeploy.
 - **Bỏ nút "Mở Google Sheet"** khỏi trang `/admin` và bỏ biến `SHEET_EDIT_URL`. Link sửa sheet không nên nằm trên web. Muốn mở sheet thì dùng bookmark riêng; nên để sheet ở chế độ chỉ người được mời mới sửa được.
 - **`SUPABASE_*`, `ADMIN_SECRET`** không còn được code nào dùng: xoá khỏi `.env.local` và khỏi Vercel, đồng thời đổi (rotate) key trên Supabase nếu key đó từng là key thật.
 - **Header bảo mật** trong `next.config.ts`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`; riêng `/admin` thêm `no-store` và `noindex`. CSP đã được thêm ở đợt 2026-10-09 (xem mục "Bảo mật và sửa lỗi trùng lặp" ở cuối file).
@@ -1023,7 +1141,7 @@ Tham khảo cách Infineon tổ chức thông tin (bảng thông số, trang s�
 ### Việc cần làm trên máy chủ / tài khoản (code không tự làm được)
 
 - **Đổi (rotate) `SUPABASE_SERVICE_ROLE_KEY` trên Supabase** nếu key đó là key thật, rồi xoá `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_SECRET` khỏi `.env.local` và khỏi Vercel. Code không còn dùng các biến này. Không gửi file `.env.local` (hoặc zip có chứa nó) cho ai.
-- `ADMIN_PASSWORD` trên Vercel phải dài ít nhất 12 ký tự, nếu không `/admin` tự tắt (503).
+- `ADMIN_PASSWORD` trên Vercel phải dài ít nhất 20 ký tự, nếu không `/admin` tự tắt (503).
 - Nên bật **Vercel Firewall → Rate Limiting** cho đường dẫn `/admin`. Bộ chống dò mật khẩu trong code nằm trong bộ nhớ từng instance nên trên serverless chỉ chặn được phần nào.
 
 ### Sửa giao diện
@@ -1036,7 +1154,7 @@ Tham khảo cách Infineon tổ chức thông tin (bảng thông số, trang s�
 | Hạng mục | File | Nội dung |
 | --- | --- | --- |
 | Header + CSP | `next.config.ts` | Thêm `Content-Security-Policy` (default/connect `'self'`, ảnh `https:`, `object-src 'none'`, `base-uri`, `form-action`, `frame-ancestors`, `frame-src` chỉ Spline), `Strict-Transport-Security` (chỉ khi chạy thật), `Cross-Origin-Opener-Policy`, `X-DNS-Prefetch-Control`, mở rộng `Permissions-Policy`. Script vẫn cần `'unsafe-inline'` vì Next.js chèn script nội tuyến; muốn bỏ phải dùng nonce (mọi trang thành render động, mất cache). Dev có thêm `'unsafe-eval'`. |
-| Admin | `proxy.ts` | Sai 5 lần liên tiếp từ một IP thì khoá 15 phút (HTTP 429, có `Retry-After`). So mật khẩu qua SHA-256, không dừng sớm. Chạy thật mà `ADMIN_PASSWORD` thiếu hoặc dưới 12 ký tự thì `/admin` trả 503. Lần mở trang đầu (chưa gửi mật khẩu) không tính là sai. |
+| Admin | `proxy.ts` | Sai 5 lần liên tiếp từ một IP thì khoá 15 phút (HTTP 429, có `Retry-After`). So mật khẩu qua SHA-256, không dừng sớm. Chạy thật mà `ADMIN_PASSWORD` thiếu hoặc dưới 20 ký tự thì `/admin` trả 503. Lần mở trang đầu (chưa gửi mật khẩu) không tính là sai. |
 | Lọc link | `lib/safe-url.ts` (mới) | `safeHttpUrl` chỉ nhận `http(s)`, chặn `javascript:`, `data:`, link có `user@`, ký tự điều khiển, link quá dài. `safeHref` cho phép thêm đường dẫn nội bộ `/...` nhưng chặn `//evil.com`. |
 | Link từ Sheet | `lib/sheet-data.ts` | Mọi cột url (Resources, datasheet, nơi mua, News, Events, Campus, Research, Admissions) đi qua `safeHttpUrl`. Dòng Resources có url không hợp lệ bị bỏ qua (dev có log). |
 | Ảnh | `lib/photo-url.ts` | `resolvePhotoUrl` chặn scheme lạ, `//host`, `\`, `..`; tên file được mã hoá từng đoạn nên ký tự `#` `?` `%` trong tên không làm hỏng đường dẫn. |
@@ -1274,7 +1392,7 @@ Mỗi nhóm được kiểm tra bằng cách **phá code cố ý** (bỏ bản d
 ### Chịu lỗi cho dữ liệu và `/api/health`
 
 - `lib/sheet-source.ts` (tách khỏi `sheet-data.ts`): mỗi lần tải Sheet có kết quả `ok`, `stale`, `failed`, `rejected` hoặc `missing`. Khi lần tải mới **lỗi (HTTP lỗi, quá thời gian, quá lớn) mà trước đó đã tải được**, trang dùng bản tốt gần nhất (`stale`) thay vì trống. Bản này nằm trong bộ nhớ của tiến trình, nên trên Vercel chỉ giữ khi instance còn sống: đây là lớp đỡ thêm, không thay cho bộ đệm 60 giây của Next.js. Lỗi tải giờ cũng được ghi log ở production (trước đây im lặng).
-- `GET /api/health`: tải thử từng Sheet đã cấu hình (kết quả đệm 60 giây nên gọi dồn dập cũng chỉ tải tối đa mỗi phút một lần). `200 ok` mọi Sheet tải được hoặc chưa cấu hình; `200 degraded` có Sheet đang dùng bản cũ; `503 down` có Sheet lỗi hẳn. Không trả về link hay nội dung, chỉ tên tab, trạng thái, số dòng, thời gian tải. Trỏ UptimeRobot / Better Stack vào đó để được báo khi Sheet hỏng.
+- `GET /api/health`: tải thử từng Sheet đã cấu hình (kết quả đệm 60 giây nên gọi dồn dập cũng chỉ tải tối đa mỗi phút một lần). `200 ok` mọi Sheet tải được hoặc chưa cấu hình; `200 degraded` có Sheet đang dùng bản cũ; `503 down` có Sheet lỗi hẳn. Không trả về link hay nội dung, chỉ trạng thái tổng và phiên bản. Xem chi tiết từng tab tại `/admin/health` (cần mật khẩu). Trỏ UptimeRobot / Better Stack vào `/api/health` để được báo khi Sheet hỏng.
 
 ### CI
 
@@ -1317,7 +1435,7 @@ Còn 5 cảnh báo mức high **chỉ nằm trong công cụ dev** (chuỗi `esl
 
 ### Vệ sinh bảo mật
 
-- **Mật khẩu admin mẫu:** `proxy.ts` giờ tắt `/admin` (503) trên bản chạy thật nếu `ADMIN_PASSWORD` bắt đầu bằng giá trị mẫu hoặc dễ đoán (`change…`, `password…`, `admin…`, `your…`, `test…`, `example…`, `12345…`, `qwerty…`), cùng với quy tắc đã có (trống hoặc dưới 12 ký tự).
+- **Mật khẩu admin mẫu:** `proxy.ts` giờ tắt `/admin` (503) trên bản chạy thật nếu `ADMIN_PASSWORD` bắt đầu bằng giá trị mẫu hoặc dễ đoán (`change…`, `password…`, `admin…`, `your…`, `test…`, `example…`, `12345…`, `qwerty…`), cùng với quy tắc đã có (trống hoặc dưới 20 ký tự).
 - **Quét khóa bí mật** (`scripts/secret-scan.mjs`, `npm run check:secrets`, chạy trong CI): bắt khóa riêng, khóa AWS/GitHub/Stripe/Slack/Google, webhook Discord/Slack, khóa `service_role` của Supabase (cả dạng JWT lẫn dạng `sb_secret_`), link xuất bản thật của Google Sheet, biến tên "bí mật" gán giá trị dài thật, và file `.env` thật bị theo dõi trong git. Không bao giờ in giá trị ra màn hình. Bỏ qua giá trị mẫu (`YOUR_…`, `change-this…`) và khóa `anon` công khai.
 - **Dependabot** (`.github/dependabot.yml`): PR cập nhật thư viện hằng tuần (gom bản vá và bản nhỏ), cập nhật GitHub Actions hằng tháng. Mỗi PR chạy CI.
 - **CI** (`.github/workflows/ci.yml`): quyền tối thiểu `contents: read`; thêm bước quét khóa bí mật và job `audit` riêng (`npm audit --omit=dev --audit-level=high`).
@@ -1351,7 +1469,7 @@ npm run fixtures          # tạo lại các file CSV mẫu (tests/fixtures/*.cs
 - Dữ liệu mẫu (tiếng Việt, ảnh dùng file có sẵn trong `public/images`): 24 tài liệu, 26 món Inventory, 3 khóa học (nhiều bài, có nhánh), 11 sự kiện, 13 tin tức, ảnh khuôn viên, học viên, hướng nghiên cứu, tuyển sinh. Ngày trong dữ liệu mẫu viết dạng `{{today+3}}` và đổi thành ngày thật lúc đọc, nên "sắp diễn ra / đã diễn ra" luôn đúng dù chạy vào hôm nào.
 - Có chủ ý cài vài dòng "xấu" để kiểm tra bị loại đúng: dòng trùng, link `javascript:` và `data:`, dòng thiếu link, món thiếu id.
 - Cách hoạt động (`lib/sheet-source.ts`): đặt `SHEET_FIXTURES_DIR` và link Sheet dạng `https://docs.google.com/spreadsheets/d/e/FIXTURE-events/pub?output=csv` thì tab đó đọc từ `events.csv` trong thư mục đó thay vì gọi Google. Tên file chỉ nhận chữ, số, gạch nối (không đọc được file ngoài thư mục).
-- **An toàn:** tự tắt khi chạy trên Vercel (`VERCEL` được đặt), in cảnh báo lớn lúc khởi động, và `/api/health` trả `fixtures: true` khi đang bật để không ai nhầm với dữ liệu thật. Không đặt `SHEET_FIXTURES_DIR` trên máy chủ thật.
+- **An toàn:** tự tắt khi chạy trên Vercel (`VERCEL` được đặt), in cảnh báo lớn lúc khởi động, và `/admin/health` trả `fixtures: true` khi đang bật để không ai nhầm với dữ liệu thật. Không đặt `SHEET_FIXTURES_DIR` trên máy chủ thật.
 
 ### Kiểm thử
 
@@ -1397,3 +1515,476 @@ Cải tiến kèm theo (từ kiểm thử tìm ra): thông báo ★ hiện 8 gi�
 **Lưu ý thiết kế:** chữ hero đặt ở phần dưới ảnh, không đặt giữa như Tesla, vì ảnh tập thể có mặt người ở giữa khung. Ba ảnh hướng hoạt động hiện tại là sơ đồ kỹ thuật nhỏ (660–840 px, nền trắng) nên đặt trong khung thẻ chứ không phóng tràn nền. Muốn đẹp như Tesla cần ảnh thật khổ rộng (từ 1920px) của phòng lab, xe, mạch.
 
 **Đã kiểm chứng:** `tests/e2e-data/cinematic.spec.ts` (hero bằng chiều cao màn hình và ảnh đầu tải ưu tiên; header trong suốt rồi kính mờ khi cuộn và trả lại; ba hướng hoạt động đủ tiêu đề, hai nút; chữ và ảnh không dính mép màn hình; nút Khám phá cuộn tới đúng chỗ, tiêu đề không bị header che; các trang khác vẫn header trắng dính) và `tests/e2e/performance.spec.ts` (logo dưới 150 KB và có bộ đệm đúng; khi chưa có dữ liệu nút Khám phá trỏ tới `#kham-pha`): 22 lượt pass. Trang chủ qua axe (WCAG A/AA) không có lỗi nghiêm trọng và không tràn ngang. Chưa thử Firefox/Safari.
+
+
+---
+
+## Phụ lục: hướng dẫn README đã hợp nhất từ các thư mục cũ
+
+### CTIT-2.2-EMBEDDED-UX-README.md
+
+# CTIT 2.2 — Embedded Identity & UX Patch
+
+Nguồn: đúng bản `1 (1).zip` người dùng gửi ngày 28/10/2026.
+
+##### Cài đặt (Windows / PowerShell)
+
+Đây là ZIP **chỉ chứa các file thay đổi**, không phải toàn bộ dự án.
+
+1. Lưu hoặc commit các thay đổi hiện tại của CTIT trước, vì thao tác đè sẽ thay các file trùng tên.
+2. Giải nén ZIP này thẳng vào `C:\Users\HOME\Desktop\CTIT` (các thư mục `app`, `components`, `lib`, `tests` nằm ngay bên trong CTIT, không có cấp thư mục CTIT lồng).
+3. Chạy:
+
+```powershell
+cd "C:\Users\HOME\Desktop\CTIT"
+npm run ci
+npm run dev
+```
+
+4. Kiểm tra trang chủ trên desktop, mobile (đặc biệt ở độ rộng 320px, 375px, 390px, 768px), `/resources`, `/research`, `/saved`, `/admin` và hộp tìm kiếm.
+5. Chỉ push qua Pull Request sau khi CI trên máy Windows đạt.
+
+##### Thay đổi thực hiện
+
+- Giữ nguyên bộ UI cũ (header kính mờ, hero điện ảnh, gradient cyan → indigo → violet, card góc vuông và bóng lệch).
+- Thêm `app/embedded.css`: design token ngữ nghĩa `--color-*`, `--motion-*`, font mono hệ thống cho nhãn kỹ thuật (không phát sinh font download). Không thay thế `--tsinghua-*` hiện có để tránh rủi ro CSS.
+- Trang chủ có grid chấm kỹ thuật cực nhẹ chỉ ở phần Khám phá; một số ô Bento có nhãn silkscreen minh họa `U1 / CTIT` (chỉ trang trí, không phải ID vật tư thật).
+- Nút tìm kiếm trong hero tái sử dụng SearchDialog hiện hành và shortcut Ctrl+K (không tạo modal hoặc backend mới).
+- Thanh tab mobile 5 mục: Trang chủ, Tìm, Tài nguyên, Đã lưu (có số lượng), Menu (mở drawer đã có). Hỗ trợ CSS safe-area cho iPhone, nhãn dễ hiểu, focus bàn phím. Trang Admin không hiển thị thanh này.
+- Tìm kiếm: thêm **Nghiên cứu** vào chỉ mục thực lấy từ Research Sheet; sửa lỗi giới hạn top-60 **trước** khi lọc loại. Chỉ render tối đa 60 kết quả được chọn, nhưng chip hiển thị tổng số khớp thực.
+- Bổ sung kiểm thử tìm kiếm với fixture và ca nhiều kết quả.
+
+##### Kết quả kiểm tra trong môi trường tạo bản vá
+
+- `npm run typecheck`: **PASS**.
+- ESLint trên các file có thay đổi: **0 errors**, có warning cũ từ các component trước khi sửa.
+- Parse CSS qua PostCSS: **PASS**.
+- Smoke test hàm tìm kiếm + render SSR thanh mobile: **PASS**.
+- `npm run check:dependencies` và `npm run check:secrets`: **PASS**.
+- `npm test` chưa chạy được: dependencies native Rolldown trong ZIP là cho Windows, môi trường dựng patch là Linux.
+- `npm run build` chưa chạy được: thiếu native SWC Linux, không truy cập được registry để cài tự động.
+
+##### Bảo mật / dữ liệu
+
+- Không đóng gói `.env.local`, `.git`, `node_modules`, `.next`, cache hoặc bí mật.
+- Không thay nguồn CSV/Google Sheets, không đổi logic admin/password/middleware.
+- Không phát sinh số liệu mô phỏng mang nhãn LIVE; mã chip U1 chỉ là chi tiết trang trí.
+- Không thêm npm package.
+
+Nếu CTIT local của bạn đã thay đổi sau khi ZIP gốc được gửi, cần xem diff/commit trước khi giải nén đè.
+
+
+### CTIT-2.3-README.md
+
+# CTIT 2.3 — Unified Design System Overlay
+
+Bản vá dựa trên `CTIT.zip` mới nhất trong cuộc trò chuyện (28/10/2026), giữ nguyên hero điện ảnh trang chủ và dữ liệu Google Sheets.
+
+##### Cài trên Windows (không tạo backup)
+
+1. Giải nén toàn bộ nội dung ZIP vào `C:\Users\HOME\Desktop\CTIT`, chọn **Replace / Ghi đè**.
+2. Không giải nén thành một thư mục CTIT con; ở gốc ZIP có `app/`, `components/`, `tests/`.
+3. Trong VS Code Terminal:
+
+   cd "C:\Users\HOME\Desktop\CTIT"
+   npm run ci
+   npm run dev
+
+4. Kiểm tra /resources, /resources/documents, /resources/inventory, /resources/courses, /events, /schools, /campus, /saved và 2 trang chi tiết.
+5. So sánh mobile ~390px, desktop ~1440px; kiểm tra Light/Dark và Reduce Motion.
+
+##### Các thay đổi chính
+
+- PageHero có `standard`, `compact`, `reading`; tương thích API cũ, có màu nhấn ngữ nghĩa.
+- PageShell chọn compact cho các trang danh sách, giữ `about` nguyên chuẩn cũ.
+- SectionHeader dùng chung, đã tích hợp trang Resources.
+- CSS hệ thống riêng `app/design-system.css` với tokens, type scale, hiệu ứng nhẹ, xử lý mobile.
+- Resources, Documents, Inventory, Courses, Saved: dùng compact hero; các trang chi tiết khóa học và linh kiện dùng reading hero.
+- Events, Schools, Campus: thừa hưởng compact từ PageShell.
+- Research, News: giữ hero custom; chỉ đánh dấu accent để dùng mở rộng trong tương lai.
+- Hiển thị số liệu bằng 0 đúng thực tế; không dùng số liệu giả.
+- Unit test mới cho PageHero và SectionHeader.
+- Không thêm npm dependency, không sửa page chủ, header/footer, data hay auth.
+
+##### Kiểm thử ở môi trường dựng bản vá
+
+- TypeScript `tsc --noEmit`: PASS.
+- ESLint cho các file sửa: PASS (0 errors).
+- PostCSS parse stylesheet: PASS.
+- SSR smoke test PageHero compact/reading, stat 0, SectionHeader: PASS.
+- Dependency security floor và secret scanner: PASS.
+- Production build: CHƯA chạy thành công, do công cụ môi trường Linux không tải được SWC từ npm registry (EAI_AGAIN). Cần xác nhận trên Windows với `npm run ci`.
+- Vitest full suite: CHƯA chạy trong môi trường này, vì ZIP gốc chứa native binaries Windows; vẫn cần chạy trên máy người dùng.
+
+##### Lưu ý
+
+- Bản vá chỉ chứa các file được thay đổi. Không có `.env.local`, `.git`, `node_modules`, `.next` hoặc backup.
+- Nếu sau lúc tạo CTIT.zip bạn đã chỉnh các file trong ZIP này ở máy, xem thay đổi trước khi ghi đè để tránh mất những chỉnh sửa đó.
+
+
+### CTIT-MOTION-README.md
+
+# CTIT 2.1 — Subtle Motion Patch
+
+**Dùng với đúng bản CTIT.zip người dùng đã gửi ngày 25/10/2026.**
+
+##### Cài đặt trên Windows
+
+1. Sao lưu folder `C:\Users\HOME\Desktop\CTIT`.
+2. Giải nén **nội dung** ZIP này **trực tiếp vào** `C:\Users\HOME\Desktop\CTIT`, chọn Replace khi được hỏi. ZIP không có folder `CTIT` lồng bên trong.
+3. Không cần chạm tới `.env.local`, `.git`, `node_modules` hoặc `.next`. ZIP không chứa những tệp này.
+4. Mở VS Code Terminal:
+
+   ```powershell
+   cd "C:\Users\HOME\Desktop\CTIT"
+   npm ci
+   npm run ci
+   ```
+
+5. Chạy `npm run dev` và xem trang `/research` (PCB trong hero, CAN/BMS dạng sóng trên thẻ dự án phù hợp nếu dự án không có ảnh); thử lưu một mục vật tư/tài liệu khi dùng chuột desktop.
+6. Kiểm tra mobile, Light/Dark và tùy chọn Windows **Reduce Motion** trước khi push GitHub qua Pull Request.
+
+##### Đã sửa
+
+- Reveal nhẹ (10px, 340ms, không blur/zoom).
+- PCB SVG trong Research Hero khi không bật Spline iframe; xung tín hiệu chỉ chạy khi trong viewport, tab hiển thị và người dùng không bật Reduce Motion.
+- Waveform CAN/BMS nhỏ được gắn **có điều kiện** cho dự án liên quan, khi không có ảnh minh họa. Có nhãn rõ là **mô phỏng**, tuyệt đối không gọi là dữ liệu LIVE.
+- 3D tilt giới hạn ±2° cho card dự án nổi bật trên chuột desktop.
+- 6 particle nhỏ chỉ khi người dùng thực sự lưu mục bằng chuột desktop; vẫn giữ toast xác nhận và nút Hoàn tác cũ.
+- Bổ sung bài test cho 2 minh họa SVG.
+- Không cài thêm npm package nào, không thay giao diện tổng thể, không đổi nguồn Google Sheets.
+
+##### Lưu ý
+
+- Đây là **bản vá đè 9 tệp**, không phải dự án đầy đủ.
+- Nếu repo đã có chỉnh sửa khác sau ngày nhận ZIP, xem diff trước khi đè.
+- Dạng sóng chỉ là **đồ họa minh họa**, không phải telemetry có kết nối BMS.
+- Chưa tự động đẩy GitHub hay Vercel.
+
+
+### public/images/About/README.txt
+
+Bỏ ảnh người phụ trách vào đây, ví dụ: about-photo.jpg
+
+Trong Google Sheet (tab About), dòng `photo` (hoặc dòng `id`) ghi ĐÚNG tên file
+có cả đuôi: about-photo.jpg  -> web tự link tới /images/About/about-photo.jpg
+
+Tên phải khớp chính xác, kể cả chữ hoa/thường và đuôi file.
+
+
+### public/images/Admissions/README.txt
+
+Ảnh cho các dòng "track" (mảng chuyên môn) trong tab Admissions đặt tại đây.
+
+Cột image trong sheet nhận:
+- tên file có đuôi, khớp CHÍNH XÁC hoa/thường: automotive.jpg -> /images/Admissions/automotive.jpg
+- Google Drive share link
+- URL ảnh trực tiếp
+
+Để trống cột image thì thẻ mảng chuyên môn chỉ hiện tiêu đề + mô tả, không có ảnh, không lỗi.
+
+
+### public/images/Campus/README.txt
+
+Ảnh cho tab Campus đặt tại đây (1 dòng sheet = 1 ảnh).
+
+Cột image trong sheet nhận:
+- tên file có đuôi, khớp CHÍNH XÁC hoa/thường: lab-01.jpg -> /images/Campus/lab-01.jpg
+  (nên đặt chữ thường, không dấu, không cách)
+- Google Drive share link
+- URL ảnh trực tiếp
+
+Kích thước: ngang 3:2 hoặc 4:3, rộng ~1600px, dưới 500KB.
+Cột summary là note hiện trong lightbox, khoảng 1-2 câu (tối đa ~120 ký tự).
+
+
+### public/images/Courses/README.txt
+
+Ảnh bìa cho các dòng "course" (môn học) trong tab Courses đặt tại đây.
+
+Cột image trong sheet nhận:
+- tên file có đuôi, khớp CHÍNH XÁC hoa/thường: vi-dieu-khien.jpg -> /images/Courses/vi-dieu-khien.jpg
+- Google Drive share link
+- URL ảnh trực tiếp
+
+Để trống cột image thì thẻ môn học hiện ô chữ cái đầu có màu, không lỗi.
+
+
+### public/images/Events/README.txt
+
+Ảnh cho tab Events đặt tại đây (1 dòng sheet = 1 sự kiện, ảnh không bắt buộc).
+
+Cột image trong sheet nhận:
+- tên file có đuôi, khớp CHÍNH XÁC hoa/thường: can-workshop.jpg -> /images/Events/can-workshop.jpg
+  (nên đặt chữ thường, không dấu, không cách)
+- Google Drive share link
+- URL ảnh trực tiếp
+
+Kích thước: ngang 16:9 hoặc 4:3, rộng ~1600px, dưới 500KB.
+Cột summary hiện ở thẻ lịch (sắp diễn ra) và trong lightbox (đã diễn ra),
+khoảng 1-2 câu (tối đa ~120 ký tự).
+
+
+### public/images/Research/README.txt
+
+Ảnh cho tab Research đặt tại đây (jpg / png / webp).
+
+Trong Google Sheet (tab Research), cột `id` ghi ĐÚNG tên file có cả đuôi.
+Ví dụ: es.png -> /images/Research/es.png
+
+- dòng "focus": ảnh này hiện thay cho chữ viết tắt (ES, AE, ...) trong panel hướng nghiên cứu
+- dòng "project": ảnh dự án
+
+Tên phải khớp chính xác, kể cả chữ hoa/thường và đuôi file.
+Cột `image` (nếu có) vẫn dùng được và được ưu tiên hơn `id`; nhận tên file, link Google Drive hoặc URL ảnh.
+Để trống cả hai thì focus hiện chữ viết tắt, project chỉ hiện chữ, không lỗi.
+
+
+### public/images/Resources/Courses/README.txt
+
+Ảnh bìa cho các môn trong khối Course (cột id, ô AB trong tab Resources) đặt tại đây.
+
+Cột id nhận:
+- tên file có đuôi, khớp CHÍNH XÁC hoa/thường: vi-dieu-khien.jpg
+- đường dẫn có thư mục con theo môn: Vi-dieu-khien/bia.jpg
+- Google Drive share link
+- URL ảnh trực tiếp
+
+Chỉ cần ghi id ở MỘT dòng của môn. Để trống thì thẻ môn hiện ô chữ cái đầu có màu, không lỗi.
+Ảnh nên tỉ lệ 4:3 hoặc 16:9, rộng khoảng 1200px, dưới 300KB.
+
+
+### public/images/Resources/Documents/README.txt
+
+Bỏ ảnh bìa tài liệu vào đây (jpg/png/webp).
+
+Trong Google Sheet (tab Resources), cột `id` ghi ĐÚNG tên file có cả đuôi.
+Ví dụ: Chuyen-nganh-co-dien-tu.jpg
+-> web tự link tới /images/Resources/Documents/Chuyen-nganh-co-dien-tu.jpg
+Tên phải khớp chính xác, kể cả chữ hoa/thường và đuôi file.
+
+
+### public/images/Resources/Inventory/README.txt
+
+Ảnh của Inventory sẽ được đặt trong folder này.
+
+
+### public/images/Students/README.txt
+
+Bỏ ảnh học viên vào đây (jpg/png/webp).
+
+Trong Google Sheet (tab Students), cột `id` (hoặc `photo`) ghi ĐÚNG tên file có
+cả đuôi. Ví dụ file "nguyen-van-a.jpg" thì trong sheet ghi: nguyen-van-a.jpg
+-> web tự link tới /images/Students/nguyen-van-a.jpg
+
+Tên phải khớp chính xác, kể cả chữ hoa/thường và đuôi file. Sai tên thì card
+hiện chữ cái đầu thay cho ảnh (npm run dev sẽ báo trong terminal).
+
+---
+
+# Cập nhật hero PCB STM32
+
+Slide giới thiệu ở trang chủ sử dụng bo mạch phối cảnh tự dựng bằng CSS/SVG: chip có chiều dày, 64 chân kim loại, pad, via, tụ SMD, thạch anh, SWD và LED. Không tải hình, logo hoặc model từ ST. Đây là minh họa thiết kế, không phải sơ đồ điện để chế tạo PCB.
+
+## Thay đổi
+- `components/PCBHero.tsx`: bo mạch và điều khiển chuyển động.
+- `app/pcb-hero.css`: vật liệu, phối cảnh, đường mạch indigo/cyan/violet và bố cục responsive.
+- `components/HomeCarousel.tsx`: tích hợp PCB qua thuộc tính `pcb`, thêm nút tắt chuyển động.
+- `app/page.tsx`: bật PCB cho slide giới thiệu, giữ slide tin/sự kiện từ Sheets.
+
+Khi vào trang, vệt sáng lướt qua mặt chip. Xung sáng chạy ra ngoài dọc đường đồng. Chuột làm nghiêng nhẹ trên máy tính; cuộn làm bo mạch đổi góc và thu nhỏ. Dừng hoạt hình khi slide ẩn, ra khỏi viewport, tab trình duyệt ẩn hoặc người dùng tắt. Hỗ trợ prefers-reduced-motion. Hình nền có sẵn trong HTML trước khi hydrate. Không thêm thư viện.
+
+## Chạy
+### Cập nhật đè lên dự án hiện có
+
+1. Tắt server đang chạy bằng `Ctrl+C` trong terminal.
+2. Giải nén `CTIT-PCB-STM32.zip` vào một thư mục tạm.
+3. Mở thư mục `CTIT` vừa giải nén, chép **nội dung bên trong** vào thư mục dự án cũ (nơi có `package.json`), chọn **Replace files**. Không tạo thư mục lồng `CTIT\CTIT`.
+4. Giữ nguyên `.env.local` đang dùng trên máy; bản ZIP không chứa cấu hình riêng này.
+5. Nếu đã chép bản ZIP trước đó, xóa file `PCB-HERO-README.md` cũ trong thư mục dự án. Giải nén đè không tự xóa file đã bỏ khỏi ZIP. Hướng dẫn nay nằm trong `README.md`.
+6. Mở terminal tại thư mục dự án và chạy các lệnh dưới đây. Sau khi server sẵn sàng, mở trang rồi nhấn **Ctrl+F5** để tải lại giao diện.
+
+```powershell
+npm ci
+npm run dev
+```
+
+Xem với dữ liệu mẫu: `npm run dev:fixtures`.
+Build thật: `npm run build`. Kiểm tra kiểu: `npm run typecheck`.
+
+## Kiểm tra bản giao
+- TypeScript: đạt.
+- Build production bằng dữ liệu mẫu (`npm run build:fixtures`): đạt, 23 trang.
+- Build còn 3 cảnh báo có sẵn ở `lib/imagery.ts` về truy vết filesystem.
+- Chưa xác minh trực quan trong trình duyệt: hệ thống preview truyền `--host` và `--strictPort`, không tương thích lệnh Next.js của dự án. Cần xem desktop/mobile khi chạy local.
+- Chưa triển khai Vercel/Firebase; chưa thay đổi repository từ xa.
+
+Ảnh Campus cũ vẫn có trong public. Để trở lại hero ảnh cũ, bỏ `pcb: true` trong slide đầu của `app/page.tsx`.
+
+### Đồng bộ màu hero với CTIT
+
+Hero dùng lại các biến màu của site: `--tsinghua-purple` (#4f46e5), `--accent-cyan` (#38bdf8) và `--accent-violet` (#a855f7). PCB phủ tím than, đường mạch indigo nhạt, xung sáng cyan xen violet. Chip giữ chất liệu graphite với phản chiếu tím nhẹ; chân và pad dùng bạc lạnh. CTA chính chuyển sang indigo, nút phụ và trạng thái focus theo cùng bảng màu. Không đổi bố cục hoặc cơ chế chuyển động.
+
+Các sắc nền và đường mạch riêng nằm trong nhóm biến `--pcb-*` đầu `app/pcb-hero.css`.
+
+### Trang tuyển sinh — bố cục tham khảo TI
+
+Trang `/admissions` được chỉnh riêng theo cách tổ chức nội dung của https://www.ti.com/: banner lớn, nhóm nội dung rõ ràng, thẻ góc vuông, dải số liệu và lời mời hành động cuối trang. Giữ bảng màu CTIT indigo/cyan/violet; không dùng màu đỏ, logo hay ảnh TI.
+
+- Hero ảnh rộng: ưu tiên ảnh đầu tiên có trong các hướng hoạt động của Admissions; nếu chưa có, dùng ảnh Campus sẵn trong dự án. Chữ được phủ nền tối để dễ đọc.
+- Dải thông tin tuyển sinh dùng `status.title`, `status.content`, `status.url`. Khi chưa có dữ liệu, chỉ hướng người xem liên hệ, không tự công bố đang mở tuyển.
+- Thanh điều hướng dính theo các phần có dữ liệu, kèm đánh dấu mục đang xem.
+- Các hướng hoạt động hiển thị dạng thẻ ảnh; quy trình dùng lưới các bước, không bắt cuộn ngang trên điện thoại.
+- Giữ điều kiện, mốc thời gian và FAQ từ Google Sheets. FAQ dùng thẻ details, thao tác được bằng bàn phím.
+- Bổ sung các lối vào Giới thiệu, Khóa học và Nghiên cứu; dải số liệu tính trực tiếp từ dữ liệu tuyển sinh.
+- Responsive: thẻ chuyển 3 → 2 → 1 cột; nút có focus rõ và tôn trọng giảm chuyển động.
+
+Tệp thay đổi: `app/admissions/AdmissionsView.tsx` và `app/admissions/admissions.css`. Các trang khác giữ nguyên. Hướng dẫn cập nhật đè ở phần hero PCB phía trên vẫn áp dụng; giữ `.env.local`.
+
+Đối chiếu tham khảo: đã đọc cấu trúc nội dung trang TI qua web; chưa kiểm tra ảnh chụp TI vì bước duyệt mở trình duyệt bị lỗi quá tải. Chưa xác minh trực quan bản tuyển sinh trong trình duyệt; hệ thống preview hiện truyền tham số không tương thích với Next.js. Kiểm tra cú pháp CSS và TypeScript đã đạt.
+
+Build production với dữ liệu mẫu (`npm run build:fixtures`) đã đạt; còn 3 cảnh báo truy vết filesystem có sẵn ở `lib/imagery.ts`.
+
+### Banner STM32 cố định và ô Giới thiệu
+
+Trang chủ giữ banner STM32 cố định, không tự chuyển sang tin tức/sự kiện và không hiện các nút điều khiển carousel khi chỉ có một banner. Tin tức và sự kiện vẫn nằm ở những phần riêng phía dưới. Nút tắt chuyển động chỉ điều khiển hiệu ứng PCB, không chuyển nội dung banner. Đã tăng khoảng trống dưới khối nội dung để tránh chồng nút.
+
+Ô Giới thiệu trong “Khám phá CTIT” thay ảnh logo bằng bản thu nhỏ của chính PCB STM32. Bản thu nhỏ tĩnh, không đăng ký listener chuột/cuộn riêng. Link vẫn dẫn đến `/about`. Logo nhận diện ở header và nội dung trang `/about` không đổi; Trường & Khoa giữ nguyên để thực hiện sau.
+
+## Nâng cấp thư viện khóa học — giữ nguyên Google Sheets
+
+### Cấu trúc dữ liệu không thay đổi
+
+Vẫn gọi `getCourses()` với `COURSES_SHEET_CSV_URL`, hoặc nguồn Resources hiện có nếu biến đó để trống. Vẫn tìm khối bắt đầu bằng header `Môn` trong vùng Course (thường từ cột W); không tạo tab Lessons/Paths, không yêu cầu chuyển cơ sở dữ liệu.
+
+| Cột đang dùng | Vai trò giữ nguyên |
+| --- | --- |
+| Môn | Tên môn, dùng gom khóa và tạo slug như trước |
+| Title / Tiêu đề / Tên bài | Tên bài |
+| URL / Link / Đường dẫn | Liên kết HTTP(S); trống thì bài hiện “Sắp có” |
+| Type / Định dạng / Hình thức | Video, PDF, Code…; parser hiện tại vẫn chuẩn hóa như trước |
+| Description / Mô tả | Mô tả bài; dòng không có Title và URL dùng mô tả môn/nhánh |
+| id / image / Ảnh | Ảnh khóa theo quy ước ảnh hiện tại |
+| Track / Nhánh (tùy chọn) | Nhánh học trong môn |
+| Group / Chương / Nhóm bài / Phần (tùy chọn) | Nhóm bài/chương |
+
+Giữ thứ tự dòng trong Sheet. Không tự đổi `slug`; không đổi key `ctit-done`. ID tiến độ vẫn là `course.slug:track.slug:index`. Vì ID cũ phụ thuộc vị trí bài, chèn/xóa/đổi thứ tự bài trong Sheet có thể làm tiến độ cũ lệch bài; bản này không âm thầm chuyển cơ chế ID.
+
+### Danh mục `/resources/courses`
+
+- Lưới môn tạo từ dữ liệu thật; số nhánh/bài tính từ đề cương.
+- Tìm kiếm không dấu với ba loại kết quả: Khóa học / Nhánh học / Bài học. Không gọi nhánh là lộ trình nhiều khóa vì Sheet chưa có quan hệ đó.
+- Lọc theo môn, định dạng và tiến độ khóa. Sắp xếp theo đề cương, tên A–Z, ít bài nhất (không phải thời lượng).
+- Phân trang 12 kết quả; điều kiện nằm trên URL (`q`, `subject`, `type`, `progress`, `sort`, `view`, `page`), có thể sao chép link.
+- “Tiếp tục học” chỉ xuất hiện khi có tiến độ thực, dẫn đến bài có link chưa hoàn thành. Thẻ dùng tiến độ cũ trong trình duyệt.
+
+### Trang chi tiết
+
+- Mục lục bên trái, chia chương theo Group, tìm bài trong nhánh; điện thoại đưa mục lục lên trên.
+- Link bài dạng `/resources/courses/<slug>?track=<track>&lesson=<index>`; index bắt đầu từ 0. Link cũ chỉ có slug/track vẫn hoạt động.
+- Bài trước / Bài tiếp theo; đánh dấu đã học vẫn dùng `LessonDone` và `useDone` cũ. Chuyển bài không tự đánh dấu hoàn thành.
+- Nhớ bài đã chọn gần nhất bằng `ctit-last-lesson:<course>:<track>` trên trình duyệt; URL có lesson ưu tiên hơn vị trí đã lưu.
+- Các mục Bài học / Tổng quan / Tài liệu / Vật tư / Hỗ trợ.
+- Video YouTube chỉ được tải sau khi bấm xem, dùng host `youtube-nocookie.com`. URL có `t`/`start` được giữ mốc bắt đầu; không lưu thời điểm phát video. Có link mở nguồn nếu video không cho nhúng. Các nguồn khác vẫn mở trực tiếp, không tự nhúng iframe tùy ý.
+- CSP chỉ bổ sung host iframe YouTube này, giữ các hạn chế khác.
+- Tài liệu lấy từ những bài có link và định dạng khác Video trong nhánh. Vật tư hiện dẫn đến Inventory, ghi rõ chưa có danh sách theo khóa; chưa có nút Mượn hay xác nhận tồn kho tự động. Hỗ trợ mở email có tên khóa và bài, không phải hệ thống hỏi đáp lưu trên server.
+
+### Chưa triển khai khi chưa có dữ liệu tương ứng
+
+Không tự bịa thời lượng, mức độ, ngày cập nhật, ngôn ngữ, lượt xem, đánh giá, mã khóa hay cờ lỗi thời. Chưa có Paths/Roadmap liên khóa, vật tư theo từng khóa, Wokwi, liên kết Events/Imagery, quiz, chuỗi ngày học, chứng nhận có xác minh hoặc AI Tutor. Chưa thêm API key hoặc dịch vụ trả phí. Các phần này cần nguồn dữ liệu/quy ước liên kết được xác định trước.
+
+### Kiểm tra
+
+TypeScript đạt; production build dùng fixture đạt; 4 kiểm thử link video đạt (host chính xác, scheme, video ID và mốc thời gian). Đã so sánh byte với bản gốc: `lib/sheet-data.ts`, `lib/dashboard-types.ts`, `lib/saved.ts` giữ nguyên. Chưa xác minh trực quan trong trình duyệt do giới hạn preview đã ghi ở trên. Build còn các cảnh báo tracing filesystem sẵn có trong `lib/imagery.ts`.
+
+Chép đè bản ZIP, giữ `.env.local`, chạy lại server. Không cần sửa Google Sheet để dùng bản nâng cấp này.
+
+### Kết nối khóa học với Inventory
+
+Tab **Vật tư** trong từng nhánh tra cứu theo mã model/linh kiện xuất hiện trong tên, mô tả môn, chương hoặc bài. Dùng cùng quy tắc đối chiếu với trang chi tiết Inventory. Đây là vật tư liên quan, không phải danh sách bắt buộc. Muốn một board xuất hiện, điền mã model của board vào mô tả bài bằng các cột hiện có. Trang hiển thị trạng thái và số lượng từ Inventory, có liên kết tới đúng mục kho. Khi lượng ghi trong Sheet lớn hơn 0 và trạng thái cho phép hỏi mượn, nút **Hỏi mượn qua email** mở bản nháp với tên vật tư và khóa học. Người học tự gửi email, kho không bị trừ số lượng.
+
+Nút **Học tiếp** ở dải tổng kết mở đúng nhánh và bài có liên kết đầu tiên chưa đánh dấu xong. Thứ tự được lấy từ Sheet và tiến độ lấy từ trình duyệt đang dùng.
+
+## Thư viện học tập CTIT — lộ trình, quiz và chứng nhận
+
+Phiên bản này bổ sung dữ liệu **tùy chọn**. Sheet hiện tại vẫn cấp môn, nhánh và bài bằng khối **Môn, Title, URL, Type, Description, id, Track, Group**. Tiếp tục nhập bài theo thứ tự dòng hiện tại. Dữ liệu cũ và đường dẫn khóa vẫn hoạt động. Không cần triển khai Supabase hay sửa Google Sheet để chạy site.
+
+**Danh mục và Roadmap.** Mở `/resources/courses` để tìm theo Lộ trình, Khóa học, Nhánh học hoặc Bài học. Có 10 ô chủ đề kèm mô tả và số khóa. Khi chưa khai báo category, trang gợi ý chủ đề theo tên môn/nhánh. Các mục “Tiếp tục học”, “Mới cập nhật” và “Lộ trình đề xuất” chỉ xuất hiện khi có dữ liệu. Trang `/roadmap` đọc cùng danh sách lộ trình và tổng hợp tiến độ bài học trên thiết bị hiện tại. Nếu chưa cấu hình Paths, bộ gợi ý chọn các khóa có thật theo thứ tự chủ đề, chỉ hiện lộ trình khi tìm được ít nhất hai khóa phù hợp.
+
+**Dữ liệu mở rộng trong khối Course hiện có.** Nếu cần metadata, đặt các cột tùy chọn liền trong khối Course, trước cột phân cách trống. Không ghi vào các khối Documents hoặc Inventory. Điền metadata môn trên dòng tổng quan đầu tiên của môn (Môn có giá trị, Title/URL/Track để trống).
+
+| Cột tùy chọn | Cách nhập và sử dụng |
+| --- | --- |
+| code, category | Ví dụ MCU-02 và STM32 / ARM Cortex-M. Mã hiển thị theo giá trị người quản trị nhập. |
+| level, language | Cơ bản / Trung bình / Nâng cao hoặc basic / intermediate / advanced. Ngôn ngữ dùng nhãn người đọc hiểu, ví dụ Tiếng Việt. |
+| duration_min, updated | Tổng số phút và ngày YYYY-MM-DD. Nhãn Mới hiện trong 14 ngày tính từ ngày cập nhật. |
+| status, requires_hardware | pending hoặc Cần cập nhật để hiện cảnh báo. Phần cứng nhập true / false hoặc có / không. Ô trống biểu thị chưa rõ. |
+| views, rating, rating_count | Sắp xếp Phổ biến theo views từ Sheet. Điểm 0–5 chỉ hiển thị khi có ít nhất 5 lượt. |
+| instructor, outcomes, prerequisites | Người dạy, kết quả học tập, slug các khóa tiền đề ngăn cách bằng dấu phẩy hoặc gạch đứng. |
+| lesson_duration_min | Điền trên dòng bài để hiện thời lượng trong mục lục. |
+| quiz_json | Điền trên dòng bài. Mảng 3–5 câu, mỗi câu có question, options (2–5 lựa chọn), answer (chỉ số bắt đầu từ 0), explanation tùy chọn. Quiz phục vụ tự kiểm tra, đáp án có trong dữ liệu công khai. |
+
+Ví dụ ô quiz_json của một bài GPIO:
+
+```json
+[{"question":"Thanh ghi đầu ra điều khiển gì?","options":["Mức logic chân ra","Tần số CPU"],"answer":0},{"question":"Khi đọc nút nhấn, GPIO dùng chế độ nào?","options":["Đầu vào","Đầu ra"],"answer":0},{"question":"Điện trở kéo lên giúp chân hở có mức nào?","options":["Thấp","Cao"],"answer":1}]
+```
+
+**Lộ trình tự biên soạn.** Có thể tạo tab Paths riêng trên Google Sheet với header `slug,title,summary,course_slugs`, rồi gán URL CSV đã publish cho `PATHS_SHEET_CSV_URL`. Ví dụ `course_slugs` là `vi-dieu-khien|lap-trinh-nhung-voi-esp32` nếu site thực sự có hai slug này. Thứ tự từ trái sang phải là thứ tự học. Slug không tồn tại bị bỏ qua và được báo tại `/admin`. Khi đã cấu hình Paths, trang chỉ dùng lộ trình quản trị viên khai báo.
+
+**Video và thực hành.** YouTube chỉ tải sau thao tác bấm xem, lưu vị trí trên thiết bị mỗi 5 giây và khi tạm dừng nếu Player API hoạt động. Video xong sẽ xóa mốc. Link có mốc thời gian vẫn được giữ khi xem từ đầu. Với Wokwi, điền URL HTTPS của dự án công khai vào URL bài, ví dụ dạng `https://wokwi.com/projects/<id số>`. Người học bấm Mở mô phỏng Wokwi hoặc mở nguồn trực tiếp nếu nhà cung cấp hạn chế nhúng. Sheet vẫn là nguồn cho các liên kết. Trang hiển thị album và sự kiện khi tên khớp tên khóa (bỏ qua hoa thường); bản ghi workshop đưa vào khóa qua URL bài như trước.
+
+**Thành tích.** Chuỗi ngày học tính từ lần đánh dấu một bài mới hoàn thành, theo ngày Việt Nam và trên thiết bị đó. Dữ liệu cũ vẫn giữ nguyên, không suy đoán ngày học trong quá khứ. Chứng nhận do CTIT cấp thủ công trong tab Google Sheet tùy chọn với header `code,recipient,course,issued`. Publish CSV và cấu hình `CERTIFICATES_SHEET_CSV_URL`. Chỉ đưa thông tin được phép công khai vào tab đã publish. Mỗi mã ngẫu nhiên duy nhất đại diện một chứng nhận đã cấp. Người nhận vào `/verify` nhập mã để xem và in/lưu PDF. Tích hoàn thành trong trình duyệt không tự phát hành chứng nhận.
+
+**Phạm vi.** Phiên bản này chưa kết nối AI Tutor trả phí, chưa đồng bộ tiến độ giữa thiết bị. Liên kết sự kiện không tự tạo khóa từ bản ghi. Hướng dẫn cũ mô tả giới hạn trước đây; phần này là hướng dẫn hiện hành. Chép đè ZIP, giữ .env.local, khởi động lại server. Với Sheet cũ, các bộ lọc có thể không có kết quả nếu môn chưa khai báo metadata tương ứng.
+
+
+## Trang giới thiệu — chip CTIT và mạch kết nối (09/11/2026)
+
+### Cập nhật đè lên bản CTIT hiện có
+
+Gói `CTIT-cap-nhat-gioi-thieu.zip` là bản cập nhật sáu file. Giải nén trực tiếp vào thư mục CTIT đang chứa `package.json` và `README.md`, sau đó chấp nhận thay thế các file trùng tên. ZIP không có thư mục CTIT bọc ngoài.
+
+README trong gói này giữ nguyên toàn bộ 150.200 byte của README gốc được gửi trong `1(1).zip`, rồi nối thêm mục này. Không tạo README phụ và không dùng README ngắn từ bộ giao diện thử trước đó.
+
+Không cần chép lại node_modules, không thay package.json/package-lock.json hoặc biến môi trường. Nếu dự án đã cài thư viện, chạy `npm run dev` rồi mở `/about`; khi triển khai chạy `npm run build` theo quy trình hiện tại. Nếu đang chạy bản production bằng `npm start`, cần build và khởi động lại để thấy thay đổi.
+
+### Phần đã tích hợp
+
+- Trang `/about` dùng chip CTIT chữ nhật, chân hai cạnh và mạch kết nối. Header, footer và metadata dùng các thành phần gốc của website.
+- Bốn mục Sứ mệnh, Cách làm, Con người, Giá trị tạo ra: rê chuột, focus bàn phím hoặc nhấn để đổi đoạn giới thiệu và nhóm mạch đang sáng.
+- Bố cục responsive, nút tạm dừng/tiếp tục chuyển động, hỗ trợ prefers-reduced-motion và hỏi đáp bằng details/summary.
+- Màu trang lấy từ biến thương hiệu sẵn có: --tsinghua-purple, --tsinghua-purple-2, --tsinghua-lavender, --tsinghua-border, --ink, --muted và --paper.
+- Vẫn đọc getAboutInfo và getOverviewStats. pageTitle/pageIntro trong Sheet tiếp tục ghi đè tiêu đề và đoạn giới thiệu khi có dữ liệu. Hồ sơ người phụ trách và số liệu tổng quan vẫn dùng AboutIntro/CtitOverview; các khối này chỉ hiện khi có dữ liệu, không thêm số liệu giả.
+- Không tạo route /gioi-thieu song song. Trang chủ và các trang khác không thuộc bản cập nhật này.
+
+### File cập nhật
+
+| File | Vai trò |
+| --- | --- |
+| app/about/page.tsx | Route hiện có, nối dữ liệu Sheet với giao diện mới |
+| components/ctit-about/AboutPage.tsx | Nội dung, chip inline và tương tác |
+| components/ctit-about/ctit-about.css | CSS được giới hạn trong .ctit-about |
+| public/images/ctit-about-chip.svg | Bản vector gốc để chỉnh sửa |
+| scripts/sync-about-chip.py | Đồng bộ SVG đã chỉnh vào component |
+| README.md | Toàn bộ nội dung cũ cùng phần cập nhật này |
+
+### Chỉnh sửa hình chip
+
+Chỉnh `public/images/ctit-about-chip.svg` bằng editor hoặc phần mềm vector. Các nhóm có ID: board, traces, traces-mission, traces-method, traces-people, traces-output, pins, chip-shadow, chip-body, chip-labels, components và board-labels. Giữ tên ID khi chỉnh nếu vẫn dùng CSS tương tác hiện tại.
+
+Sau khi sửa SVG, chạy từ gốc dự án:
+
+```sh
+python scripts/sync-about-chip.py
+```
+
+Script chỉ dùng Python 3 chuẩn, không cần pip. Nó đồng bộ hình vào AboutPage.tsx; trang dùng SVG inline để tô sáng nhóm mạch. Nội dung giới thiệu chỉnh trong component; dữ liệu hồ sơ và thống kê vẫn chỉnh qua Sheet.
+
+Dáng chip lấy cảm hứng từ IC công suất trên trang https://www.infineon.com/part/BTS80014-SWPF-1ES (PG-TSDSO-24). Hình CTIT được vẽ mới; các chân và đường mạch chỉ phục vụ minh họa thương hiệu, không phải pinout, footprint hoặc sơ đồ điện của linh kiện.
+
+### Kiểm tra bản cập nhật
+
+- TypeScript: `node node_modules/typescript/bin/tsc --noEmit --incremental false` đã đạt sau tích hợp.
+- Production build `node node_modules/next/dist/bin/next build --webpack` đã đạt, tạo thành công route /about. Dữ liệu Google Sheets thực của người dùng không được truy cập trong môi trường kiểm tra; logic đọc Sheet gốc được giữ.
+- README gốc được so sánh theo byte với file trong ZIP đầu vào để bảo đảm không mất phần cũ.

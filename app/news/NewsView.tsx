@@ -8,6 +8,7 @@ import { contact, socials } from "@/lib/site-config";
 import "./news.css";
 import { PeekImage } from "@/components/PeekImage";
 import { Reveal } from "@/components/motion";
+import { useStickyNavOffset } from "@/components/useStickyNavOffset";
 import { ArrowIcon } from "@/components/icons";
 import { padIndex } from "@/lib/format";
 
@@ -122,6 +123,7 @@ function MediaRow({ item, i }: { item: NewsItem; i: number }) {
 /* ---------- trang ---------- */
 
 export function NewsView({ items }: { items: NewsItem[] }) {
+  const stickyNavRef = useStickyNavOffset<HTMLDivElement>(12);
   const headlines = items.filter((x) => x.section === "headlines");
   const latest = items.filter((x) => x.section === "latest");
   const media = items.filter((x) => x.section === "media");
@@ -189,7 +191,7 @@ export function NewsView({ items }: { items: NewsItem[] }) {
       </section>
 
       {sections.length > 1 ? (
-        <div className="nw-nav-wrap">
+        <div className="nw-nav-wrap" ref={stickyNavRef}>
           <nav className="nw-nav" aria-label="Các mục tin tức">
             {sections.map((s) => (
               <a key={s.id} href={`#${s.id}`} className={active === s.id ? "is-active" : ""}>{s.label}</a>

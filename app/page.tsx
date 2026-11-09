@@ -14,9 +14,9 @@ import { HomeEventBanner } from "@/components/HomeEventBanner";
 import { HomeUpcomingEvents, upcomingEvents } from "@/components/HomeUpcomingEvents";
 import { HomeStartHere } from "@/components/HomeStartHere";
 import { Reveal } from "@/components/motion";
-import { getAboutInfo, getAdmissionsInfo, getCampus, getCourses, getEvents, getInventory, getNews, getOverviewStats, getResearchInfo, getResources } from "@/lib/sheet-data";
-import { resolvePhotoUrl } from "@/lib/photo-url";
+import { getAdmissionsInfo, getCampus, getCourses, getEvents, getInventory, getNews, getOverviewStats, getResearchInfo, getResources } from "@/lib/sheet-data";
 import "./home.css";
+import "./pcb-hero.css";
 
 // Ảnh slide đầu tiên. Đổi tại đây nếu muốn ảnh khác (ảnh nằm trong /public/images).
 const HERO_IMAGE = "/images/Campus/mot_vai_thanh_vien_cua_ctit.jpg";
@@ -27,21 +27,20 @@ const pics = (list: (string | undefined)[], max = 24) => [...new Set(list.filter
 const clip = (text: string, max = 160) => (text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text);
 
 export default async function HomePage() {
-  const [news, events, resources, stats, courses, inventory, about, admissions, research, campus] = await Promise.all([
+  const [news, events, resources, stats, courses, inventory, admissions, research, campus] = await Promise.all([
     getNews(),
     getEvents(),
     getResources(),
     getOverviewStats(),
     getCourses(),
     getInventory(),
-    getAboutInfo(),
     getAdmissionsInfo(),
     getResearchInfo(),
     getCampus()
   ]);
   const tileImages: TileImages = {
-    // Giới thiệu: logo (nếu Sheet không ghi logo thì dùng file logo mặc định).
-    "/about": pics([about?.logo ? resolvePhotoUrl(about.logo, "about") : "/images/About/logo.png"]),
+    // Giới thiệu dùng PCBHero thu nhỏ, không lấy logo làm ảnh thẻ.
+    "/about": [],
     "/admissions": pics(admissions.tracks.map((track) => track.image)),
     // Trường & Khoa: tạm không dùng ảnh học viên. Khi có ảnh khác, điền đường dẫn vào đây, ví dụ pics(["/images/Schools/a.jpg", "/images/Schools/b.jpg"]).
     "/schools": pics([]),
@@ -103,7 +102,7 @@ export default async function HomePage() {
   ];
   const topics = topicSources.filter((t) => t.cards.length > 0);
 
-  // Slide 1 là phần giới thiệu CTIT; slide 2-3 lấy tin mới nhất và sự kiện đầu tiên từ Google Sheet (không có thì bỏ).
+  // Banner cố định STM32. Tin và sự kiện hiển thị ở các section bên dưới.
   const slides: HeroSlide[] = [
     {
       eyebrow: "Closed Thinking Institute of Technology",
@@ -111,31 +110,10 @@ export default async function HomePage() {
       text: "Học viên, tài liệu, tin tức và sự kiện của CTIT — mọi thứ để bạn tìm hiểu và bắt đầu.",
       cta: "Tìm hiểu CTIT",
       href: "/about",
-      image: HERO_IMAGE
+      image: HERO_IMAGE,
+      pcb: true
     }
   ];
-  if (news[0]) {
-    slides.push({
-      eyebrow: "Tin mới",
-      title: news[0].title,
-      text: news[0].summary ? clip(news[0].summary) : undefined,
-      cta: "Đọc bài",
-      href: news[0].url || "/news",
-      external: /^https?:/.test(news[0].url || ""),
-      image: news[0].image || undefined
-    });
-  }
-  if (events[0]) {
-    slides.push({
-      eyebrow: "Sự kiện",
-      title: events[0].title,
-      text: [events[0].date, events[0].place].filter(Boolean).join(" · ") || (events[0].summary ? clip(events[0].summary) : undefined),
-      cta: "Xem chi tiết",
-      href: events[0].url || "/events",
-      external: /^https?:/.test(events[0].url || ""),
-      image: events[0].image || undefined
-    });
-  }
 
 
   return (
@@ -145,7 +123,7 @@ export default async function HomePage() {
         <HomeCarousel slides={slides} exploreHref={admissions.tracks.length > 0 ? "#huong" : "#kham-pha"} />
         <HomeTracks tracks={admissions.tracks} />
 
-        <section className="section" id="kham-pha">
+        <section className="section ctit-tech-section" id="kham-pha">
           <div className="container">
             <Reveal>
               <div className="section-title">

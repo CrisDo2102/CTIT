@@ -60,6 +60,8 @@ export default async function InventoryItemPage({ params }: Props) {
       <Header />
       <main id="main">
         <PageHero
+          variant="reading"
+          accent="resources"
           eyebrow="Resources / Inventory"
           title={item.title}
           intro={item.description || undefined}

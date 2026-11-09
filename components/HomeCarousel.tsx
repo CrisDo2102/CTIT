@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { PCBHero } from "@/components/PCBHero";
+import { SearchTrigger } from "@/components/SearchTrigger";
 
 export type HeroSlide = {
   eyebrow: string;
@@ -11,6 +13,7 @@ export type HeroSlide = {
   href: string;
   external?: boolean;
   image?: string;
+  pcb?: boolean;
 };
 
 // Carousel đầu trang chủ (bố cục theo ti.com): ảnh tràn khung, chữ bên trái, mỗi slide 1 nút hành động.
@@ -20,6 +23,7 @@ export type HeroSlide = {
 export function HomeCarousel({ slides, exploreHref = "#kham-pha" }: { slides: HeroSlide[]; exploreHref?: string }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [motionPaused, setMotionPaused] = useState(false);
   const [hover, setHover] = useState(false);
   const count = slides.length;
   const go = (i: number) => setIndex((i + count) % count);
@@ -27,7 +31,7 @@ export function HomeCarousel({ slides, exploreHref = "#kham-pha" }: { slides: He
   return (
     <section
       className="ti-hero is-cinematic"
-      aria-roledescription="carousel"
+      aria-roledescription={count > 1 ? "carousel" : undefined}
       aria-label="Nổi bật"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
@@ -40,18 +44,20 @@ export function HomeCarousel({ slides, exploreHref = "#kham-pha" }: { slides: He
           return (
             <article
               key={`${slide.title}-${i}`}
-              className={`ti-slide${active ? " is-active" : ""}`}
-              aria-roledescription="slide"
-              aria-label={`${i + 1} / ${count}`}
+              className={`ti-slide${active ? " is-active" : ""}${slide.pcb ? " is-pcb" : ""}`}
+              aria-roledescription={count > 1 ? "slide" : undefined}
+              aria-label={count > 1 ? `${i + 1} / ${count}` : undefined}
               aria-hidden={!active}
               inert={!active}
             >
-              {slide.image ? <img className="ti-slide-bg" src={slide.image} alt="" loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} /> : null}
+              {slide.pcb ? <PCBHero active={active} paused={motionPaused || paused} /> : null}
+              {!slide.pcb && slide.image ? <img className="ti-slide-bg" src={slide.image} alt="" loading={i === 0 ? "eager" : "lazy"} fetchPriority={i === 0 ? "high" : "auto"} decoding={i === 0 ? "sync" : "async"} /> : null}
               <div className="container ti-slide-inner">
                 <div className="ti-slide-copy">
                   <p className="ti-eyebrow">{slide.eyebrow}</p>
                   <h1 className="ti-title">{slide.title}</h1>
                   {slide.text ? <p className="ti-text">{slide.text}</p> : null}
+                  <div className="ctit-hero-search"><SearchTrigger className="ctit-hero-trigger" label="Tìm nghiên cứu, tài liệu, vật tư..." /></div>
                   <div className="ti-actions">
                     <Cta className="ti-cta" href={slide.href} {...extra}>
                       {slide.cta} <span aria-hidden="true">→</span>
@@ -66,6 +72,8 @@ export function HomeCarousel({ slides, exploreHref = "#kham-pha" }: { slides: He
           );
         })}
       </div>
+
+      {slides[index]?.pcb ? <button className="pcb-motion-toggle" type="button" aria-pressed={motionPaused} onClick={() => setMotionPaused(v => !v)}>{motionPaused ? "Bật chuyển động" : "Tắt chuyển động"}</button> : null}
 
       {count > 1 ? (
         <div className="container ti-controls">

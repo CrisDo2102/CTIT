@@ -27,7 +27,7 @@ export function Reveal({
 
   useEffect(() => {
     const node = ref.current;
-    if (!node || reduceMotion()) return;
+    if (!node || reduceMotion() || !("IntersectionObserver" in window)) return;
     if (node.getBoundingClientRect().top < innerHeight * 0.92) return;
 
     node.classList.add("reveal");

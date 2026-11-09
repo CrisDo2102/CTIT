@@ -7,7 +7,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   const origin = request.headers.get("origin");
-  if (!origin || new URL(origin).host !== request.headers.get("host")) return new NextResponse(null, { status: 403 });
+  try {
+    if (!origin || new URL(origin).origin !== new URL(request.url).origin) return new NextResponse(null, { status: 403 });
+  } catch { return new NextResponse(null, { status: 403 }); }
+  const site = request.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin") return new NextResponse(null, { status: 403 });
 
   const configured = Boolean(process.env.ALERT_WEBHOOK_URL);
   const sent = await notify({ title: "Gửi thử từ trang admin", detail: "Nếu bạn thấy tin này, kênh cảnh báo đang hoạt động.", fingerprint: "admin-test", level: "warn", force: true });

@@ -15,7 +15,7 @@ export default function SavedPage() {
     <>
       <Header />
       <main id="main">
-        <PageHero eyebrow="Saved" title="Đã lưu" intro="Những mục bạn đã bấm ★. Danh sách nằm trong trình duyệt này, không cần đăng nhập." />
+        <PageHero variant="compact" eyebrow="Saved" title="Đã lưu" intro="Những mục bạn đã bấm ★. Danh sách nằm trong trình duyệt này, không cần đăng nhập." />
         <section className="section no-top">
           <div className="container">
             <SavedList />

@@ -3,7 +3,7 @@
 // Nút mở ô tìm kiếm. Chỉ phát sự kiện; hộp thoại (SearchDialog) gắn một lần ở Header và lắng nghe.
 export const SEARCH_EVENT = "ctit:search";
 
-export function SearchTrigger({ variant = "pill", className = "" }: { variant?: "pill" | "icon"; className?: string }) {
+export function SearchTrigger({ variant = "pill", className = "", label = "Tìm kiếm" }: { variant?: "pill" | "icon"; className?: string; label?: string }) {
   return (
     <button
       type="button"
@@ -15,7 +15,7 @@ export function SearchTrigger({ variant = "pill", className = "" }: { variant?: 
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m20 20-4.2-4.2" /></svg>
       {variant === "pill" ? (
         <>
-          <span className="search-trigger-text">Tìm kiếm</span>
+          <span className="search-trigger-text">{label}</span>
           <kbd>Ctrl K</kbd>
         </>
       ) : null}

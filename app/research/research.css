@@ -30,7 +30,7 @@
 .rx-stat strong{display:block;font-size:44px;letter-spacing:-.03em;background:var(--gradient-brand);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rx-stat span{font-size:13px;color:var(--muted)}
 
-.rx-tabs-wrap{position:sticky;top:12px;z-index:20;display:flex;justify-content:center;margin:26px 0 8px;padding:0 12px}
+.rx-tabs-wrap{position:sticky;top:calc(var(--header-h, 72px) + var(--sticky-stack-before, 0px) + var(--sticky-gap, 12px));z-index:var(--z-sticky, 15);display:flex;justify-content:center;margin:26px 0 8px;padding:0 12px}
 .rx-tabs{display:flex;gap:4px;padding:5px;max-width:100%;overflow-x:auto;border-radius:999px;background:rgba(255,255,255,.8);backdrop-filter:blur(18px);border:1px solid var(--tsinghua-border);box-shadow:0 12px 40px rgba(30,27,105,.12)}
 .rx-tab{flex:none;padding:9px 18px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;transition:all .25s}
 .rx-tab:hover{color:var(--ink)}
@@ -71,7 +71,7 @@
 .rx-dot svg{width:15px;height:15px;fill:none;stroke:var(--tsinghua-purple);stroke-width:2}
 .rx-timeline h4{margin:6px 0;font-size:19px}.rx-timeline p{margin:0 0 6px;color:var(--muted);line-height:1.6}
 
-.rx-year{position:sticky;top:70px;font-size:56px;font-weight:800;letter-spacing:-.04em;color:var(--tsinghua-border)}
+.rx-year{position:sticky;top:var(--sticky-top);font-size:56px;font-weight:800;letter-spacing:-.04em;color:var(--tsinghua-border)}
 .rx-pubgroup{display:grid;grid-template-columns:130px 1fr;gap:16px;margin-bottom:18px}
 .rx-pub{display:flex;justify-content:space-between;gap:20px;align-items:center;padding:20px 24px;margin-bottom:12px}
 .rx-pub h3{margin:0 0 6px;font-size:18px}.rx-pub p{margin:6px 0 0;color:var(--muted)}
@@ -117,3 +117,19 @@
 /* caption: dòng chú thích dưới tiêu đề (cột "caption" trong sheet) */
 .rx-caption{display:block;margin:-2px 0 12px;font-size:14px;font-weight:600;letter-spacing:.02em;color:var(--tsinghua-purple)}
 .rx-dark .rx-caption{color:#67e8f9}
+
+
+/* CTIT 2.1 — giới hạn chuyển động đúng một thẻ dự án nổi bật, chỉ ở desktop. */
+.rx-stage > .ctit-pcb-signal { z-index: 0; }
+.rx-stage > .rx-chip { z-index: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .rx-project.ctit-tilt:hover {
+    transform: perspective(1000px) translateY(-2px)
+      rotateX(var(--ctit-tilt-x, 0deg)) rotateY(var(--ctit-tilt-y, 0deg));
+    transition: transform 150ms ease-out, box-shadow 200ms ease;
+  }
+}
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .rx-project.ctit-tilt,
+  .rx-project.ctit-tilt:hover { transform: none; transition: none; }
+}

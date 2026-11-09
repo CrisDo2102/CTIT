@@ -9,6 +9,16 @@ export type ChangeEntry = {
 
 export const changelog: ChangeEntry[] = [
   {
+    version: "2026.10.28",
+    date: "28/10/2026",
+    title: "Imagery — Thư viện hình ảnh tự động từ folder",
+    items: [
+      { text: "Tạo thư mục con trong public/images/Imagery: tên folder tự trở thành danh mục, không cần Google Sheets.", href: "/imagery" },
+      { text: "Mỗi danh mục có trang riêng, tìm kiếm theo tên file, xem ảnh phóng to, chuyển ảnh bằng phím và tải bản gốc.", href: "/imagery" },
+      { text: "Imagery được bổ sung vào Resources, menu desktop/mobile, footer và sitemap. Hướng dẫn dự án được gộp vào một README.md duy nhất." }
+    ]
+  },
+  {
     version: "2026.10.16",
     date: "16/10/2026",
     title: "Trang chủ điện ảnh, ảnh nhẹ hơn nhiều",

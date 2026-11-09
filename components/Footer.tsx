@@ -30,7 +30,8 @@ const supportLinks = [
 const resourceLinks = [
   { href: "/resources/documents", label: "Tài liệu" },
   { href: "/resources/inventory", label: "Inventory" },
-  { href: "/resources/courses", label: "Khóa học" }
+  { href: "/resources/courses", label: "Khóa học" },
+  { href: "/imagery", label: "Imagery · Hình ảnh" }
 ];
 
 export function Footer() {

@@ -35,6 +35,17 @@ describe("searchEntries", () => {
     expect(searchEntries(entries, "s", 2)).toHaveLength(2);
   });
 
+  it("tìm kiếm đủ các nhóm trước khi giới hạn hiển thị", () => {
+    const many: SearchEntry[] = Array.from({ length: 75 }, (_, i) => ({
+      kind: "Tài liệu", title: `STM32 tài liệu ${i}`, sub: "", href: `/docs/${i}`
+    }));
+    many.push({ kind: "Inventory", title: "STM32 Kit", sub: "", href: "/resources/inventory/stm32-kit" });
+    const all = searchEntries(many, "stm32", Infinity);
+    expect(all.filter((entry) => entry.kind === "Inventory")).toHaveLength(1);
+    expect(all.length).toBe(76);
+    expect(all.filter((entry) => entry.kind === "Inventory").slice(0, 60)).toHaveLength(1);
+  });
+
   it("gọi lại nhiều lần cho kết quả giống nhau (bộ nhớ đệm không làm sai lệch)", () => {
     const first = searchEntries(entries, "esp32");
     const second = searchEntries(entries, "esp32");
