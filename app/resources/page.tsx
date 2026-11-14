@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
+import { SectionHeader } from "@/components/SectionHeader";
 import { InventoryIcon } from "@/components/icons";
 
 function DocumentIcon() {
@@ -10,6 +11,9 @@ function DocumentIcon() {
 }
 function CourseIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M4 12h10M4 18h6" /><path d="m16 14 5 3-5 3Z" /></svg>;
+}
+function ImageryIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" /><circle cx="9" cy="9" r="2" /><path d="m4 18 5-5 3 3 3-4 5 6" /></svg>;
 }
 export const metadata = navMetadata("/resources");
 
@@ -19,14 +23,21 @@ export default function ResourcesPage() {
       <Header />
       <main id="main">
         <PageHero
+          variant="compact"
+          accent="resources"
           eyebrow="CTIT Resources"
           title="Tài nguyên"
           intro="Một không gian chung cho mọi tài nguyên CTIT — từ kiến thức để học đến vật tư để làm."
-          stats={[{ value: 3, label: "nhóm tài nguyên" }]}
+          stats={[{ value: 4, label: "nhóm tài nguyên" }]}
         />
 
         <section className="section no-top">
           <div className="container">
+            <SectionHeader
+              eyebrow="RESOURCE DIRECTORY / 01"
+              title="Khám phá tài nguyên"
+              description="Tài liệu, linh kiện, lộ trình học và thư viện hình ảnh — chọn đúng thứ bạn cần."
+            />
             <div className="resources-directory">
               <Link href="/resources/documents" className="resource-hub-card">
                 <div className="resource-hub-icon"><DocumentIcon /></div>
@@ -46,6 +57,7 @@ export default function ResourcesPage() {
                   <span className="resource-hub-link">Khám phá inventory <b>→</b></span>
                 </div>
               </Link>
+
               <Link href="/resources/courses" className="resource-hub-card is-courses">
                 <div className="resource-hub-icon"><CourseIcon /></div>
                 <div className="resource-hub-copy">
@@ -53,6 +65,15 @@ export default function ResourcesPage() {
                   <h2>Khóa học</h2>
                   <p>Lộ trình học theo từng môn, bắt đầu từ vi điều khiển với hai nhánh AVR và ARM. Mỗi bài là một link, xếp theo thứ tự nên học.</p>
                   <span className="resource-hub-link">Xem khóa học <b>→</b></span>
+                </div>
+              </Link>
+              <Link href="/imagery" className="resource-hub-card is-imagery">
+                <div className="resource-hub-icon"><ImageryIcon /></div>
+                <div className="resource-hub-copy">
+                  <span className="type">04 / IMAGERY</span>
+                  <h2>Imagery</h2>
+                  <p>Hình ảnh khoa học và kỹ thuật, tự xuất bản theo tên thư mục trong public/images/Imagery. Không cần qua Sheet.</p>
+                  <span className="resource-hub-link">Khám phá hình ảnh <b>→</b></span>
                 </div>
               </Link>
             </div>

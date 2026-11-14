@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCourses, getEvents, getInventory, getNews, getResources, getStudents } from "@/lib/sheet-data";
+import { getCourses, getEvents, getInventory, getNews, getResearchInfo, getResources, getStudents } from "@/lib/sheet-data";
 import { withSlugs } from "@/lib/inventory";
 import { nav } from "@/lib/site-config";
 import type { SearchEntry } from "@/lib/search";
@@ -14,19 +14,37 @@ const clip = (text: string | undefined, max = 90) => {
 };
 
 export async function GET() {
-  const [resources, inventory, courses, news, events, students] = await Promise.allSettled([
+  const [resources, inventory, courses, news, events, students, research] = await Promise.allSettled([
     getResources(),
     getInventory(),
     getCourses(),
     getNews(),
     getEvents(),
-    getStudents()
+    getStudents(),
+    getResearchInfo()
   ]);
   const ok = <T,>(r: PromiseSettledResult<T[]>): T[] => (r.status === "fulfilled" ? r.value : []);
 
   const entries: SearchEntry[] = [];
 
   for (const n of nav) entries.push({ kind: "Trang", title: n.label, sub: clip(n.intro), href: n.href });
+  entries.push({ kind: "Trang", title: "Imagery · Thư viện hình ảnh", sub: "Danh mục Physics, Math và hình ảnh kỹ thuật CTIT", href: "/imagery" });
+
+  if (research.status === "fulfilled") {
+    const data = research.value;
+    const sections = [
+      { items: data.project, label: "Dự án", href: "/research#rx-projects" },
+      { items: data.focus, label: "Hướng nghiên cứu", href: "/research" },
+      { items: data.publication, label: "Ấn phẩm", href: "/research#rx-publications" },
+      { items: data.achievement, label: "Thành tích", href: "/research" }
+    ];
+    for (const section of sections) {
+      for (const r of section.items) {
+        if (r.title) entries.push({ kind: "Nghiên cứu", title: r.title, sub: clip([section.label, r.tag || r.category, r.content].filter(Boolean).join(" · ")),
+          href: section.href });
+      }
+    }
+  }
 
   for (const r of ok(resources)) {
     entries.push({ kind: "Tài liệu", title: r.title, sub: clip([r.type, r.category || r.topic].filter(Boolean).join(" · ") || r.description), href: r.url || `/resources/documents?q=${encodeURIComponent(r.title)}`, external: Boolean(r.url) });

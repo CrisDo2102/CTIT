@@ -17,6 +17,14 @@ describe("logEvent", () => {
     logEvent("warn", "x", { stack: "a".repeat(5000) });
     expect(JSON.parse(spy.mock.calls[0][0]).stack.length).toBeLessThan(600);
   });
+  it("che token và query của URL trong log", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    logEvent("error", "client_error", { message: "token=abc123 https://example.com/path?secret=xyz" });
+    const entry = JSON.parse(spy.mock.calls[0][0]);
+    expect(entry.message).toContain("token=[REDACTED]");
+    expect(entry.message).not.toContain("abc123");
+    expect(entry.message).not.toContain("xyz");
+  });
   it("dùng đúng kênh theo mức: info -> log, warn -> warn, error -> error", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

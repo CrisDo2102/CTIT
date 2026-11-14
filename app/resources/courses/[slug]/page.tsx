@@ -5,19 +5,17 @@ import { cache } from "react";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
-import { CourseProgress, LessonDone } from "@/components/LessonDone";
-import { ResumeButton, TrackTools } from "@/components/CourseProgressUI";
+import { CourseClassroom } from "@/components/CourseClassroom";
 import { SafeImage } from "@/components/SafeImage";
 import { SaveButton } from "@/components/SaveButton";
-import { TypeIcon } from "@/components/ResourceCard";
-import type { CourseLesson } from "@/lib/dashboard-types";
-import { padIndex } from "@/lib/format";
-import { getCourses } from "@/lib/sheet-data";
+import { matchesKeys, relatedKeys, statusKind, statusLabel, withSlugs } from "@/lib/inventory";
+import { getImageryCategories } from "@/lib/imagery";
+import { getCourses, getEvents, getInventory } from "@/lib/sheet-data";
 import "../courses.css";
 
 type Props = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ track?: string | string[] }>;
+  searchParams: Promise<{ track?: string | string[]; lesson?: string | string[] }>;
 };
 
 const loadCourse = cache(async (slug: string) => (await getCourses()).find((course) => course.slug === slug));
@@ -29,37 +27,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: `${course.title} | Khóa học`, description: course.description || undefined };
 }
 
-// Gom các bài liên tiếp có cùng "group" (chương). Số thứ tự chạy liền qua các chương.
-function groupLessons(lessons: CourseLesson[]) {
-  const groups: { name: string; items: { lesson: CourseLesson; no: number }[] }[] = [];
-  lessons.forEach((lesson, index) => {
-    const last = groups[groups.length - 1];
-    if (last && last.name === lesson.group) {
-      last.items.push({ lesson, no: index });
-    } else {
-      groups.push({ name: lesson.group, items: [{ lesson, no: index }] });
-    }
-  });
-  return groups;
-}
-
 export default async function CoursePage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { track: trackParam } = await searchParams;
+  const { track: trackParam, lesson: lessonParam } = await searchParams;
   const course = await loadCourse(slug);
   if (!course) notFound();
 
   const wanted = Array.isArray(trackParam) ? trackParam[0] : trackParam;
   const track = course.tracks.find((item) => item.slug === wanted) ?? course.tracks[0];
-  const groups = groupLessons(track.lessons);
-  const trackIds = track.lessons.flatMap((lesson, index) => (lesson.url ? [`${course.slug}:${track.slug}:${index}`] : []));
-  const playable = track.lessons.flatMap((lesson, index) => (lesson.url ? [{ id: `${course.slug}:${track.slug}:${index}`, title: lesson.title, url: lesson.url }] : []));
+  const outline = [course.title, course.description, track.name, track.description,
+    ...track.lessons.flatMap(lesson => [lesson.group, lesson.title, lesson.description])].join(" ");
+  const parts = await getInventory().then(items => withSlugs(items)
+    .filter(item => matchesKeys(outline, relatedKeys(item)))
+    .map(item => ({
+      slug: item.slug, title: item.title, quantity: item.quantity, unit: item.unit,
+      status: statusLabel(item.status),
+      canInquire: item.quantity > 0 && ["ok", "low"].includes(statusKind(item.status))
+    }))).catch(() => null);
+  const [allCourses, albums, events] = await Promise.all([getCourses(), getImageryCategories(), getEvents()]);
+  const prereqs=(course.info?.prerequisites||"").split(/[|,]/).map(s=>s.trim()).flatMap(slug=>allCourses.filter(c=>c.slug===slug && c.slug!==course.slug));
+  const sameTitle=(value:string)=>value.trim().toLocaleLowerCase("vi")===course.title.trim().toLocaleLowerCase("vi");
+  const album=albums.find(a=>sameTitle(a.name));
+  const workshop=events.find(e=>sameTitle(e.title));
+  const rawLesson = Array.isArray(lessonParam) ? lessonParam[0] : lessonParam;
+  const parsedLesson = rawLesson === undefined ? undefined : Number(rawLesson);
+  const initialLesson = parsedLesson !== undefined && Number.isInteger(parsedLesson) && parsedLesson >= 0 ? parsedLesson : undefined;
 
   return (
     <>
       <Header />
       <main id="main">
         <PageHero
+          variant="reading"
+          accent="resources"
           eyebrow="Resources / Courses"
           title={course.title}
           intro={course.description || undefined}
@@ -96,60 +96,16 @@ export default async function CoursePage({ params, searchParams }: Props) {
               </nav>
             ) : null}
 
-            {track.name || track.description || playable.length > 0 ? (
-              <div className="course-track-head">
-                <div>
-                  {track.name ? <h2>{track.name}</h2> : null}
-                  {track.description ? <p>{track.description}</p> : null}
-                </div>
-                <ResumeButton lessons={playable} />
-              </div>
-            ) : null}
-
-            <CourseProgress ids={trackIds} />
-            <TrackTools ids={trackIds} />
-
-            {groups.map((group, groupIndex) => (
-              <section key={`${group.name}-${groupIndex}`} className="course-group">
-                {group.name ? <h3>{group.name}</h3> : null}
-                <ol className="course-lessons">
-                  {group.items.map(({ lesson, no }) => (
-                    <li key={`${lesson.title}-${no}`} className={lesson.url ? "has-done" : undefined}>
-                      {lesson.url ? (
-                        <>
-                        <a className="course-lesson" href={lesson.url} target="_blank" rel="noopener noreferrer">
-                          <span className="course-lesson-no">{padIndex(no)}</span>
-                          <span className="course-lesson-main">
-                            <strong>{lesson.title}</strong>
-                            {lesson.description ? <span>{lesson.description}</span> : null}
-                          </span>
-                          <span className="course-lesson-meta">
-                            <span className="course-lesson-type">
-                              <TypeIcon type={lesson.type} />
-                              {lesson.type}
-                            </span>
-                            <span className="sr-only">(mở tab mới)</span>
-                          </span>
-                        </a>
-                        <LessonDone id={`${course.slug}:${track.slug}:${no}`} title={lesson.title} />
-                        </>
-                      ) : (
-                        <div className="course-lesson is-soon">
-                          <span className="course-lesson-no">{padIndex(no)}</span>
-                          <span className="course-lesson-main">
-                            <strong>{lesson.title}</strong>
-                            {lesson.description ? <span>{lesson.description}</span> : null}
-                          </span>
-                          <span className="course-lesson-meta">
-                            <span className="course-lesson-soon">Sắp có</span>
-                          </span>
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ))}
+            {(course.info?.teacher||course.info?.outcomes||course.info?.pending||course.info?.updated||prereqs.length>0||album||workshop)&&<aside className="course-facts">
+              {course.info?.pending&&<strong>Khóa cần cập nhật. Kiểm tra phiên bản công cụ trước khi thực hành.</strong>}
+              {course.info?.outcomes&&<p><b>Bạn sẽ học được</b><br/>{course.info.outcomes}</p>}
+              {course.info?.teacher&&<p>Người hướng dẫn · {course.info.teacher}</p>}
+              {course.info?.updated&&<p>Cập nhật · {course.info.updated.split("-").reverse().join("/")}</p>}
+              {prereqs.length>0&&<p>Học trước: {prereqs.map(c=><Link key={c.slug} href={`/resources/courses/${c.slug}`}>{c.title} </Link>)}</p>}
+              {workshop&&<p><Link href={workshop.url||"/events"}>Sự kiện liên quan · {workshop.title}</Link></p>}
+              {album&&<Link href={album.href}>Xem ảnh buổi học →</Link>}
+            </aside>}
+            <CourseClassroom key={`${course.slug}:${track.slug}`} course={course} track={track} initialLesson={initialLesson} parts={parts} />
           </div>
         </section>
       </main>

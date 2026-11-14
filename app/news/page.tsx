@@ -12,7 +12,7 @@ export default async function NewsPage() {
   return (
     <>
       <Header />
-      <main id="main">
+      <main id="main" data-ctit-accent="news">
         <NewsView items={items} />
       </main>
       <Footer />

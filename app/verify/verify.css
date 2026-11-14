@@ -1,0 +1,3 @@
+.verify-course form { display:flex;gap:16px;align-items:end;flex-wrap:wrap; }.verify-course label { display:grid;gap:8px; }.verify-course input { padding:12px;font:inherit; }
+.certificate { margin:32px auto;padding:clamp(24px,6vw,70px);border:double 6px var(--tsinghua-purple);background:#faf9ff;text-align:center;max-width:850px; }.certificate h3 { font-size:30px; }
+@media print { body:has(.certificate) * { visibility:hidden; } body:has(.certificate) .certificate,body:has(.certificate) .certificate * { visibility:visible; } .certificate { position:absolute;inset:0 auto auto 0;width:100%;margin:0; }.certificate button { display:none; } }

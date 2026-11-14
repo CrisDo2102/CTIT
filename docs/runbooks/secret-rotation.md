@@ -22,7 +22,7 @@
 
 ## Từng khóa
 
-**`ADMIN_PASSWORD`**: đặt chuỗi dài từ 16 ký tự, ngẫu nhiên (trình quản lý mật khẩu tạo giúp). Dưới 12 ký tự thì `/admin` tự tắt trên bản chạy thật.
+**`ADMIN_PASSWORD`**: đặt chuỗi dài tối thiểu 20 ký tự, ngẫu nhiên (trình quản lý mật khẩu tạo giúp). Dưới 20 ký tự thì `/admin` tự tắt trên bản chạy thật.
 
 **`ALERT_WEBHOOK_URL`**: Discord: Cài đặt kênh → Tích hợp → Webhook → xóa webhook cũ, tạo cái mới, sao chép URL. Slack: Incoming Webhooks → thu hồi URL cũ, tạo URL mới. Sau đó bấm "Gửi cảnh báo thử" ở `/admin` để kiểm tra.
 

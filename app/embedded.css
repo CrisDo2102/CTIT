@@ -1,0 +1,187 @@
+/* CTIT 2.2 — Embedded Identity. Layer bổ sung, giữ nguyên thiết kế trong globals/home/cinematic.
+   Font mono sử dụng font hệ thống, không tải thêm tài nguyên từ mạng. */
+:root {
+  --color-primary: var(--tsinghua-purple);
+  --color-primary-deep: var(--tsinghua-purple-2);
+  --color-surface: var(--white);
+  --color-surface-muted: var(--tsinghua-lavender);
+  --color-text: var(--ink);
+  --color-text-muted: var(--muted);
+  --color-border: var(--tsinghua-border);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-violet: var(--accent-violet);
+  --font-tech: "Cascadia Code", "IBM Plex Mono", "JetBrains Mono", Consolas, ui-monospace, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --motion-fast: 160ms;
+  --motion-base: 240ms;
+  --motion-reveal: 340ms;
+  --motion-ease: cubic-bezier(.22, 1, .36, 1);
+  --shadow-offset: 8px 8px 0 rgba(79, 70, 229, .13);
+  --radius-tech: 0px;
+}
+
+/* Mono chỉ cho mã kỹ thuật, chú thích, số đếm; font Inter nội dung vẫn giữ nguyên. */
+:is(.ti-tile-body small, .ti-eyebrow, .ct-kicker, .rx-kicker,
+  .rx-date, .nav-mega-kicker, .ph-stats strong, .ti-band-stat strong,
+  .item-specs dt, .search-group > p, .search-start h3,
+  .course-track-chip em, .inventory-kpi strong, .ctit-silkscreen) {
+  font-family: var(--font-tech);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Lưới blueprint chỉ xuất hiện trong section Khám phá, không phủ nền hero ảnh thật. */
+.ctit-tech-section { position: relative; isolation: isolate; }
+.ctit-tech-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  opacity: .45;
+  background-image: radial-gradient(circle, rgba(79,70,229,.16) .8px, transparent 1.2px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, transparent, black 16%, black 82%, transparent);
+}
+.ctit-tech-section > .container { position: relative; }
+
+/* Một chi tiết silkscreen nhỏ trên một vài ô Bento, chỉ là họa tiết. */
+.ti-tile .ctit-silkscreen {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  z-index: 2;
+  padding: 3px 6px;
+  background: rgba(14, 16, 43, .76);
+  border: 1px solid rgba(219, 234, 254, .34);
+  color: #f2f6ff;
+  letter-spacing: .1em;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+/* Nút tìm kiếm ngay trong ảnh hero: tái sử dụng Command Palette có sẵn. */
+.ctit-hero-search { display: flex; justify-content: center; margin-top: 24px; }
+.ctit-hero-search .ctit-hero-trigger {
+  width: min(480px, 100%);
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.6);
+  border-radius: var(--radius-tech);
+  background: rgba(11, 14, 37, .45);
+  color: #fff;
+  backdrop-filter: blur(10px);
+  font: 600 14px/1.35 Inter, system-ui, sans-serif;
+  justify-content: flex-start;
+  text-align: left;
+  transition: background var(--motion-fast), border-color var(--motion-fast);
+}
+.ctit-hero-search .ctit-hero-trigger:hover,
+.ctit-hero-search .ctit-hero-trigger:focus-visible {
+  background: rgba(11, 14, 37, .78);
+  border-color: #fff;
+  color: #fff;
+}
+.ctit-hero-search .ctit-hero-trigger svg { width: 19px; height: 19px; flex: none; }
+.ctit-hero-search .ctit-hero-trigger kbd {
+  margin-left: auto;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.38);
+  font-family: var(--font-tech);
+}
+.ti-hero.is-cinematic .ctit-hero-search + .ti-actions { margin-top: 18px; }
+
+/* Mobile app-like navigation. Desktop menu và hamburger cũ vẫn không bị thay đổi. */
+.ctit-bottom-nav { display: none; }
+@media (max-width: 720px) {
+  body:has(.ctit-bottom-nav) {
+    padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  }
+  .ctit-bottom-nav {
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: stretch;
+    height: calc(66px + env(safe-area-inset-bottom, 0px));
+    padding: 5px max(6px, env(safe-area-inset-left, 0px)) calc(5px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-right, 0px));
+    border-top: 1px solid var(--color-border);
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 -5px 22px rgba(28, 21, 72, .09);
+    backdrop-filter: blur(16px);
+  }
+  .ctit-bottom-nav > :is(a, button) {
+    min-width: 0;
+    min-height: 50px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: 0;
+    border-top: 2px solid transparent;
+    background: transparent;
+    color: #5e6074;
+    font: 700 11px/1.2 Inter, system-ui, sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .ctit-bottom-nav svg {
+    width: 21px;
+    height: 21px;
+    flex: none;
+  }
+  .ctit-bottom-nav > .is-active,
+  .ctit-bottom-nav > button[aria-expanded="true"] {
+    color: var(--color-primary);
+    border-top-color: var(--color-primary);
+  }
+  .ctit-bottom-nav > :is(a, button):focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -3px;
+  }
+  .ctit-bottom-count {
+    position: absolute;
+    top: 0px;
+    left: calc(50% + 9px);
+    min-width: 17px;
+    height: 17px;
+    border-radius: 9px;
+    padding-inline: 3px;
+    background: var(--color-primary);
+    color: white;
+    font: 700 10px/17px var(--font-tech);
+    text-align: center;
+  }
+  /* Menu dùng luôn drawer cũ của CTIT: mở bằng nút Menu ở thanh dưới. */
+  .mobile-nav-toggle { display: none; }
+  .header .search-trigger-mobile { display: none; }
+  .mobile-nav-panel { max-height: calc(100dvh - 145px - env(safe-area-inset-bottom, 0px)); }
+  .ti-hero.is-cinematic .ti-slide-inner { padding-bottom: 108px; }
+  .ctit-hero-search .ctit-hero-trigger { min-height: 44px; font-size: 12px; }
+  .ctit-hero-search .ctit-hero-trigger kbd { display: none; }
+  .search-field input { font-size: 16px; }
+}
+@media (max-width: 375px) {
+  .ctit-bottom-nav > :is(a, button) { font-size: 10px; }
+  .ctit-bottom-nav svg { width: 19px; height: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctit-hero-search .ctit-hero-trigger,
+  .ctit-bottom-nav > :is(a, button) { transition: none !important; }
+}
+@media print {
+  .ctit-bottom-nav { display: none !important; }
+  body:has(.ctit-bottom-nav) { padding-bottom: 0 !important; }
+}

@@ -11,18 +11,19 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "ci": "npm run typecheck && npm run lint && npm test && npm run check:secrets && npm run build",
+    "ci": "npm run typecheck && npm run lint && npm test && npm run check:secrets && npm run check:dependencies && npm run build",
     "check:secrets": "node scripts/secret-scan.mjs",
     "fixtures": "node scripts/make-fixtures.mjs",
     "dev:fixtures": "node scripts/dev-fixtures.mjs",
     "build:fixtures": "node scripts/build-fixtures.mjs",
-    "e2e:all": "npm run build && npm run build:fixtures && npm run test:e2e"
+    "e2e:all": "npm run build && npm run build:fixtures && npm run test:e2e",
+    "check:dependencies": "node scripts/check-vulnerable-deps.mjs"
   },
   "dependencies": {
     "@vercel/speed-insights": "^2.0.0",
-    "next": "16.4.0",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "next": "16.4.1",
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

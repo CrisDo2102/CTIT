@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { PCBHero } from "@/components/PCBHero";
 import { useEffect, useRef, useState } from "react";
 import { Reveal } from "@/components/motion";
 import { nav } from "@/lib/site-config";
@@ -96,9 +97,10 @@ export function HomeBento({ images = {} }: { images?: TileImages }) {
       {nav.map((item, index) => (
         <Reveal key={item.href} i={index} className="ti-tile-cell">
           <Link href={item.href} className="ti-tile" style={{ "--h": 235 + index * 14 } as React.CSSProperties}>
-            <span className={`ti-tile-media${CONTAIN.has(item.href) ? " is-contain" : ""}`} aria-hidden="true">
-              <TileMedia href={item.href} index={index} images={images[item.href] ?? []} />
-            </span>
+            <div className={`ti-tile-media${item.href === "/about" ? " pcb-tile" : ""}`} aria-hidden="true">
+              {item.href === "/about" ? <><PCBHero active={false} paused compact /><span className="ti-tile-num">01</span></> : <TileMedia href={item.href} index={index} images={images[item.href] ?? []} />}
+              {index % 3 === 0 ? <span className="ctit-silkscreen" aria-hidden="true">U{index + 1} / CTIT</span> : null}
+            </div>
             <span className="ti-tile-body">
               <small>{item.en}</small>
               <strong>{item.label}</strong>

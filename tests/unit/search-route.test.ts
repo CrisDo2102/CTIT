@@ -36,6 +36,12 @@ describe("GET /api/search", () => {
     expect(new Set(kim.map((e) => e.href)).size).toBe(2);
   });
 
+  it("đưa dự án nghiên cứu có thật từ tab Research vào tìm kiếm", () => {
+    const research = entries.filter((e) => e.kind === "Nghiên cứu");
+    expect(research.some((e) => e.title === "Hệ thống giám sát pin xe điện")).toBe(true);
+    expect(research.every((e) => e.href.startsWith("/research"))).toBe(true);
+  });
+
   it("không có mục trùng hoàn toàn và không có link nguy hiểm", () => {
     const keys = entries.map((e) => `${e.kind}|${e.href}|${e.title}`.toLowerCase());
     expect(new Set(keys).size).toBe(keys.length);

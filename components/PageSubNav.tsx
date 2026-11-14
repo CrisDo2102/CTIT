@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useStickyNavOffset } from "@/components/useStickyNavOffset";
 
 export type SubNavItem = { id: string; label: string };
 
@@ -8,22 +9,7 @@ export type SubNavItem = { id: string; label: string };
 // Làm sáng mục đang xem khi cuộn; bấm thì cuộn mượt tới phần tương ứng.
 export function PageSubNav({ items, label = "Trong trang này" }: { items: SubNavItem[]; label?: string }) {
   const [active, setActive] = useState(items[0]?.id ?? "");
-  const navRef = useRef<HTMLElement>(null);
-
-  // Báo chiều cao của thanh này qua --subnav-h để scroll-padding chừa đủ chỗ (top dính do CSS: var(--header-h)).
-  useEffect(() => {
-    const node = navRef.current;
-    if (!node) return;
-    const root = document.documentElement;
-    const apply = () => root.style.setProperty("--subnav-h", `${Math.round(node.getBoundingClientRect().height)}px`);
-    apply();
-    const observer = new ResizeObserver(apply);
-    observer.observe(node);
-    return () => {
-      observer.disconnect();
-      root.style.removeProperty("--subnav-h");
-    };
-  }, []);
+  const navRef = useStickyNavOffset<HTMLElement>();
 
   useEffect(() => {
     const targets = items.map((item) => document.getElementById(item.id)).filter((el): el is HTMLElement => Boolean(el));

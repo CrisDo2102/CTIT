@@ -1,5 +1,5 @@
 // Dùng chung cho API /api/search và ô tìm kiếm (components/SearchDialog.tsx).
-export type SearchKind = "Trang" | "Tài liệu" | "Inventory" | "Khóa học" | "Tin tức" | "Sự kiện" | "Học viên";
+export type SearchKind = "Trang" | "Nghiên cứu" | "Tài liệu" | "Inventory" | "Khóa học" | "Tin tức" | "Sự kiện" | "Học viên";
 
 export type SearchEntry = {
   kind: SearchKind;
@@ -9,7 +9,7 @@ export type SearchEntry = {
   external?: boolean;
 };
 
-export const kindOrder: SearchKind[] = ["Trang", "Khóa học", "Tài liệu", "Inventory", "Tin tức", "Sự kiện", "Học viên"];
+export const kindOrder: SearchKind[] = ["Trang", "Nghiên cứu", "Khóa học", "Tài liệu", "Inventory", "Tin tức", "Sự kiện", "Học viên"];
 
 // Bỏ dấu tiếng Việt + chữ thường, để gõ "tai lieu" vẫn ra "Tài liệu".
 export function fold(text: string): string {

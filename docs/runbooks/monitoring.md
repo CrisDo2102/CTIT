@@ -4,7 +4,7 @@
 
 | Việc | Cách | Xem ở đâu |
 |---|---|---|
-| Biết Google Sheet nào đang hỏng | `GET /api/health` tải thử từng Sheet (đệm 60 giây). `ok`, `degraded` (đang dùng bản cũ), `down` (HTTP 503) | Mở `/api/health` hoặc trỏ công cụ giám sát vào |
+| Biết Google Sheet nào đang hỏng | `GET /api/health` chỉ trả trạng thái tổng; `/admin/health` (có đăng nhập) hiển thị từng Sheet (đệm dữ liệu 60 giây). `ok`, `degraded` (đang dùng bản cũ), `down` (HTTP 503) | Mở `/admin/health` để xem chi tiết, hoặc trỏ công cụ giám sát vào `/api/health` |
 | Biết lỗi phía máy chủ | `instrumentation.ts` ghi nhật ký `"event":"server_error"` mỗi khi một yêu cầu gặp lỗi | Vercel → Logs, lọc `server_error` |
 | Biết lỗi phía trình duyệt người dùng | Lỗi JavaScript chưa xử lý và lỗi hiển thị trang gửi về `/api/report`, ghi `"event":"client_error"` | Vercel → Logs, lọc `client_error` |
 | Được báo chủ động | Các lỗi trên và Sheet hỏng được gửi vào kênh Discord/Slack qua `ALERT_WEBHOOK_URL` | Kênh Discord/Slack của bạn |
@@ -24,7 +24,7 @@ Cảnh báo được **giới hạn tần suất**: cùng một lỗi chỉ báo
 
 | Cảnh báo | Thường là | Việc đầu tiên |
 |---|---|---|
-| "Google Sheet không tải được" | Link CSV sai hoặc đã dừng xuất bản; Google tạm lỗi | Mở `/api/health` xem tab nào; mở link CSV của tab đó trong trình duyệt ẩn danh |
+| "Google Sheet không tải được" | Link CSV sai hoặc đã dừng xuất bản; Google tạm lỗi | Mở `/admin/health` (cần tài khoản) xem tab nào; mở link CSV của tab đó trong trình duyệt ẩn danh |
 | "Google Sheet đang dùng bản dữ liệu cũ" | Google tạm lỗi; trang vẫn hiển thị bình thường bằng bản cũ | Thường tự hết; nếu kéo dài hơn 1 giờ thì xử lý như trên |
 | "Lỗi máy chủ: …" | Lỗi code hoặc dữ liệu lạ trong Sheet | Vercel → Logs, lọc `server_error`, xem `path` và `digest` |
 | "Lỗi trên trình duyệt: …" | Lỗi JavaScript ở máy một số người dùng | Vercel → Logs, lọc `client_error`; xem `path`, nội dung và dấu vết |
