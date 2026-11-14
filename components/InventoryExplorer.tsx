@@ -14,7 +14,7 @@ import { countSelected, emptySelected, readSelected, runFacets, toggleValue, uni
 import { toneOf } from "@/lib/format";
 import { statusClass, statusKind, statusLabel, type InventoryEntry } from "@/lib/inventory";
 
-type SortKey = "title" | "category" | "manufacturer" | "model" | "quantity" | "location" | "status";
+type SortKey = "title" | "category" | "manufacturer" | "model" | "quantity" | "location" | "status" | "currentUser";
 type Sort = { key: SortKey; dir: "asc" | "desc" } | null;
 type View = "grid" | "table";
 
@@ -28,7 +28,8 @@ const columns: { key: SortKey; label: string; numeric?: boolean }[] = [
   { key: "model", label: "Model" },
   { key: "quantity", label: "SL", numeric: true },
   { key: "location", label: "Vị trí" },
-  { key: "status", label: "Trạng thái" }
+  { key: "status", label: "Trạng thái" },
+  { key: "currentUser", label: "Người sử dụng" }
 ];
 
 const sortPresets: { value: string; label: string }[] = [
@@ -36,7 +37,8 @@ const sortPresets: { value: string; label: string }[] = [
   { value: "title:asc", label: "Tên A → Z" },
   { value: "quantity:desc", label: "Số lượng nhiều → ít" },
   { value: "quantity:asc", label: "Số lượng ít → nhiều" },
-  { value: "category:asc", label: "Danh mục A → Z" }
+  { value: "category:asc", label: "Danh mục A → Z" },
+  { value: "currentUser:asc", label: "Người sử dụng A → Z" }
 ];
 
 const sortValue = (sort: Sort) => (sort ? `${sort.key}:${sort.dir}` : "");
@@ -82,7 +84,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
 
   // Chuỗi để tìm kiếm tính sẵn một lần, khỏi nối lại mỗi lần gõ phím.
   const haystacks = useMemo(
-    () => new Map(initialItems.map((item) => [item.slug, [item.category, item.title, item.manufacturer, item.model, item.description, item.location, item.id].join(" ").toLowerCase()])),
+    () => new Map(initialItems.map((item) => [item.slug, [item.category, item.title, item.manufacturer, item.model, item.description, item.location, item.id, item.currentUser].join(" ").toLowerCase()])),
     [initialItems]
   );
 
@@ -176,7 +178,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
       <div className="inventory-toolbar">
         <div className="resource-search inventory-search">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" /></svg>
-          <input className="input" type="search" placeholder="Tìm STM32, ESP32, CAN, Hakko..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Tìm vật tư" />
+          <input className="input" type="search" placeholder="Tìm vật tư, model hoặc người sử dụng..." value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Tìm vật tư" />
         </div>
       </div>
 
@@ -294,6 +296,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
                   <td className="is-num">{item.quantity}</td>
                   <td>{item.location || "—"}</td>
                   <td><span className={statusClass(item.status)}>{statusLabel(item.status)}</span></td>
+                  <td>{item.currentUser || "Chưa cập nhật"}</td>
                 </tr>
               ))}
             </tbody>
@@ -322,7 +325,7 @@ export function InventoryExplorer({ initialItems }: { initialItems: InventoryEnt
                   <span><b>{item.quantity}</b> {item.unit || "đơn vị"}</span>
                   {item.location ? <span>{item.location}</span> : null}
                 </div>
-                {item.currentUser ? <div className="inventory-user"><span>Đang sử dụng</span><strong>{item.currentUser}</strong></div> : null}
+                <div className="inventory-user"><span>Người sử dụng</span><strong>{item.currentUser || "Chưa cập nhật"}</strong></div>
                 <div className="inventory-actions">
                   <div className="inventory-link-group">
                     {item.datasheet ? <a className="btn secondary" href={item.datasheet} target="_blank" rel="noreferrer">Datasheet</a> : null}
@@ -376,7 +379,7 @@ function CompareDialog({ items, onClose, onRemove }: { items: InventoryEntry[]; 
     { label: "Số lượng", render: (item) => `${item.quantity} ${item.unit || ""}`.trim() },
     { label: "Vị trí", render: (item) => item.location || "—" },
     { label: "Trạng thái", render: (item) => <span className={statusClass(item.status)}>{statusLabel(item.status)}</span> },
-    { label: "Đang sử dụng", render: (item) => item.currentUser || "—" },
+    { label: "Người sử dụng", render: (item) => item.currentUser || "Chưa cập nhật" },
     { label: "Datasheet", render: (item) => (item.datasheet ? <a href={item.datasheet} target="_blank" rel="noreferrer">Mở datasheet ↗</a> : "—") },
     { label: "Nơi mua", render: (item) => (item.purchaseUrl ? <a href={item.purchaseUrl} target="_blank" rel="noreferrer">Mở link ↗</a> : "—") }
   ];

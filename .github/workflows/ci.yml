@@ -39,6 +39,9 @@ jobs:
       - name: Quét khóa bí mật trong mã nguồn
         run: npm run check:secrets
 
+      - name: Chặn phiên bản framework có CVE nghiêm trọng
+        run: npm run check:dependencies
+
       - name: Build
         run: npm run build
 

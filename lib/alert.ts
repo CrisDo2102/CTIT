@@ -77,6 +77,7 @@ export async function notify(input: AlertInput): Promise<boolean> {
   try {
     const response = await fetch(webhook, {
       method: "POST",
+      redirect: "error",
       headers: { "Content-Type": "application/json" },
       body: bodyFor(new URL(webhook), text),
       signal: AbortSignal.timeout(SEND_TIMEOUT_MS)

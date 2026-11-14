@@ -1,0 +1,78 @@
+{
+  "release": "CTIT 2.3 Unified Design System",
+  "base": "CTIT.zip uploaded 2026-10-28",
+  "files": [
+    {
+      "path": "components/PageHero.tsx",
+      "sha256": "cdbec37b070257c6f86f2109feeceac31f927516ce50c42e7add3341bd8831b3"
+    },
+    {
+      "path": "components/PageShell.tsx",
+      "sha256": "9a0fde3217f82953e2596f0d6f82db0ab96a7390fc8ee374676afccf744e064e"
+    },
+    {
+      "path": "components/SectionHeader.tsx",
+      "sha256": "9ac8ba0ef085895ebc64771a0141c3ee0060a4a776b54f01c08dc37777ae8f1a"
+    },
+    {
+      "path": "app/layout.tsx",
+      "sha256": "fa578428dad8bb619f3d0baa8a892681e22b5211dcf04a191e1687c2196d11c2"
+    },
+    {
+      "path": "app/resources/page.tsx",
+      "sha256": "1b012f4f42bbf867c976e703e310f5c06131a47ca9f42f212a2902d1dc46523f"
+    },
+    {
+      "path": "app/resources/documents/page.tsx",
+      "sha256": "ddf802a8ef548f42841edf15fceb34092c3b94c693091a147a7b096d7d00b013"
+    },
+    {
+      "path": "app/resources/inventory/page.tsx",
+      "sha256": "9e472e6be819bfff6a8da1291d5cecb0f5ca24906ba46c00217dd520938f4f74"
+    },
+    {
+      "path": "app/resources/courses/page.tsx",
+      "sha256": "9092e3d629de0b59fbf7e601452ed0a2e2497e9bd8313104c2d9e2b93571c394"
+    },
+    {
+      "path": "app/resources/inventory/[slug]/page.tsx",
+      "sha256": "5e1d882f7729c3d9eaeac5795e73520a322f4772f8ff480b84e820daceff9be6"
+    },
+    {
+      "path": "app/resources/courses/[slug]/page.tsx",
+      "sha256": "45de0e237b7a6caaeac17d9122bdfcb66fe3f6b5b022366ed8c1263cda740f7b"
+    },
+    {
+      "path": "app/saved/page.tsx",
+      "sha256": "86245324e6b79ac94570411b1df1212eb5a9ca42e4080c4a73561f95b4b5446d"
+    },
+    {
+      "path": "app/changelog/page.tsx",
+      "sha256": "89fc0e089561f15206a0f81c4f0930088ac78bf3018d0de7702f401b8fa83113"
+    },
+    {
+      "path": "app/research/page.tsx",
+      "sha256": "8a563557b608daab74af7254be188f488f91a7724ac54342e4bdc93ecf920119"
+    },
+    {
+      "path": "app/news/page.tsx",
+      "sha256": "fc07e5a73f74ce2eb5136b57034a0678d62685ed8c2c5556bcbafd612739ac7c"
+    },
+    {
+      "path": "app/design-system.css",
+      "sha256": "bf56a8a616a8ddd082be385c87bd97f0651bc60d633b1ce899842f282b3e371e"
+    },
+    {
+      "path": "CTIT-2.3-CHANGELOG.txt",
+      "sha256": "605efa9986883ad79873b96eec9931951fbb0ed11a284d23e765a41efe9ea092"
+    },
+    {
+      "path": "tests/unit/design-system.test.tsx",
+      "sha256": "4d27247030d7f1b7c8eefb699351e2700aec13623fbe983021eab27dc33cc95c"
+    },
+    {
+      "path": "CTIT-2.3-README.md",
+      "sha256": "53a5420ce155ba629b526e558908cbc8cb28b79931c57e363c4d62982bfbb2e2"
+    }
+  ]
+}

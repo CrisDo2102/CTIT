@@ -16,6 +16,8 @@ export default async function InventoryPage() {
       <Header />
       <main id="main">
         <PageHero
+          variant="compact"
+          accent="resources"
           eyebrow="Resources / Inventory"
           title="Inventory"
           intro="Linh kiện, vi điều khiển, module và vật tư kỹ thuật của CTIT."

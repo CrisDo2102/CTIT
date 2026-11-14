@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { CourseCatalog } from "@/components/CourseCatalog";
 import { Footer } from "@/components/Footer";
-import { CourseCardProgress, LearningSummary } from "@/components/CourseProgressUI";
 import { Header } from "@/components/Header";
 import { PageHero } from "@/components/PageHero";
-import { SafeImage } from "@/components/SafeImage";
-import { toneOf } from "@/lib/format";
+import { getLearningPaths } from "@/lib/learning-paths";
 import { getCourses } from "@/lib/sheet-data";
 import "./courses.css";
 
@@ -16,16 +15,17 @@ export const metadata: Metadata = {
 
 export default async function CoursesPage() {
   const courses = await getCourses();
+  const paths = await getLearningPaths(courses);
+  const today = new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Ho_Chi_Minh",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
   const lessonTotal = courses.reduce((sum, course) => sum + course.lessonCount, 0);
-  // id các bài đã có link của từng khóa (khớp với ô "đã học" ở trang khóa học).
-  const lessonIds = (course: (typeof courses)[number]) =>
-    course.tracks.flatMap((track) => track.lessons.flatMap((lesson, index) => (lesson.url ? [`${course.slug}:${track.slug}:${index}`] : [])));
 
   return (
     <>
       <Header />
       <main id="main">
         <PageHero
+          variant="compact"
+          accent="resources"
           eyebrow="Resources / Courses"
           title="Khóa học"
           intro="Lộ trình học theo từng môn. Mỗi bài là một link dẫn thẳng tới video, slide hoặc tài liệu, xếp theo thứ tự nên học."
@@ -38,44 +38,8 @@ export default async function CoursesPage() {
 
         <section className="section no-top">
           <div className="container">
-            <LearningSummary courses={courses.map((course) => ({ slug: course.slug, title: course.title, ids: lessonIds(course) }))} />
-            {courses.length === 0 ? (
-              <p className="course-empty">Các khóa học đang được cập nhật. Quay lại sau nhé.</p>
-            ) : (
-              <div className="courses-grid">
-                {courses.map((course) => (
-                  <Link key={course.slug} href={`/resources/courses/${course.slug}`} className="course-card">
-                    <div className="course-cover" style={{ "--tone": toneOf(course.title) } as React.CSSProperties}>
-                      <SafeImage
-                        src={course.image}
-                        alt=""
-                        loading="lazy"
-                        fallback={<span className="course-cover-mark" aria-hidden="true">{course.title.slice(0, 2)}</span>}
-                      />
-                    </div>
-                    <div className="course-body">
-                      <h2>{course.title}</h2>
-                      {course.description ? <p>{course.description}</p> : null}
-                      <div className="course-tracks">
-                        {course.tracks.length > 1 ? (
-                          course.tracks.map((track) => (
-                            <span key={track.slug} className="course-track-chip">
-                              <strong>{track.name}</strong>
-                              <em>{track.lessons.length} bài</em>
-                            </span>
-                          ))
-                        ) : (
-                          <span className="course-track-chip">
-                            <strong>{course.lessonCount} bài</strong>
-                          </span>
-                        )}
-                      </div>
-                      <CourseCardProgress ids={lessonIds(course)} />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+            <p><Link href="/roadmap">Lộ trình học →</Link></p>
+            <CourseCatalog courses={courses} paths={paths} today={today} />
           </div>
         </section>
       </main>

@@ -9,7 +9,7 @@ const req = (body: unknown, headers: Record<string, string> = {}) =>
   new Request("http://localhost/api/report", {
     method: "POST",
     body: typeof body === "string" ? body : JSON.stringify(body),
-    headers: { host: "localhost", origin: "http://localhost", "x-forwarded-for": `10.0.0.${++ipCounter}`, ...headers }
+    headers: { /* CTIT_AUTO_TEST_FIX */ "content-type": "application/json",  host: "localhost", origin: "http://localhost", "x-forwarded-for": `10.0.0.${++ipCounter}`, ...headers }
   });
 
 beforeEach(async () => {
@@ -48,6 +48,19 @@ describe("POST /api/report", () => {
     ["Origin hỏng", { origin: "not a url" }]
   ])("chặn: %s", async (_name, headers) => {
     expect((await POST(req(valid, headers))).status).toBe(403);
+  });
+
+  it("production từ chối request thiếu Origin", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const request = req(valid);
+    request.headers.delete("origin");
+    expect((await POST(request)).status).toBe(403);
+  });
+
+  it("từ chối content-type không phải JSON và path đáng ngờ", async () => {
+    expect((await POST(req(valid, { "content-type": "text/plain" }))).status).toBe(415);
+    expect((await POST(req({ ...valid, path: "//evil.example" }))).status).toBe(400);
+    expect((await POST(req({ ...valid, path: "/events?token=123" }))).status).toBe(400);
   });
 
   it("từ chối nội dung quá lớn (413) cả khi khai báo lẫn khi thực tế", async () => {

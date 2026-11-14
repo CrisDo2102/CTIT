@@ -1,3 +1,4 @@
+import { readInfo, parseQuiz } from "@/lib/learning-model";
 import { existsSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import type {
@@ -397,42 +398,46 @@ export async function getInventory(): Promise<InventoryItem[]> {
   if (rows.length < 2) return [];
 
   const [header, ...body] = rows;
-  // Inventory nam cung Sheet voi Documents: Documents A:G, cot H la vach
-  // phan cach, Inventory bat dau tu I. Ta tim theo ten header de khong phu thuoc
-  // tuyet doi vao chu cai cot, nhung van bo qua H va cac cot khong lien quan.
-  // Quan trọng: Sheet có H là vạch vàng, Inventory bắt đầu đúng từ I.
-  // Vì Documents cũng có các cột `id`, `title`, `description` nên không thể
-  // dùng findIndex toàn header (nó sẽ lấy cột B/C/E của Documents). Ta chỉ
-  // tìm trong vùng I:U của Inventory.
-  const inventoryColumn = (offset: number, names: string[]) => {
-    const start = 8; // I
-    const end = Math.min(header.length, 21); // U
+  // Locate Inventory by its own header block, not fixed spreadsheet letters.
+  // Documents and Courses also have id/title/description, so stay inside this block.
+  const manufacturerAnchor = columnIndexAny(header, ["manufacturer", "Hãng", "Nhà sản xuất"]);
+  const categoryNames = ["category", "Danh mục"].map(normalizeHeader);
+  let inventoryStart = -1;
+  for (let index = manufacturerAnchor - 1; index >= 0; index -= 1) {
+    if (categoryNames.includes(normalizeHeader(header[index]))) { inventoryStart = index; break; }
+    if (!header[index].trim()) break;
+  }
+  if (inventoryStart === -1) {
+    if (isDev) console.warn("[Inventory] Không tìm thấy khối header category / manufacturer.");
+    return [];
+  }
+  let inventoryEnd = inventoryStart + 1;
+  while (inventoryEnd < header.length && header[inventoryEnd].trim()) inventoryEnd += 1;
+  const inventoryColumn = (names: string[]) => {
     const wanted = names.map(normalizeHeader);
-    for (let index = start; index < end; index += 1) {
+    for (let index = inventoryStart; index < inventoryEnd; index += 1) {
       if (wanted.includes(normalizeHeader(header[index]))) return index;
     }
-    return start + offset;
+    // A missing field is empty. Never substitute a neighbouring column.
+    return -1;
   };
-  const categoryIndex = inventoryColumn(0, ["category", "Danh mục"]); // I
-  const idIndex = inventoryColumn(1, ["id"]); // J
-  const titleIndex = inventoryColumn(2, ["title", "Tên vật tư", "Tên sản phẩm"]); // K
-  const manufacturerIndex = inventoryColumn(3, ["manufacturer", "Hãng", "Nhà sản xuất"]); // L
-  const modelIndex = inventoryColumn(4, ["model", "Mã sản phẩm"]); // M
-  const descriptionIndex = inventoryColumn(5, ["description", "Mô tả"]); // N
-  const unitIndex = inventoryColumn(6, ["unit", "Đơn vị"]); // O
-  const quantityIndex = inventoryColumn(7, ["quantity", "Số lượng", "Qty"]); // P
-  const datasheetIndex = inventoryColumn(8, ["datasheet", "Data sheet", "Tài liệu kỹ thuật"]); // Q
-  const purchaseUrlIndex = inventoryColumn(9, ["purchase_url", "purchase url", "link mua", "nơi mua", "mua hàng"]); // R
-  const locationIndex = inventoryColumn(10, ["location", "Vị trí"]); // S
-  const statusIndex = inventoryColumn(11, ["status", "Trạng thái"]); // T
-  const currentUserIndex = inventoryColumn(12, ["current_user", "current user", "người sử dụng", "người đang sử dụng"]); // U
+  const categoryIndex = inventoryColumn(["category", "Danh mục"]);
+  const idIndex = inventoryColumn(["id"]);
+  const titleIndex = inventoryColumn(["title", "Tên vật tư", "Tên sản phẩm"]);
+  const manufacturerIndex = inventoryColumn(["manufacturer", "Hãng", "Nhà sản xuất"]);
+  const modelIndex = inventoryColumn(["model", "Mã sản phẩm"]);
+  const descriptionIndex = inventoryColumn(["description", "Mô tả"]);
+  const unitIndex = inventoryColumn(["unit", "Đơn vị"]);
+  const quantityIndex = inventoryColumn(["quantity", "Số lượng", "Qty"]);
+  const datasheetIndex = inventoryColumn(["datasheet", "Data sheet", "Tài liệu kỹ thuật"]);
+  const purchaseUrlIndex = inventoryColumn(["purchase_url", "purchase url", "link mua", "nơi mua", "mua hàng"]);
+  const locationIndex = inventoryColumn(["location", "Vị trí"]);
+  const statusIndex = inventoryColumn(["status", "Trạng thái"]);
+  const currentUserIndex = inventoryColumn(["current_user", "current user", "người sử dụng", "người đang sử dụng", "người dùng"]);
 
   if (isDev) {
-    const cell = (index: number) => (index === -1 ? "(KHÔNG THẤY)" : `"${header[index].trim()}"`);
-    console.log(
-      `[Inventory] ${body.length} dòng | I:U | category: ${cell(categoryIndex)} | id/ảnh: ${cell(idIndex)} | title: ${cell(titleIndex)} | ` +
-        `quantity: ${cell(quantityIndex)} | datasheet: ${cell(datasheetIndex)} | purchase_url: ${cell(purchaseUrlIndex)} | location: ${cell(locationIndex)} | status: ${cell(statusIndex)} | current_user: ${cell(currentUserIndex)}`
-    );
+    const cell = (index: number) => index === -1 ? "(KHÔNG THẤY)" : `"${header[index].trim()}"`;
+    console.log(`[Inventory] ${body.length} dòng | cột ${inventoryStart + 1}-${inventoryEnd} | status: ${cell(statusIndex)} | current_user: ${cell(currentUserIndex)}`);
   }
 
   if (idIndex === -1 || titleIndex === -1) return [];
@@ -1169,7 +1174,7 @@ function isHttpUrl(value: string): boolean {
 }
 
 type DraftTrack = { slug: string; name: string; description: string; lessons: CourseLesson[] };
-type DraftCourse = { slug: string; title: string; description: string; image: string; tracks: Map<string, DraftTrack> };
+type DraftCourse = { info?: Course["info"]; slug: string; title: string; description: string; image: string; tracks: Map<string, DraftTrack> };
 
 export async function getCourses(): Promise<Course[]> {
   const rows = await fetchSheetRows(process.env.COURSES_SHEET_CSV_URL || resourcesSheetUrl, "Courses");
@@ -1223,6 +1228,8 @@ export async function getCourses(): Promise<Course[]> {
     return [];
   }
 
+  // Optional metadata is read only inside the Course block, on its overview row.
+  const infoColumns = new Map(header.slice(start,end).map((name,i)=>[name.trim().toLowerCase(),start+i]));
   const courses = new Map<string, DraftCourse>();
   const usedCourseSlugs = new Set<string>();
   const imageRefs: string[] = [];
@@ -1269,6 +1276,9 @@ export async function getCourses(): Promise<Course[]> {
     }
 
     const course = getCourse(courseName);
+    if (!title && !url && !trackName && !course.info) {
+      course.info = readInfo(key => cellAt(row, infoColumns.get(key) ?? -1));
+    }
     if (image && !course.image) {
       course.image = image;
       imageRefs.push(image);
@@ -1296,7 +1306,11 @@ export async function getCourses(): Promise<Course[]> {
       return;
     }
 
+    const quiz = parseQuiz(cellAt(row, infoColumns.get("quiz_json") ?? -1));
+    const minutes = Number(cellAt(row, infoColumns.get("lesson_duration_min") ?? -1));
     getTrack(course, trackName).lessons.push({
+      ...(quiz ? {quiz} : {}),
+      ...(minutes > 0 && Number.isFinite(minutes) ? { minutes } : {}),
       title,
       url,
       type: !url ? "" : rawType ? normalizeResourceType(rawType) : detectTypeFromUrl(url),
@@ -1327,6 +1341,7 @@ export async function getCourses(): Promise<Course[]> {
 
     result.push({
       slug: course.slug,
+      ...(course.info ? { info: course.info } : {}),
       title: course.title,
       description: course.description,
       image: course.image ? resolvePhotoUrl(course.image, "courses") : "",

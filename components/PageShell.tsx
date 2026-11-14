@@ -1,29 +1,50 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { PageHero } from "@/components/PageHero";
+import { PageHero, type HeroAccent, type HeroVariant } from "@/components/PageHero";
 import { nav } from "@/lib/site-config";
 
 type Props = {
   slug: string;
   bare?: boolean;
-  // Tuy chon: ghi de tieu de (h1) / mo ta (lead) cua banner, dung khi trang
-  // muon lay 2 dong nay tu Google Sheet thay vi lib/site-config.ts (vd trang
-  // /about lay tu tab Admin: page_title, page_intro). Bo trong thi dung mac
-  // dinh trong nav[] nhu cu.
   title?: string;
   intro?: string;
   heroClass?: string;
+  heroVariant?: HeroVariant;
+  heroAccent?: HeroAccent;
   children: React.ReactNode;
 };
 
-// Khung chung cho các trang con: banner (PageHero) + nội dung + footer.
-export function PageShell({ slug, bare, title, intro, heroClass = "", children }: Props) {
-  const page = nav.find((item) => item.href === `/${slug}`)!;
+const ACCENTS: Partial<Record<string, HeroAccent>> = {
+  events: "events",
+  schools: "schools",
+  campus: "neutral",
+  resources: "resources"
+};
+
+/** Shared app shell; each page decides its density, not its brand identity. */
+export function PageShell({
+  slug,
+  bare,
+  title,
+  intro,
+  heroClass = "",
+  heroVariant,
+  heroAccent,
+  children
+}: Props) {
+  const page = nav.find((item) => item.href === `/${slug}`);
+  if (!page) throw new Error(`PageShell: unknown page slug "${slug}"`);
+
+  const variant = heroVariant ?? (slug === "about" ? "standard" : "compact");
+  const accent = heroAccent ?? ACCENTS[slug] ?? "neutral";
+
   return (
     <>
       <Header />
-      <main id="main">
+      <main id="main" className="ctit-page-shell" data-ctit-page={variant}>
         <PageHero
+          variant={variant}
+          accent={accent}
           className={heroClass}
           eyebrow={page.en}
           title={title || page.label}

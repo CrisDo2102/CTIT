@@ -16,6 +16,8 @@ export default async function DocumentsPage() {
       <Header />
       <main id="main">
         <PageHero
+          variant="compact"
+          accent="resources"
           eyebrow="Resources / Documents"
           title="Tài liệu"
           intro="Sách, PDF, video, link học tập và tài liệu kỹ thuật."

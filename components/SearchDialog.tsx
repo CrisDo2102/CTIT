@@ -85,7 +85,9 @@ export function SearchDialog() {
   }, [open, index, failed]);
 
   const typed = query.trim().length > 0;
-  const results = useMemo(() => (index && typed ? searchEntries(index, query, 60) : []), [index, query, typed]);
+  // Lấy đầy đủ kết quả đã xếp hạng để chip từng loại không bỏ sót mục đứng sau top 60.
+  // Chỉ render tối đa 60 mục sau khi chọn loại, tránh làm nặng DOM.
+  const results = useMemo(() => (index && typed ? searchEntries(index, query, Infinity) : []), [index, query, typed]);
 
   // Số kết quả theo từng loại, để hiện trên chip lọc.
   const counts = useMemo(() => {
@@ -95,7 +97,9 @@ export function SearchDialog() {
   }, [results]);
 
   // Khi chưa gõ: gợi ý các trang chính.
-  const shown = typed ? results.filter((entry) => scope === "all" || entry.kind === scope) : (index || []).filter((entry) => entry.kind === "Trang");
+  const shown = typed
+    ? results.filter((entry) => scope === "all" || entry.kind === scope).slice(0, 60)
+    : (index || []).filter((entry) => entry.kind === "Trang");
 
   // Nhóm theo loại nhưng đánh số liên tục để điều hướng bằng phím.
   const groups = kindOrder

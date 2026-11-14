@@ -60,6 +60,8 @@ export default async function InventoryItemPage({ params }: Props) {
       <Header />
       <main id="main">
         <PageHero
+          variant="reading"
+          accent="resources"
           eyebrow="Resources / Inventory"
           title={item.title}
           intro={item.description || undefined}
@@ -90,7 +92,7 @@ export default async function InventoryItemPage({ params }: Props) {
             <div className="item-main">
               <div className="item-status-row" id="overview">
                 <span className={statusClass(item.status)}>{statusLabel(item.status)}</span>
-                {item.currentUser ? <span className="item-user">Đang sử dụng: <strong>{item.currentUser}</strong></span> : null}
+                <span className="item-user">Người sử dụng: <strong>{item.currentUser || "Chưa cập nhật"}</strong></span>
               </div>
 
               <dl className="item-specs" id="specs">

@@ -43,14 +43,14 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       // Tắt mọi link Google Sheet (kể cả khi máy có .env.local) để bài kiểm thử không phụ thuộc mạng hay dữ liệu thật.
-      env: { ADMIN_PASSWORD: "e2e-password-123456", ...Object.fromEntries(SHEET_VARS.map((name) => [name, ""])) }
+      env: { ADMIN_PASSWORD: "e2e-password-1234567", ...Object.fromEntries(SHEET_VARS.map((name) => [name, ""])) }
     },
     {
       command: `npx next start -p ${dataPort}`,
       url: `http://localhost:${dataPort}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
-      env: { ADMIN_PASSWORD: "e2e-password-123456", ...fixtureEnv({ NEXT_DIST_DIR: ".next-fixtures" }) }
+      env: { ADMIN_PASSWORD: "e2e-password-1234567", ...fixtureEnv({ NEXT_DIST_DIR: ".next-fixtures" }) }
     }
   ]
 });
